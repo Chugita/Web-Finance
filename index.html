@@ -104,14 +104,14 @@
         function init() {
             const container = document.getElementById('webgl-container');
 
-            // Escena y Cámara con rango amplio para evitar recortes
+            // Escena y Cámara con rango amplio
             scene = new THREE.Scene();
             scene.fog = new THREE.FogExp2(0x0d0f12, 0.01);
 
             camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2000);
             camera.position.set(0, 0, 15);
 
-            // Renderizador con alta calidad de color
+            // Renderizador
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -120,7 +120,7 @@
             renderer.toneMappingExposure = 1.2;
             container.appendChild(renderer.domElement);
 
-            // Iluminación envolvente de estudio (ilumina desde todas las direcciones para que no quede totalmente negro)
+            // Iluminación envolvente de estudio
             const ambientLight = new THREE.AmbientLight(0xffffff, 2.0);
             scene.add(ambientLight);
 
@@ -136,8 +136,8 @@
             dirLight2.position.set(-20, -20, -20);
             scene.add(dirLight2);
 
-            // Carga automática del modelo scene.gltf
-            loadModel('./scene.gltf');
+            // Carga inteligente del modelo que remapea las rutas de las texturas a la raíz
+            loadModelSmart('./scene.gltf');
 
             // Eventos del navegador
             window.addEventListener('resize', onWindowResize);
@@ -145,31 +145,42 @@
             window.addEventListener('click', onClick);
         }
 
-        function loadModel(url) {
-            const loader = new GLTFLoader();
+        function loadModelSmart(url) {
             const statusEl = document.getElementById('statusText');
 
+            // Creamos un LoadingManager para interceptar y corregir la ruta de las texturas automáticamente
+            const manager = new THREE.LoadingManager();
+            manager.setURLModifier((assetUrl) => {
+                // Si el modelo busca una textura dentro de una carpeta 'textures/', la redirigimos a la raíz actual
+                if (assetUrl.includes('textures/')) {
+                    const filename = assetUrl.split('/').pop();
+                    return './' + filename;
+                }
+                return assetUrl;
+            });
+
+            const loader = new GLTFLoader(manager);
             loader.load(url, (gltf) => {
                 if (model) scene.remove(model);
                 
                 model = gltf.scene;
                 scene.add(model);
 
-                // Ocultar cartel de carga al tener éxito
+                // Ocultar cartel de carga
                 statusEl.style.display = 'none';
 
-                // Forzar la visibilidad de todos los materiales y corregir caras oscuras
+                // Forzar visibilidad y doble cara de los materiales
                 model.traverse((child) => {
                     if (child.isMesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
                         if (child.material) {
-                            child.material.side = THREE.DoubleSide; // Evita que desaparezcan partes si las mallas están invertidas
+                            child.material.side = THREE.DoubleSide;
                         }
                     }
                 });
 
-                // Centrar y escalar automáticamente el modelo a un tamaño estándar visible (ej. tamaño 4)
+                // Centrar y escalar automáticamente
                 const box = new THREE.Box3().setFromObject(model);
                 const center = box.getCenter(new THREE.Vector3());
                 const size = box.getSize(new THREE.Vector3());
@@ -189,15 +200,9 @@
                         action.play();
                     });
                 }
-            }, (xhr) => {
-                // Progreso de carga opcional
-                if (xhr.total > 0) {
-                    let percent = Math.floor((xhr.loaded / xhr.total) * 100);
-                    statusEl.innerText = `Cargando modelo... ${percent}%`;
-                }
-            }, (error) => {
-                console.error("Error detallado al cargar el modelo 3D:", error);
-                statusEl.innerText = "Error al cargar scene.gltf (ver consola)";
+            }, undefined, (error) => {
+                console.error("Error al cargar el modelo 3D:", error);
+                statusEl.innerText = "Error al cargar el modelo (ver consola)";
                 statusEl.style.color = "#f43f5e";
             });
         }
@@ -213,7 +218,6 @@
         function onClick() {
             if (!model || isSpinning) return;
 
-            // Iniciar giro de 360° en un eje aleatorio tridimensional
             isSpinning = true;
             spinProgress = 0;
             startQuaternion.copy(model.quaternion);
