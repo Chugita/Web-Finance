@@ -64,7 +64,7 @@
         <span>🖱️ Haz clic para giro 360° aleatorio</span>
     </div>
 
-    <!-- Importamos Three.js y los módulos necesarios junto a la extensión SpecularGlossiness -->
+    <!-- Importamos Three.js estable sin dependencias externas problemáticas -->
     <script type="importmap">
         {
             "imports": {
@@ -77,12 +77,11 @@
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { KHR_materials_pbrSpecularGlossiness } from 'three/addons/loaders/gltf/KHR_materials_pbrSpecularGlossiness.js';
 
         let scene, camera, renderer, model, mixer;
         let clock = new THREE.Clock();
         
-        // Variables para el movimiento de vuelo y comportamiento
+        // Variables para el movimiento de vuelo
         let flightTime = 0;
         let targetPosition = new THREE.Vector3();
         
@@ -93,7 +92,7 @@
         let startQuaternion = new THREE.Quaternion();
         let targetQuaternion = new THREE.Quaternion();
 
-        // Seguimiento del mouse en coordenadas 3D
+        // Seguimiento del mouse en 3D
         let mouse = new THREE.Vector2();
         let raycaster = new THREE.Raycaster();
         let planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -105,7 +104,7 @@
         function init() {
             const container = document.getElementById('webgl-container');
 
-            // Escena y Cámara con rango amplio
+            // Escena y Cámara
             scene = new THREE.Scene();
             scene.fog = new THREE.FogExp2(0x0d0f12, 0.01);
 
@@ -121,7 +120,7 @@
             renderer.toneMappingExposure = 1.2;
             container.appendChild(renderer.domElement);
 
-            // Iluminación envolvente de estudio
+            // Iluminación envolvente
             const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
             scene.add(ambientLight);
 
@@ -137,7 +136,7 @@
             dirLight2.position.set(-20, -20, -20);
             scene.add(dirLight2);
 
-            // Carga inteligente del modelo
+            // Cargar modelo
             loadModelSmart('./scene.gltf');
 
             // Eventos del navegador
@@ -149,7 +148,7 @@
         function loadModelSmart(url) {
             const statusEl = document.getElementById('statusText');
 
-            // LoadingManager para corregir rutas de texturas
+            // Redirigir las rutas de las texturas que el modelo busque en 'textures/' hacia la raíz suelta
             const manager = new THREE.LoadingManager();
             manager.setURLModifier((assetUrl) => {
                 if (assetUrl.includes('textures/')) {
@@ -160,9 +159,6 @@
             });
 
             const loader = new GLTFLoader(manager);
-            
-            // Registramos el soporte para materiales SpecularGlossiness
-            loader.register((parser) => new KHR_materials_pbrSpecularGlossiness(parser));
 
             loader.load(url, (gltf) => {
                 if (model) scene.remove(model);
@@ -170,16 +166,29 @@
                 model = gltf.scene;
                 scene.add(model);
 
-                // Ocultar cartel de carga
                 statusEl.style.display = 'none';
 
-                // Forzar visibilidad de los materiales
+                // Asegurar que todos los materiales sean visibles y compatibles
                 model.traverse((child) => {
                     if (child.isMesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
+                        
+                        // Si el material tiene la extensión antigua o no se renderiza bien, aplicamos compatibilidad
                         if (child.material) {
                             child.material.side = THREE.DoubleSide;
+                            
+                            // Reemplazo seguro si la malla quedó en negro por SpecularGlossiness
+                            if (!child.material.map && child.material.type === 'MeshPhongMaterial') {
+                                const textureLoader = new THREE.TextureLoader();
+                                textureLoader.load('./material_0_diffuse.png', (tex) => {
+                                    tex.colorSpace = THREE.SRGBColorSpace;
+                                    child.material = new THREE.MeshStandardMaterial({
+                                        map: tex,
+                                        side: THREE.DoubleSide
+                                    });
+                                });
+                            }
                         }
                     }
                 });
@@ -196,7 +205,7 @@
                 }
                 model.position.sub(center);
 
-                // Configurar animaciones
+                // Reproducir animaciones
                 if (gltf.animations && gltf.animations.length > 0) {
                     mixer = new THREE.AnimationMixer(model);
                     gltf.animations.forEach((clip) => {
@@ -205,8 +214,8 @@
                     });
                 }
             }, undefined, (error) => {
-                console.error("Error al cargar el modelo 3D:", error);
-                statusEl.innerText = "Error al cargar el modelo";
+                console.error("Error al cargar el modelo:", error);
+                statusEl.innerText = "Error al cargar scene.gltf";
                 statusEl.style.color = "#f43f5e";
             });
         }
@@ -246,7 +255,7 @@
             if (model) {
                 flightTime += delta * 0.8;
 
-                // Patrón de vuelo fluido
+                // Vuelo fluido
                 targetPosition.x = Math.sin(flightTime * 0.7) * 4;
                 targetPosition.y = Math.cos(flightTime * 0.5) * 2.5;
                 targetPosition.z = Math.sin(flightTime * 0.3) * 1.5;
@@ -254,7 +263,7 @@
                 if (!isSpinning) {
                     model.position.lerp(targetPosition, 0.05);
 
-                    // Seguimiento del cursor con la mirada
+                    // Seguimiento del cursor
                     let lookTarget = new THREE.Vector3(
                         mouseWorldPos.x * 0.5,
                         mouseWorldPos.y * 0.5,
