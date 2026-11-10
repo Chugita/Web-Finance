@@ -64,7 +64,7 @@
         <span>🖱️ Haz clic para giro 360° aleatorio</span>
     </div>
 
-    <!-- Importamos Three.js y los módulos necesarios mediante ES Modules -->
+    <!-- Importamos Three.js y los módulos necesarios junto a la extensión SpecularGlossiness -->
     <script type="importmap">
         {
             "imports": {
@@ -77,6 +77,7 @@
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { KHR_materials_pbrSpecularGlossiness } from 'three/addons/loaders/gltf/KHR_materials_pbrSpecularGlossiness.js';
 
         let scene, camera, renderer, model, mixer;
         let clock = new THREE.Clock();
@@ -121,7 +122,7 @@
             container.appendChild(renderer.domElement);
 
             // Iluminación envolvente de estudio
-            const ambientLight = new THREE.AmbientLight(0xffffff, 2.0);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
             scene.add(ambientLight);
 
             const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2.5);
@@ -136,7 +137,7 @@
             dirLight2.position.set(-20, -20, -20);
             scene.add(dirLight2);
 
-            // Carga inteligente del modelo que remapea las rutas de las texturas a la raíz
+            // Carga inteligente del modelo
             loadModelSmart('./scene.gltf');
 
             // Eventos del navegador
@@ -148,10 +149,9 @@
         function loadModelSmart(url) {
             const statusEl = document.getElementById('statusText');
 
-            // Creamos un LoadingManager para interceptar y corregir la ruta de las texturas automáticamente
+            // LoadingManager para corregir rutas de texturas
             const manager = new THREE.LoadingManager();
             manager.setURLModifier((assetUrl) => {
-                // Si el modelo busca una textura dentro de una carpeta 'textures/', la redirigimos a la raíz actual
                 if (assetUrl.includes('textures/')) {
                     const filename = assetUrl.split('/').pop();
                     return './' + filename;
@@ -160,6 +160,10 @@
             });
 
             const loader = new GLTFLoader(manager);
+            
+            // Registramos el soporte para materiales SpecularGlossiness
+            loader.register((parser) => new KHR_materials_pbrSpecularGlossiness(parser));
+
             loader.load(url, (gltf) => {
                 if (model) scene.remove(model);
                 
@@ -169,7 +173,7 @@
                 // Ocultar cartel de carga
                 statusEl.style.display = 'none';
 
-                // Forzar visibilidad y doble cara de los materiales
+                // Forzar visibilidad de los materiales
                 model.traverse((child) => {
                     if (child.isMesh) {
                         child.castShadow = true;
@@ -192,7 +196,7 @@
                 }
                 model.position.sub(center);
 
-                // Configurar animaciones si el modelo las incluye
+                // Configurar animaciones
                 if (gltf.animations && gltf.animations.length > 0) {
                     mixer = new THREE.AnimationMixer(model);
                     gltf.animations.forEach((clip) => {
@@ -202,7 +206,7 @@
                 }
             }, undefined, (error) => {
                 console.error("Error al cargar el modelo 3D:", error);
-                statusEl.innerText = "Error al cargar el modelo (ver consola)";
+                statusEl.innerText = "Error al cargar el modelo";
                 statusEl.style.color = "#f43f5e";
             });
         }
@@ -258,7 +262,7 @@
                     );
                     model.lookAt(lookTarget);
                 } else {
-                    // Ejecutar giro de 360° fluido
+                    // Giro 360° fluido
                     spinProgress += delta * 4;
                     if (spinProgress >= 1) {
                         spinProgress = 1;
