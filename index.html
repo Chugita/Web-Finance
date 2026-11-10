@@ -64,7 +64,7 @@
 </head>
 <body>
 
-    <label class="file-loader">
+    <label class="file-loader" style="display: none;">
         📁 Cargar tu modelo (.gltf / .bin)
         <input type="file" id="fileInput" multiple accept=".gltf,.bin,.png,.jpg">
     </label>
@@ -143,16 +143,13 @@
             pointLight.position.set(-10, -10, 10);
             scene.add(pointLight);
 
-            // Cargar modelo automático apuntando a scene.gltf
-            loadModel('scene.gltf');
+            // Carga automática del modelo scene.gltf
+            loadModel('./scene.gltf');
 
             // Eventos del navegador
             window.addEventListener('resize', onWindowResize);
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('click', onClick);
-
-            // Selector manual por si se quiere cargar otro archivo localmente
-            document.getElementById('fileInput').addEventListener('change', handleFileSelect);
         }
 
         function loadModel(url) {
@@ -180,51 +177,8 @@
                     });
                 }
             }, undefined, (error) => {
-                console.log("Error cargando el modelo automáticamente.");
+                console.error("Error al cargar el archivo scene.gltf:", error);
             });
-        }
-
-        function handleFileSelect(event) {
-            const files = event.target.files;
-            if (files.length === 0) return;
-
-            let gltfFile = null;
-            const fileMap = {};
-
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                fileMap[file.name] = URL.createObjectURL(file);
-                if (file.name.endsWith('.gltf') || file.name.endsWith('.glb')) {
-                    gltfFile = file;
-                }
-            }
-
-            if (gltfFile) {
-                const manager = new THREE.LoadingManager();
-                manager.setURLModifier((url) => {
-                    const filename = url.split('/').pop();
-                    return fileMap[filename] || url;
-                });
-
-                const loader = new GLTFLoader(manager);
-                loader.load(fileMap[gltfFile.name], (gltf) => {
-                    if (model) scene.remove(model);
-                    model = gltf.scene;
-                    scene.add(model);
-
-                    const box = new THREE.Box3().setFromObject(model);
-                    const center = box.getCenter(new THREE.Vector3());
-                    const size = box.getSize(new THREE.Vector3());
-                    const maxDim = Math.max(size.x, size.y, size.z);
-                    model.scale.multiplyScalar(4 / maxDim);
-                    model.position.sub(center.multiplyScalar(4 / maxDim));
-
-                    if (gltf.animations && gltf.animations.length > 0) {
-                        mixer = new THREE.AnimationMixer(model);
-                        gltf.animations.forEach(clip => mixer.clipAction(clip).play());
-                    }
-                });
-            }
         }
 
         function onMouseMove(event) {
