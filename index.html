@@ -93,12 +93,10 @@
 
         let scene, camera, renderer, model, mixer;
         let clock = new THREE.Clock();
-        let animations = [];
         
         // Variables para el movimiento de vuelo y comportamiento
         let flightTime = 0;
         let targetPosition = new THREE.Vector3();
-        let currentPosition = new THREE.Vector3();
         
         // Control de giro de 360° por clics
         let isSpinning = false;
@@ -145,15 +143,15 @@
             pointLight.position.set(-10, -10, 10);
             scene.add(pointLight);
 
-            // Cargar modelo inicial por defecto (reemplaza 'model.gltf' por la ruta de tu archivo subido)
-            loadModel('model.gltf');
+            // Cargar modelo automático apuntando a scene.gltf
+            loadModel('scene.gltf');
 
             // Eventos del navegador
             window.addEventListener('resize', onWindowResize);
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('click', onClick);
 
-            // Selector manual de archivos locales
+            // Selector manual por si se quiere cargar otro archivo localmente
             document.getElementById('fileInput').addEventListener('change', handleFileSelect);
         }
 
@@ -182,7 +180,7 @@
                     });
                 }
             }, undefined, (error) => {
-                console.log("Carga un modelo usando el botón superior si 'model.gltf' no se encuentra localmente.");
+                console.log("Error cargando el modelo automáticamente.");
             });
         }
 
