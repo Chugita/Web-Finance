@@ -1,0 +1,11 @@
+Model Information:
+* title:	Bee
+* source:	https://sketchfab.com/3d-models/bee-c80f9c2110c847db9375c548f14a0315
+* author:	etro313 (https://sketchfab.com/etro313)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Bee" (https://sketchfab.com/3d-models/bee-c80f9c2110c847db9375c548f14a0315) by etro313 (https://sketchfab.com/etro313) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
