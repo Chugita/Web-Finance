@@ -64,7 +64,7 @@
         <span>🖱️ Haz clic para giro 360° aleatorio</span>
     </div>
 
-    <!-- Importamos Three.js estable sin dependencias externas problemáticas -->
+    <!-- Importamos Three.js estable -->
     <script type="importmap">
         {
             "imports": {
@@ -148,7 +148,7 @@
         function loadModelSmart(url) {
             const statusEl = document.getElementById('statusText');
 
-            // Redirigir las rutas de las texturas que el modelo busque en 'textures/' hacia la raíz suelta
+            // Redirigir las rutas de las texturas desde 'textures/' hacia la raíz
             const manager = new THREE.LoadingManager();
             manager.setURLModifier((assetUrl) => {
                 if (assetUrl.includes('textures/')) {
@@ -168,27 +168,13 @@
 
                 statusEl.style.display = 'none';
 
-                // Asegurar que todos los materiales sean visibles y compatibles
+                // Asegurar visibilidad de materiales
                 model.traverse((child) => {
                     if (child.isMesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
-                        
-                        // Si el material tiene la extensión antigua o no se renderiza bien, aplicamos compatibilidad
                         if (child.material) {
                             child.material.side = THREE.DoubleSide;
-                            
-                            // Reemplazo seguro si la malla quedó en negro por SpecularGlossiness
-                            if (!child.material.map && child.material.type === 'MeshPhongMaterial') {
-                                const textureLoader = new THREE.TextureLoader();
-                                textureLoader.load('./material_0_diffuse.png', (tex) => {
-                                    tex.colorSpace = THREE.SRGBColorSpace;
-                                    child.material = new THREE.MeshStandardMaterial({
-                                        map: tex,
-                                        side: THREE.DoubleSide
-                                    });
-                                });
-                            }
                         }
                     }
                 });
