@@ -1544,6 +1544,7 @@ if (portrait) {
 const heroSection = $('inicio');
 const beeCanvas = $('heroCanvas');
 let beeScene, beeCamera, beeRenderer, beeFlight, beeFacing, beeRig, beeMixer;
+let beeHeadFrontCorrection=0; // determined from actual head/abdomen bone positions
 let beeClock = 0, beePrevFrame = null, beeLoaded = false;
 let beeViewportW = innerWidth, beeViewportH = innerHeight;
 let beeModelVisible = true;
@@ -1729,6 +1730,38 @@ function initBeeAcrossPage() {
             }
             beeRig.updateMatrixWorld(true);
             beeFacing.add(beeRig);
+            // Check the actual anatomical orientation at runtime, not guessed
+            // signs of Euler yaw. The camera sits on +Z: the true frontal
+            // pose has HEAD.z > ABDOMEN.z in camera/world coordinates.
+            beeHeadFrontCorrection=0;
+            if(head&&abdomen){
+                beeFacing.rotation.set(0,-Math.PI/2,0,'YXZ');
+                beeFacing.updateMatrixWorld(true);
+                const frontHead=head.getWorldPosition(new THREE.Vector3());
+                const frontAbdomen=abdomen.getWorldPosition(new THREE.Vector3());
+                const depthDifference=frontHead.z-frontAbdomen.z;
+                if(depthDifference<0)beeHeadFrontCorrection=Math.PI;
+                // Verify again after correction: HEAD must be closer.
+                beeFacing.rotation.set(0,-Math.PI/2+beeHeadFrontCorrection,0,'YXZ');
+                beeFacing.updateMatrixWorld(true);
+                const verifiedHead=head.getWorldPosition(new THREE.Vector3());
+                const verifiedAbdomen=abdomen.getWorldPosition(new THREE.Vector3());
+                const correctDepth=verifiedHead.z-verifiedAbdomen.z;
+                window.GAXBeeOrientation={
+                    calibrated:correctDepth>0,
+                    headAheadOfAbdomen:correctDepth>0,
+                    headDepthDifference:Number(correctDepth.toFixed(4)),
+                    yawCorrectionRadians:beeHeadFrontCorrection
+                };
+                if(!(correctDepth>0)){
+                    console.warn('GAX: bee head orientation could not be geometrically verified');
+                }
+            }else{
+                console.warn('GAX: missing head/abdomen bones; cannot verify frontal orientation');
+                window.GAXBeeOrientation={calibrated:false,reason:'missing anatomy bones'};
+            }
+            beeFacing.rotation.set(0,0,0,'YXZ');
+            beeFacing.updateMatrixWorld(true);
             beeRig.traverse(obj=>{
                 if(!obj.isMesh)return;
                 obj.frustumCulled=false;
@@ -1816,7 +1849,9 @@ function animateBeeAcrossPage(now){
             pitch=motion.pitch+flutter*(.014*Math.sin(beeClock*3.7)+motion.nectar*.032*Math.sin(beeClock*7.0));
             roll=motion.roll+flutter*.017*Math.sin(beeClock*3.0);
             const depthScale=motion.size*(1+flutter*.006*Math.sin(beeClock*4.1));
-            beeFacing.rotation.set(pitch,yaw,roll,'YXZ');
+            // The yaw compensation is established using REAL bone positions:
+            // the visible camera-facing pose cannot accidentally be abdomen-first.
+            beeFacing.rotation.set(pitch,yaw+beeHeadFrontCorrection,roll,'YXZ');
             if(beeDepthLayer!==motion.layer){
                 beeDepthLayer=motion.layer;
                 beeCanvas.style.zIndex=beeDepthLayer==='front'?'6':'2';
