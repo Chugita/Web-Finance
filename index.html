@@ -410,8 +410,8 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
     .hero h1{font-size:clamp(28px,7.5vw,46px)}
 }
 
-/* GAX Hero balance — align flower stem to section divider,
-   harmonize radiographic brightness with the bee. */
+/* GAX Hero — scale the flower upward from its planted stem.
+   Keep the lower stem anchored at the same divider; do not move the Hero or the bee. */
 .hero {
     background-color:#080909;
     background-image:
@@ -419,7 +419,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
       url('nectar-scan.jpg');
     background-repeat:no-repeat;
     background-position:center,center calc(100% + 18px);
-    background-size:cover,min(92vw,1240px) auto;
+    background-size:cover,min(108vw,1460px) auto;
 }
 .hero::after {
     background:radial-gradient(ellipse at 50% 42%,
@@ -430,13 +430,13 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
 @media(max-width:900px) {
     .hero {
         background-position:center,center calc(100% + 22px);
-        background-size:cover,min(108vw,900px) auto;
+        background-size:cover,min(124vw,1060px) auto;
     }
 }
 @media(max-width:650px) {
     .hero {
         background-position:center,center calc(100% + 26px);
-        background-size:cover,max(100vw,700px) auto;
+        background-size:cover,max(116vw,790px) auto;
     }
 }
 
