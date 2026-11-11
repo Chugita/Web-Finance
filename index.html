@@ -1491,9 +1491,15 @@ function initBeeAcrossPage() {
             // The body extends along the original Y axis. Rotate its length
             // onto the horizontal screen X axis and keep the broad lateral
             // surface facing the camera (avoid an edge-on rear perspective).
-            // Calibrate the anatomical axes from the actual rig bones.
-            // This is independent of Sketchfab/Blender import Euler orientation.
-            beeRig.rotation.set(0,0,0);
+            // VERIFIED FROM scene.gltf RIG: head is +Z, abdomen is -Z,
+            // dorsal wing roots are +Y and legs are -Y.
+            // Turn +Z toward screen-right (+X) with a 90-degree Y rotation.
+            // Keep model local X out of the animation's orientation logic.
+            beeRig.rotation.set(0, Math.PI / 2, 0);
+            beeRig.updateMatrixWorld(true);
+            const orientedBounds = new THREE.Box3().setFromObject(beeRig);
+            // Recenter after rotating, so the original model stays in its flight lane.
+            beeRig.position.sub(orientedBounds.getCenter(new THREE.Vector3()));
             beeRig.updateMatrixWorld(true);
             const findBone=prefix=>{
                 let found=null;
