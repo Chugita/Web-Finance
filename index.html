@@ -887,7 +887,7 @@ const dict = {
         tFooterText: "PLANIFICACIÓN FINANCIERA / DISEÑÁ TU FUTURO",
         tModalMicro: "GAX / CONTACTO",
         tModalTitle: "Solicitar una reunión",
-        tModalDesc: "An initial conversation to understand your goals. This form is a demo and does not send requests yet.",
+        tModalDesc: "Una conversación inicial para entender tus objetivos. Este formulario es una demostración y todavía no envía solicitudes.",
         tField1: "NOMBRE Y APELLIDO",
         tField2: "CORREO ELECTRÓNICO",
         tField3: "TELÉFONO / WHATSAPP",
@@ -955,7 +955,7 @@ const dict = {
         tCloseTitle: "NOW YOU KNOW YOUR<br>STARTING POINT.<br><span class=\"accent\">NOW, LET'S DESIGN<br>WHAT'S NEXT.</span>",
         tCloseDesc: "A conversation to dive deeper into your goals, assess your situation, and explore the next steps that make sense for you.",
         tCloseBtn: "REQUEST A MEETING ↗",
-        tCloseNote: "NO OBLIGATION TO HIRE · WEB DIAGNOSIS IS ORIENTATIVO",
+        tCloseNote: "NO OBLIGATION TO HIRE · WEB SELF-ASSESSMENT IS INDICATIVE",
         tFooterText: "FINANCIAL PLANNING / DESIGN YOUR FUTURE",
         tModalMicro: "GAX / CONTACT",
         tModalTitle: "Request a meeting",
@@ -1070,7 +1070,7 @@ function renderResult(){
     const p=getProfiles()[answers[0]];
     $('resultTitle').textContent=p.title;
     $('resultDescription').textContent=p.description+' '+getOrgTips()[answers[1]];
-    const fields=currentLang==='es'?['TU PRIORIDAD','TU ORGANIZACIÓN','TU HORIZONTE','TU OBSTÁCULO']:['YOUR PRIORITY','YOUR ORGANIZATION','YOUR HORIZONTE','YOUR OBSTACLE'];
+    const fields=currentLang==='es'?['TU PRIORIDAD','TU ORGANIZACIÓN','TU HORIZONTE','TU OBSTÁCULO']:['YOUR PRIORITY','YOUR ORGANIZATION','YOUR HORIZON','YOUR OBSTACLE'];
     const grid=$('resultGrid');
     grid.replaceChildren();
     answers.forEach((a,i)=>{
@@ -1088,6 +1088,64 @@ $('prevQuestion').addEventListener('click',()=>{if(step>0){step--;renderQuestion
 $('nextQuestion').addEventListener('click',()=>{if(answers[step]===null)return;if(step===3)renderResult();else{step++;renderQuestion()}});
 $('restart').addEventListener('click',()=>{step=0;answers=[null,null,null,null];renderQuestion();$('diagnostico').scrollIntoView({behavior:reduced?'auto':'smooth'})});
 renderQuestion();
+
+/* FULL ES / EN LANGUAGE SWITCH — preserve the active diagnostic and sliders. */
+function setGaxLanguage(next){
+    if(next!=='es'&&next!=='en')return;
+    currentLang=next;
+    document.documentElement.lang=next;
+    const copy=dict[next];
+    const htmlKeys=new Set(['tHeroTitle','tCloseTitle']);
+    for(const [key,value] of Object.entries(copy)){
+        if(key==='pageTitle'){document.title=value;continue}
+        if(key==='navMeeting'){const el=$('navBtnMeeting');if(el)el.textContent=value;continue}
+        if(key==='tModalTitle'){const el=$('modalTitle');if(el)el.textContent=value;continue}
+        const el=$(key);
+        if(!el)continue;
+        if(htmlKeys.has(key))el.innerHTML=value;
+        else el.textContent=value;
+    }
+    $('langBtn').textContent=next==='es'?'ES / EN':'EN / ES';
+    $('langBtn').setAttribute('aria-label',next==='es'?'Switch to English':'Cambiar a español');
+    $('langBtn').setAttribute('aria-pressed',String(next==='en'));
+    const qVisible=!$('resultPanel').hidden;
+    if(qVisible)renderResult();
+    else renderQuestion();
+    updateSim();
+    updateTime();
+    // Independent UI strings not in the original dictionary.
+    const independent={
+        es:{
+            f1:'Plazo A (Años)',f2:'Plazo B (Años)',
+            m1:'CERRAR VENTANA',m2:'CONSULTAR SOBRE LA ESTRATEGIA INTEGRAL ↗',
+            matrix:'GAX / IDENTITY SCAN',fx:'Tipo de cambio referencial no actualizado. Verificá la cotización vigente.'
+        },
+        en:{
+            f1:'Horizon A (Years)',f2:'Horizon B (Years)',
+            m1:'CLOSE WINDOW',m2:'ASK ABOUT OUR INTEGRATED STRATEGY ↗',
+            matrix:'GAX / IDENTITY SCAN',fx:'Reference exchange rate not updated. Verify the current rate.'
+        }
+    };
+    const captions=independent[next];
+    const labelA=document.querySelector('label[for="yearsA"]');
+    const labelB=document.querySelector('label[for="yearsB"]');
+    if(labelA)labelA.textContent=captions.f1;
+    if(labelB)labelB.textContent=captions.f2;
+    const closeMethod=$('closeMethodBtn');
+    if(closeMethod)closeMethod.textContent=captions.m1;
+    const methodCTA=document.querySelector('#methodModal button[data-open-modal]');
+    if(methodCTA)methodCTA.textContent=captions.m2;
+    const formFeedback=$('formFeedback');
+    if(formFeedback)formFeedback.textContent=next==='es'?'El envío real requiere conectar un correo, calendario o servidor.':'Submitting this form requires connecting email, calendar, or a server.';
+    if($('methodModal')?.classList.contains('open')){
+        const openKey=document.querySelector('.method-item[data-method-modal]')?.getAttribute('data-method-modal');
+        // Open content is handled by method-language data in the next section.
+    }
+}
+$('langBtn').addEventListener('click',()=>{
+    setGaxLanguage(currentLang==='es'?'en':'es');
+});
+setGaxLanguage('es');
 
 /* CLOCK */
 function clock(){ $('liveTimeDisplay').textContent='BUE '+new Date().toLocaleTimeString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour12:false})+' HS' }clock();setInterval(clock,1000);
@@ -1402,7 +1460,7 @@ function initBeeAcrossPage() {
             // The body extends along the original Y axis. Rotate its length
             // onto the horizontal screen X axis and keep the broad lateral
             // surface facing the camera (avoid an edge-on rear perspective).
-            beeRig.rotation.set(0,0,-Math.PI/2);
+            beeRig.rotation.set(Math.PI/2,0,-Math.PI/2);
             beeFacing.add(beeRig);
             beeRig.traverse(obj=>{
                 if(!obj.isMesh)return;
@@ -1555,7 +1613,7 @@ function animateBeeAcrossPage(now){
             }
         }
         // Keep the skeletal side profile near frontal-camera plane.
-        beeFacing.rotation.set(pitch,yaw,roll);
+        beeFacing.rotation.set(pitch*.2,0,roll);
         beeScreenX=x;beeScreenY=y;
         beeFlight.position.copy(beePositionFromScreen(x,y));
         beeFlight.scale.setScalar(innerWidth<650?.72:.93);
