@@ -350,6 +350,66 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
     #heroCanvas {opacity:.52;}
 }
 
+
+/* GAX responsive header and proportional flower — 2026-11-11 */
+.hero {
+    background-color:#080909;
+    background-size: cover, min(90vw, 1220px) auto;
+    background-repeat:no-repeat;
+    background-position:center, center 46%;
+}
+/* Mobile/tablet: header row 1 = GAX | Buenos Aires clock | language;
+   header row 2 = full-width live market ticker. */
+@media (max-width:900px) {
+    header {
+        grid-template-columns: minmax(76px, 1fr) minmax(125px, 2fr) minmax(65px, 1fr);
+        grid-template-rows: auto auto;
+        justify-content:initial;
+        column-gap:8px;
+        row-gap:8px;
+        align-items:center;
+        padding:9px 16px 8px;
+    }
+    header .brand {grid-column:1;grid-row:1;justify-self:start}
+    header .nav-info {display:contents}
+    header .clock {
+        display:block;
+        grid-column:2;
+        grid-row:1;
+        justify-self:center;
+        text-align:center;
+        color:var(--fg);
+        font-size:clamp(9px,2.4vw,11px);
+        letter-spacing:-.02em;
+    }
+    header .ticker-window {
+        display:block;
+        grid-column:1 / -1;
+        grid-row:2;
+        width:100%;
+        min-width:0;
+        overflow:hidden;
+        border-top:1px solid rgba(112,189,140,.16);
+        padding-top:6px;
+    }
+    header .ticker-track{gap:24px;font-size:10px}
+    header .nav-actions{grid-column:3;grid-row:1;justify-self:end}
+    header .nav-actions .btn{display:none}
+    header .brand img{max-width:86px;height:24px}
+    header .lang{padding:8px 9px;font-size:10px}
+    .hero{padding-top:160px;background-size:cover, min(106vw, 860px) auto;background-position:center,center 43%}
+}
+@media (max-width:650px) {
+    header{padding:8px 12px 7px;column-gap:5px;row-gap:6px}
+    header .brand img{max-width:72px;height:23px}
+    header .clock{font-size:9px}
+    header .dot{margin-right:4px;width:5px;height:5px}
+    header .ticker-track{gap:18px;font-size:9px}
+    header .ticker-window{padding-top:5px}
+    .hero{padding-top:164px;background-size:cover, max(100vw, 670px) auto;background-position:center,center 42%}
+    .hero h1{font-size:clamp(28px,7.5vw,46px)}
+}
+
 /* GAX initial loading screen: never trap the user on external API failures. */
 #gaxLoading {
   position:fixed; inset:0; z-index:10000; display:flex; flex-direction:column;
@@ -1647,6 +1707,16 @@ function animateBeeAcrossPage(now){
             }
         // Keep the skeletal side profile near frontal-camera plane.
         beeFacing.rotation.set(pitch*.2,0,roll);
+        // Never let the rendered bee pass below the EXPLORE marker.
+        // Leave enough clearance for the actual 3D silhouette, not only its pivot.
+        const exploreCue=document.getElementById('tScrollCue');
+        if(exploreCue){
+            const exploreTop=exploreCue.getBoundingClientRect().top;
+            const silhouetteClearance=window.innerWidth<=650?76:100;
+            const lowestCenter=(exploreTop-silhouetteClearance)/Math.max(1,innerHeight);
+            y=Math.min(y,Math.max(.12,lowestCenter));
+            if(exploreTop<silhouetteClearance)visible=false;
+        }
         beeScreenX=x;beeScreenY=y;
         beeFlight.position.copy(beePositionFromScreen(x,y));
         beeFlight.scale.setScalar(innerWidth<650?.72:.93);
