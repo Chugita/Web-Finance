@@ -410,16 +410,16 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
     .hero h1{font-size:clamp(28px,7.5vw,46px)}
 }
 
-/* GAX Hero — a single flower, with full-width pollen/scan background.
-   Never repeat the flower asset as a second dark background image. */
+/* GAX Hero — independent transparent flower + seamless full-width pollen.
+   Once gax-flor.png is uploaded, the fallback original disappears automatically. */
 .hero {
     background-color:#080909;
     background-image:
-        radial-gradient(circle at 14% 22%,rgba(184,218,201,.15) 0 .65px,transparent 1.25px),
-        radial-gradient(circle at 72% 76%,rgba(168,199,181,.11) 0 .55px,transparent 1.2px),
-        radial-gradient(circle at 42% 58%,rgba(184,218,201,.13) 0 .65px,transparent 1.25px),
-        repeating-linear-gradient(0deg,rgba(188,221,199,.018) 0 1px,transparent 1px 5px),
-        radial-gradient(ellipse at 60% 50%,rgba(24,32,27,.20),transparent 80%);
+      radial-gradient(circle at 14% 22%,rgba(184,218,201,.17) 0 .6px,transparent 1.25px),
+      radial-gradient(circle at 72% 76%,rgba(168,199,181,.12) 0 .6px,transparent 1.2px),
+      radial-gradient(circle at 42% 58%,rgba(184,218,201,.14) 0 .7px,transparent 1.25px),
+      repeating-linear-gradient(0deg,rgba(188,221,199,.02) 0 1px,transparent 1px 5px),
+      radial-gradient(ellipse at 60% 50%,rgba(24,32,27,.20),transparent 80%);
     background-size:137px 163px,223px 171px,181px 209px,100% 100%,cover;
     background-repeat:repeat,repeat,repeat,no-repeat,no-repeat;
     background-position:center;
@@ -430,41 +430,66 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
     inset:0;
     z-index:0;
     pointer-events:none;
-    /* One instance of nectar-scan.jpg only. */
-    background-image:
-        linear-gradient(rgba(3,7,5,.45),rgba(3,7,5,.48)),
-        url('nectar-scan.jpg');
+    opacity:0;
+    background:none;
+}
+/* Show the old composition only while the new PNG is not yet available. */
+.hero.flower-fallback::before {
+    opacity:1;
+    background-image:linear-gradient(rgba(3,7,5,.45),rgba(3,7,5,.48)),url('nectar-scan.jpg');
+    background-size:cover,min(64vw,1080px) auto;
     background-position:center,center bottom;
     background-repeat:no-repeat;
-    background-size:cover,min(64vw,1080px) auto;
-    opacity:1;
-    /* Fade the original rectangular scan edges into the tiled background. */
     -webkit-mask-image:radial-gradient(ellipse 55% 88% at 60% 57%,#000 44%,transparent 100%);
     mask-image:radial-gradient(ellipse 55% 88% at 60% 57%,#000 44%,transparent 100%);
 }
-.hero::after {
+.gax-flower {
+    position:absolute;
     z-index:1;
-    background:radial-gradient(ellipse at 49% 43%,
-      rgba(2,5,3,.52) 0%,rgba(2,5,3,.25) 56%,rgba(2,5,3,.04) 100%);
+    right:clamp(2%,7vw,12%);
+    bottom:0;
+    display:block;
+    height:min(86%,900px);
+    max-width:58vw;
+    width:auto;
+    object-fit:contain;
+    object-position:bottom right;
+    opacity:.62;
+    filter:brightness(.9);
+    pointer-events:none;
 }
-.hero .hero-content {position:relative;z-index:3;}
-.hero .scroll-cue {z-index:4;}
+.hero::after {
+    z-index:2;
+    background:radial-gradient(ellipse at 49% 43%,
+        rgba(2,5,3,.48) 0%,rgba(2,5,3,.18) 56%,rgba(2,5,3,.02) 100%);
+}
+.hero .hero-content{position:relative;z-index:3}
+.hero .scroll-cue{z-index:4}
 @media(max-width:900px) {
-    .hero::before {
-        background-position:center,center bottom;
+    .hero.flower-fallback::before {
         background-size:cover,min(112vw,860px) auto;
         -webkit-mask-image:radial-gradient(ellipse 73% 92% at 58% 58%,#000 50%,transparent 100%);
         mask-image:radial-gradient(ellipse 73% 92% at 58% 58%,#000 50%,transparent 100%);
     }
+    .gax-flower {
+        height:min(79%,730px);
+        max-width:84vw;
+        right:-3%;
+        bottom:0;
+        opacity:.58;
+    }
 }
 @media(max-width:650px) {
-    .hero::before {
+    .hero.flower-fallback::before {
         background-size:cover,max(116vw,790px) auto;
-        background-position:center,center bottom;
         transform:scaleY(1.18);
         transform-origin:center bottom;
-        -webkit-mask-image:radial-gradient(ellipse 90% 95% at 54% 57%,#000 55%,transparent 100%);
-        mask-image:radial-gradient(ellipse 90% 95% at 54% 57%,#000 55%,transparent 100%);
+    }
+    .gax-flower {
+        height:79%;
+        max-width:104vw;
+        right:-12%;
+        bottom:0;
     }
 }
 
@@ -531,7 +556,11 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
 </header>
 
 <main>
-<section class="hero" id="inicio">
+<section class="hero flower-fallback" id="inicio">
+    <img class="gax-flower" src="gax-flor.png" alt="" aria-hidden="true"
+         decoding="async" fetchpriority="high"
+         onload="this.closest('.hero').classList.remove('flower-fallback')"
+         onerror="this.hidden=true">
     <div class="hero-content">
         <div class="micro" id="tHeroMicro">GAX / PLANIFICACIÓN FINANCIERA</div>
         <h1 id="tHeroTitle"><span>EL FUTURO</span><span>NO SE ESPERA.</span><span class="accent">SE DISEÑA.</span></h1>
