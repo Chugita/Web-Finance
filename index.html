@@ -349,9 +349,49 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
 @media(prefers-reduced-motion:reduce) {
     #heroCanvas {opacity:.52;}
 }
+
+/* GAX initial loading screen: never trap the user on external API failures. */
+#gaxLoading {
+  position:fixed; inset:0; z-index:10000; display:flex; flex-direction:column;
+  justify-content:center; align-items:center; gap:18px;
+  background:#080b09; color:#eaf2ed;
+  transition:opacity .65s ease,visibility .65s ease;
+}
+#gaxLoading.is-ready {opacity:0;visibility:hidden;pointer-events:none}
+.gax-loader-logo {font:400 clamp(32px,6vw,64px)/1 'Geist Mono',monospace;letter-spacing:-.08em}
+.gax-loader-label {font:400 11px/1.8 'Geist Mono',monospace;color:#99b7a3;letter-spacing:.15em}
+.gax-loader-line {width:min(200px,52vw);height:2px;background:#26372b;overflow:hidden}
+.gax-loader-line::before {content:"";display:block;height:100%;width:32%;
+  background:#70bd8c;animation:gaxLoaderFlow 1.2s ease-in-out infinite alternate}
+@keyframes gaxLoaderFlow {from{transform:translateX(-100%)}to{transform:translateX(620%)}}
+@media(prefers-reduced-motion:reduce){.gax-loader-line::before{animation:none;width:100%}}
 </style>
 </head>
 <body>
+
+<div id="gaxLoading" role="status" aria-live="polite" aria-label="Preparando GAX">
+  <div class="gax-loader-logo">GAX.</div>
+  <div class="gax-loader-line" aria-hidden="true"></div>
+  <div class="gax-loader-label">PREPARANDO EXPERIENCIA</div>
+</div>
+<script>
+(function(){
+  var completed=false;
+  function done(){
+    if(completed)return;
+    completed=true;
+    var element=document.getElementById('gaxLoading');
+    if(element)element.classList.add('is-ready');
+    window.setTimeout(function(){ if(element)element.remove(); },800);
+  }
+  window.GAXLoading={done:done};
+  // Never block the site indefinitely on a missing 3D file or an API outage.
+  window.setTimeout(done,8500);
+  window.addEventListener('error',function(event){
+    if(event && event.target && event.target.tagName==='SCRIPT')done();
+  },true);
+})();
+</script>
 <canvas id="heroCanvas" aria-hidden="true"></canvas>
 
 <div class="cursor-trail" id="cursorTrail"></div>
@@ -1054,58 +1094,58 @@ function clock(){ $('liveTimeDisplay').textContent='BUE '+new Date().toLocaleTim
 
 /* TICKER */
 async function fetchLiveMarketData() {
-    const track = document.getElementById('tickerTrack');
-    let itemsHTML = '';
-
-    try {
-        const resDolar = await fetch('https://cotizacionya.ar/api/v1/argentina/dollars');
-        const dolares = await resDolar.json();
-
-        const oficial = dolares.find(d => d.source === 'oficial') || { sell: 1570 };
-        const blue = dolares.find(d => d.source === 'blue') || { sell: 1555 };
-        const mep = dolares.find(d => d.source === 'bolsa') || { sell: 1549 };
-        const cripto = dolares.find(d => d.source === 'cripto') || { sell: 1661 };
-
-        currentOfficialRate = oficial.sell;
-        $('fxRateDisplay').textContent = `Tipo de cambio oficial ref: $${currentOfficialRate.toLocaleString()} ARS`;
-
-        itemsHTML += `
-            <div class="ticker-item"><span class="ticker-symbol">USD/ARS (Oficial):</span> <span class="ticker-price pixel">$${oficial.sell.toLocaleString()}</span> <span class="ticker-up">▲ Live</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">USD/ARS (Blue):</span> <span class="ticker-price pixel">$${blue.sell.toLocaleString()}</span> <span class="ticker-up">▲ Live</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">USD/ARS (MEP):</span> <span class="ticker-price pixel">$${mep.sell.toLocaleString()}</span> <span class="ticker-up">▲ Live</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">USD/ARS (Cripto):</span> <span class="ticker-price pixel">$${cripto.sell.toLocaleString()}</span> <span class="ticker-up">▲ Live</span></div>
-        `;
-    } catch (e) {
-        itemsHTML += `
-            <div class="ticker-item"><span class="ticker-symbol">USD/ARS (Oficial):</span> <span class="ticker-price pixel">$1,570.00</span> <span class="ticker-up">▲ Live</span></div>
-            <div class="ticker-item"><span class="ticker-symbol">USD/ARS (Blue):</span> <span class="ticker-price pixel">$1,555.00</span> <span class="ticker-up">▲ Live</span></div>
-        `;
+    const track=$('tickerTrack');
+    if (!track) return;
+    const withTimeout=async url=>{
+        const ctl=new AbortController();
+        const timer=setTimeout(()=>ctl.abort(),5000);
+        try {
+            const response=await fetch(url,{signal:ctl.signal,cache:'no-store'});
+            if(!response.ok)throw new Error('Market API status '+response.status);
+            return await response.json();
+        } finally {clearTimeout(timer);}
+    };
+    const dollarReq=withTimeout('https://dolarapi.com/v1/dolares');
+    const btcReq=withTimeout('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
+    const settled=await Promise.allSettled([dollarReq,btcReq]);
+    const items=[];
+    const push=(label,value,kind='')=>{
+        items.push('<div class="ticker-item"><span class="ticker-symbol">'+label+
+          ':</span> <span class="ticker-price pixel">'+value+'</span>'+
+          (kind?'<span class="ticker-up pixel">'+kind+'</span>':'')+'</div>');
+    };
+    const usd=n=>'$'+Number(n).toLocaleString('en-US',{maximumFractionDigits:2});
+    const ars=n=>'$'+Number(n).toLocaleString('es-AR',{maximumFractionDigits:2});
+    if(settled[0].status==='fulfilled'&&Array.isArray(settled[0].value)){
+        const data=settled[0].value;
+        let official=null;
+        for(const key of ['oficial','blue','bolsa','cripto']){
+            const quote=data.find(item=>item.casa===key);
+            if(quote&&Number.isFinite(Number(quote.venta))&&Number(quote.venta)>0){
+                push('USD/ARS '+key.toUpperCase(),ars(quote.venta));
+                if(key==='oficial')official=Number(quote.venta);
+            }
+        }
+        if(official){
+            currentOfficialRate=official;
+            const note=$('fxRateDisplay');
+            if(note)note.textContent='Tipo de cambio oficial consultado: '+ars(official)+' ARS';
+            updateSim();
+        }
+    }else{
+        push('USD/ARS','Datos no disponibles');
+        const note=$('fxRateDisplay');
+        if(note)note.textContent='Tipo de cambio referencial no actualizado. Verificá la cotización vigente.';
     }
-
-    try {
-        const resCrypto = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
-        const cryptoData = await resCrypto.json();
-        const btcPrice = cryptoData.bitcoin.usd;
-        const btcChange = cryptoData.bitcoin.usd_24h_change;
-        const changeClass = btcChange >= 0 ? 'ticker-up' : 'ticker-down';
-        const changeSign = btcChange >= 0 ? '▲ +' : '▼ ';
-
-        itemsHTML += `
-            <div class="ticker-item"><span class="ticker-symbol">BTC/USD:</span> <span class="ticker-price pixel">$${btcPrice.toLocaleString()}</span> <span class="${changeClass} pixel">${changeSign}${btcChange.toFixed(2)}%</span></div>
-        `;
-    } catch (e) {
-        itemsHTML += `
-            <div class="ticker-item"><span class="ticker-symbol">BTC/USD:</span> <span class="ticker-price pixel">$74,884</span> <span class="ticker-up pixel">▲ +1.14%</span></div>
-        `;
-    }
-
-    itemsHTML += `
-        <div class="ticker-item"><span class="ticker-symbol">S&P 500:</span> <span class="ticker-price pixel">752.96</span> <span class="ticker-up pixel">▲ +2.40%</span></div>
-        <div class="ticker-item"><span class="ticker-symbol">NASDAQ 100:</span> <span class="ticker-price pixel">679.35</span> <span class="ticker-up pixel">▲ +3.54%</span></div>
-    `;
-
-    track.innerHTML = itemsHTML + itemsHTML;
-    updateSim();
+    if(settled[1].status==='fulfilled'){
+        const data=settled[1].value?.bitcoin;
+        if(data&&Number.isFinite(data.usd)){
+            const change=Number(data.usd_24h_change);
+            push('BTC/USD',usd(data.usd),Number.isFinite(change)?((change>=0?'▲ +':'▼ ')+Math.abs(change).toFixed(2)+'%'):'');
+        }else push('BTC/USD','Datos no disponibles');
+    }else push('BTC/USD','Datos no disponibles');
+    // No fabricated S&P/NASDAQ values; add an authenticated source later.
+    track.innerHTML=items.join('')+items.join('');
 }
 fetchLiveMarketData();
 setInterval(fetchLiveMarketData, 180000);
@@ -1292,6 +1332,7 @@ function beeGrayTexture(source) {
 function initBeeAcrossPage() {
     if(typeof THREE==='undefined'||typeof THREE.GLTFLoader!=='function') {
         console.warn('GAX: Three.js could not load. The site remains usable.');
+        window.GAXLoading?.done();
         return;
     }
     try {
@@ -1351,7 +1392,8 @@ function initBeeAcrossPage() {
                 beeMixer.clipAction(clip).setLoop(THREE.LoopRepeat,Infinity).play();
             }
             beeLoaded=true;
-        },undefined,error=>console.error('GAX: failed to load bee scene.gltf',error));
+            window.GAXLoading?.done();
+        },undefined,error=>{console.error('GAX: failed to load bee scene.gltf',error);window.GAXLoading?.done();});
         window.addEventListener('resize',resizeBeeViewport,{passive:true});
         document.addEventListener('visibilitychange',()=>{
             beeModelVisible=!document.hidden;
@@ -1362,6 +1404,7 @@ function initBeeAcrossPage() {
     }catch(err){
         console.warn('GAX: WebGL unavailable; readable static site maintained',err);
         beeCanvas.style.display='none';
+        window.GAXLoading?.done();
     }
 }
 function resizeBeeViewport(){
@@ -1438,32 +1481,7 @@ function animateBeeAcrossPage(now){
     }
     beeRenderer.render(beeScene,beeCamera);
 }
-initBeeAcrossPage();   const p = ease(cycle/.30);
-            x = -2.7 + 3.1*p; y = .35 + .28*p;
-        } else if (cycle < .46) {
-            const p = (cycle-.30)/.16;
-            x = .4 + .10*Math.sin(p*Math.PI*2);
-            y = .63 + .09*Math.sin(p*Math.PI*4);
-        } else if (cycle < .76) {
-            const p = ease((cycle-.46)/.30);
-            const angle = p*Math.PI*2;
-            x = .4 - .65*Math.sin(angle);
-            y = .63 + .65*(1-Math.cos(angle));
-            roll = -angle; // side-profile looping (no edge-on collapse)
-        } else {
-            const p = ease((cycle-.76)/.24);
-            x = .4 - 3.1*p; y = .63 - .28*p;
-        }
-        flightRoot.position.set(x, y + (beePrefersStill?0:.04*Math.sin(beeFlightElapsed*8)), .5);
-        beeOrientation.rotation.set(
-            beePrefersStill ? 0 : -heroPointerY*.06,
-            beePrefersStill ? 0 : heroPointerX*.12,
-            roll
-        );
-    }
-    heroRenderer.render(heroScene, heroCamera);
-}
-initHero3D();
+initBeeAcrossPage();
 </script>
 </body>
 </html>
