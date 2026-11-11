@@ -1547,7 +1547,7 @@ let beeScene, beeCamera, beeRenderer, beeFlight, beeFacing, beeRig, beeMixer;
 let beeClock = 0, beePrevFrame = null, beeLoaded = false;
 let beeViewportW = innerWidth, beeViewportH = innerHeight;
 let beeModelVisible = true;
-const flightDuration = 17.0; // approach, flower interaction, turn, free flight
+const flightDuration = 23.0; // organic loop: flower, viewer, turning flight
 let beeScreenX=.14, beeScreenY=.43;
 
 const mixBee = (a,b,t) => a + (b-a)*t;
@@ -1756,41 +1756,37 @@ function animateBeeAcrossPage(now){
         let x=beeScreenX,y=beeScreenY;
         let yaw=0,roll=0,pitch=0;
         let visible=true;
-            // Autonomous bee is a HERO scene, not an automatic scroll follower.
-            // Every cycle approaches the flower sideways, hovers, turns and
-            // explores the hero perimeter without covering the title.
+            // Explore the flower, face the visitor, approach the screen,
+            // complete an aerial turn and return. One seamless 23-second loop.
             visible=inHero;
             const t=(beeClock%flightDuration)/flightDuration;
-            if(t<.29){
-                const p=easeBee(t/.29);
-                x=mixBee(.13,.73,p);
-                y=mixBee(.41,.34,p)+.015*Math.sin(beeClock*6);
-            }else if(t<.51){
-                const p=(t-.29)/.22;
-                x=.73+.018*Math.sin(p*Math.PI*4);
-                y=.34+.020*Math.sin(p*Math.PI*8);
-                pitch=.09*Math.sin(p*Math.PI*6);
-            }else if(t<.64){
-                const p=easeBee((t-.51)/.13);
-                x=mixBee(.73,.65,p);
-                y=mixBee(.34,.31,p);
-                // Deliberate change of heading; rear view appears only briefly.
-                yaw=Math.PI*p;
-                roll=-.10*Math.sin(p*Math.PI);
-            }else if(t<.89){
-                const p=easeBee((t-.64)/.25);
-                x=mixBee(.65,.12,p);
-                y=mixBee(.31,.63,p)+.03*Math.sin(p*Math.PI*3);
-                yaw=Math.PI;
-                roll=-.08*Math.sin(p*Math.PI*2);
-            }else{
-                const p=easeBee((t-.89)/.11);
-                x=mixBee(.12,.13,p);
-                y=mixBee(.63,.41,p);
-                yaw=Math.PI*(1-p);
-            }
-        // Keep the skeletal side profile near frontal-camera plane.
-        beeFacing.rotation.set(pitch*.2,0,roll);
+            const stages=[
+                {t:0,   x:.72,y:.245,yaw:0,          scale:.93,bank:0,    tilt:0},
+                {t:.12, x:.79,y:.355,yaw:-.15,       scale:.91,bank:-.08,tilt:.03},
+                {t:.24, x:.735,y:.465,yaw:-.36,      scale:.82,bank:.12, tilt:-.12},
+                {t:.34, x:.748,y:.435,yaw:-.65,      scale:.83,bank:-.09,tilt:.10},
+                {t:.45, x:.80,y:.315,yaw:-Math.PI/2, scale:1.20,bank:-.08,tilt:.03},
+                {t:.53, x:.785,y:.300,yaw:-Math.PI/2,scale:1.35,bank:0,tilt:0},
+                {t:.67, x:.66,y:.24,yaw:-Math.PI*1.55,scale:1.02,bank:.24,tilt:.10},
+                {t:.79, x:.70,y:.39,yaw:-Math.PI*2,  scale:.88,bank:-.12,tilt:-.07},
+                {t:.91, x:.76,y:.45,yaw:-Math.PI*2.08,scale:.86,bank:.08,tilt:-.07},
+                {t:1,   x:.72,y:.245,yaw:-Math.PI*2,scale:.93,bank:0,tilt:0}
+            ];
+            let idx=0;
+            while(idx<stages.length-2 && t>stages[idx+1].t)idx++;
+            const from=stages[idx],to=stages[idx+1];
+            const p=easeBee((t-from.t)/(to.t-from.t));
+            x=mixBee(from.x,to.x,p);
+            y=mixBee(from.y,to.y,p);
+            yaw=mixBee(from.yaw,to.yaw,p);
+            roll=mixBee(from.bank,to.bank,p);
+            pitch=mixBee(from.tilt,to.tilt,p);
+            const depthScale=mixBee(from.scale,to.scale,p);
+            const hoverAmount=Math.sin(Math.PI*t);
+            x+=.007*Math.sin(beeClock*2.7)*hoverAmount;
+            y+=.009*Math.sin(beeClock*4.2)*hoverAmount;
+            // +X is the nose, +Y points toward wings, +Z is camera.
+            beeFacing.rotation.set(pitch,yaw,roll,'YXZ');
         // Never let the rendered bee pass below the EXPLORE marker.
         // Leave enough clearance for the actual 3D silhouette, not only its pivot.
         const exploreCue=document.getElementById('tScrollCue');
@@ -1803,7 +1799,7 @@ function animateBeeAcrossPage(now){
         }
         beeScreenX=x;beeScreenY=y;
         beeFlight.position.copy(beePositionFromScreen(x,y));
-        beeFlight.scale.setScalar(innerWidth<650?.72:.93);
+        beeFlight.scale.setScalar(depthScale*(innerWidth<650?.73:innerWidth<900?.83:1));
         beeCanvas.style.opacity=visible?'1':'0';
     }
     beeRenderer.render(beeScene,beeCamera);
