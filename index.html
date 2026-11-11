@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&family=Geist+Pixel&display=swap" rel="stylesheet">
 <!-- THREE.JS PARA ANIMACIÓN 3D PROFESIONAL -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <style>
 :root{--bg:#080a09;--fg:#f2f4f1;--muted:#9eaaa0;--line:#222c23;--green:#70bd8c;--soft:rgba(17,27,20,0.65);--mono:'Geist Mono',monospace;--pixel:'Geist Pixel',monospace}
 *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:82px}
@@ -100,7 +101,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
 .lang{font:400 10px var(--pixel);padding:12px;background:transparent;border:1px solid var(--line);color:var(--fg);border-radius:6px;transition:border-color .2s}
 .lang:hover{border-color:var(--green)}
 
-.hero{position:relative;min-height:100svh;display:grid;place-items:center;text-align:center;isolation:isolate;padding:130px 24px 90px;overflow:hidden;background:#080808;opacity:1;transform:none}
+.hero{position:relative;min-height:100svh;display:grid;place-items:center;text-align:center;isolation:isolate;padding:130px 24px 90px;overflow:hidden;background:#080808 url('nectar-scan.jpg') center center / cover no-repeat;opacity:1;transform:none}
 .hero canvas{position:absolute;inset:0;width:100%;height:100%;z-index:-2;cursor:pointer}
 .hero::after{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at 50% 45%,rgba(8,10,9,.5),rgba(8,10,9,.08) 80%);pointer-events:none}
 .hero-content{max-width:1100px;pointer-events:none}
@@ -569,7 +570,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
 </main>
 
 <footer>
-    <div class="wrap footer"><strong>GAX.</strong><span id="tFooterText">PLANIFICACIÓN FINANCIERA / DISEÑÁ TU FUTURO</span><span class="pixel">© 2026</span></div>
+    <div class="wrap footer"><strong>GAX.</strong><span id="tFooterText">PLANIFICACIÓN FINANCIERA / DISEÑÁ TU FUTURO</span><span class="pixel">© 2026 · Bee 3D: <a href="https://sketchfab.com/3d-models/bee-c80f9c2110c847db9375c548f14a0315" target="_blank" rel="noopener noreferrer">etro313 / Sketchfab</a> (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>) · Adaptado para GAX</span></div>
 </footer>
 
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
@@ -1221,142 +1222,155 @@ function animatePortrait() {
 }
 animatePortrait();
 
-/* HERO 3D SCENE (THREE.JS + VOLUMEN 3D, VUELO LIBRE, SEGUIMIENTO Y GIRO 360 CIRCULAR) */
+/* GAX HERO — authentic rigged 3D bee from scene.gltf, with hover animation.
+   The flower remains a static CSS background. No PNG-bee or fake cube. */
 const heroSection = $('inicio');
 const heroCanvas = $('heroCanvas');
-let scene, camera, renderer, beeGroup, beeMesh, flowerBgMesh;
-let raycaster, mouseVec;
-let mouseX = 0, mouseY = 0, targetMouseX = 0, targetMouseY = 0;
-let heroVisible = true;
-let isSpinning = false;
-let spinProgress = 0;
+let heroScene, heroCamera, heroRenderer, flightRoot, beeOrientation, beeRig;
+let beeMixer = null, hoverAction = null;
+let heroVisible = true, heroLastTime = 0, beeFlightElapsed = 0;
+let heroPointerX = 0, heroPointerY = 0;
+const beePrefersStill = reduced;
 
 function initHero3D() {
-    const width = heroSection.clientWidth;
-    const height = heroSection.clientHeight;
-
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
-    camera.position.z = 5;
-
-    renderer = new THREE.WebGLRenderer({ canvas: heroCanvas, alpha: true, antialias: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    raycaster = new THREE.Raycaster();
-    mouseVec = new THREE.Vector2();
-
-    // Iluminación escénica neón
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
-    scene.add(ambientLight);
-
-    const greenNeonLight = new THREE.PointLight(0x70bd8c, 3, 14);
-    greenNeonLight.position.set(2, 2, 3);
-    scene.add(greenNeonLight);
-
-    const textureLoader = new THREE.TextureLoader();
-
-    // Flor / Néctar de fondo ensanchada para ocupar todo el Hero
-    textureLoader.load('nectar-scan.jpg', (flowerTex) => {
-        const bgGeo = new THREE.PlaneGeometry(20, 11);
-        const bgMat = new THREE.MeshBasicMaterial({ map: flowerTex, transparent: true, opacity: 0.4 });
-        flowerBgMesh = new THREE.Mesh(bgGeo, bgMat);
-        flowerBgMesh.position.z = -3;
-        scene.add(flowerBgMesh);
-    });
-
-    // Grupo de la abeja con volumen 3D real (Caja 3D fina con textura mapeada)
-    beeGroup = new THREE.Group();
-    scene.add(beeGroup);
-
-    textureLoader.load('bee-sprite.png', (beeTex) => {
-        const beeGeo = new THREE.BoxGeometry(2.2, 1.8, 0.3);
-        const beeMat = new THREE.MeshStandardMaterial({ 
-            map: beeTex, 
-            transparent: true, 
-            alphaTest: 0.3,
-            roughness: 0.3,
-            metalness: 0.3
-        });
-        beeMesh = new THREE.Mesh(beeGeo, beeMat);
-        beeGroup.add(beeMesh);
-    });
-
-    window.addEventListener('resize', onHeroResize);
-    window.addEventListener('pointermove', onHeroPointerMove);
-    window.addEventListener('click', onHeroClick);
-
-    new IntersectionObserver(entries => {
-        heroVisible = entries[0]?.isIntersecting ?? false;
-    }).observe(heroSection);
-
-    animateHero3D(0);
-}
-
-function onHeroResize() {
-    if (!heroSection || !renderer) return;
-    const width = heroSection.clientWidth;
-    const height = heroSection.clientHeight;
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-    renderer.setSize(width, height);
-}
-
-function onHeroPointerMove(e) {
-    targetMouseX = (e.clientX / window.innerWidth) * 2 - 1;
-    targetMouseY = -(e.clientY / window.innerHeight) * 2 + 1;
-    mouseVec.x = targetMouseX;
-    mouseVec.y = targetMouseY;
-}
-
-function onHeroClick(e) {
-    if (!beeMesh || isSpinning) return;
-    
-    raycaster.setFromCamera(mouseVec, camera);
-    const intersects = raycaster.intersectObject(beeMesh);
-
-    if (intersects.length > 0) {
-        isSpinning = true;
-        spinProgress = 0;
+    // The background and text stay visible even when WebGL/model loading fails.
+    if (typeof THREE === 'undefined' || typeof THREE.GLTFLoader !== 'function') {
+        console.warn('GAX: Three.js or GLTFLoader unavailable; static flower fallback.');
+        return;
     }
+    try {
+        heroScene = new THREE.Scene();
+        heroCamera = new THREE.PerspectiveCamera(48, 1, 0.1, 100);
+        heroCamera.position.set(0, 0, 9);
+        heroRenderer = new THREE.WebGLRenderer({
+            canvas: heroCanvas, alpha: true, antialias: true
+        });
+        heroRenderer.setClearColor(0x000000, 0);
+        heroRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        heroRenderer.outputEncoding = THREE.sRGBEncoding;
+        heroRenderer.setSize(heroSection.clientWidth, heroSection.clientHeight, false);
+
+        heroScene.add(new THREE.AmbientLight(0xffffff, 1.6));
+        const key = new THREE.DirectionalLight(0xffffff, 2.4);
+        key.position.set(3, 4, 7);
+        heroScene.add(key);
+        const rim = new THREE.DirectionalLight(0xddefff, 1.25);
+        rim.position.set(-3, 1, -5);
+        heroScene.add(rim);
+
+        flightRoot = new THREE.Group();
+        beeOrientation = new THREE.Group();
+        flightRoot.add(beeOrientation);
+        heroScene.add(flightRoot);
+        flightRoot.position.set(-2.7, 0.5, 0);
+
+        const loader = new THREE.GLTFLoader();
+        loader.load('scene.gltf', gltf => {
+            beeRig = gltf.scene;
+            // Preserve the skeleton / original animations and organic detail.
+            const bounds = new THREE.Box3().setFromObject(beeRig);
+            const dimensions = bounds.getSize(new THREE.Vector3());
+            const largest = Math.max(dimensions.x, dimensions.y, dimensions.z);
+            if (!Number.isFinite(largest) || largest <= 0) {
+                console.warn('GAX: bee model has invalid dimensions');
+                return;
+            }
+            beeRig.scale.multiplyScalar(1.8 / largest);
+            beeRig.updateMatrixWorld(true);
+            const centeredBounds = new THREE.Box3().setFromObject(beeRig);
+            beeRig.position.sub(centeredBounds.getCenter(new THREE.Vector3()));
+
+            beeOrientation.add(beeRig);
+            // Geometry stays authentic; a cool silver tint matches the GAX radiographic flower.
+            beeRig.traverse(obj => {
+                if (!obj.isMesh) return;
+                obj.frustumCulled = false; // animated skinned meshes
+                const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+                materials.forEach(mat => {
+                    if (!mat) return;
+                    mat.side = THREE.DoubleSide;
+                    if (mat.color) mat.color.multiply(new THREE.Color(0xdde6e4));
+                    mat.needsUpdate = true;
+                });
+            });
+
+            const hoverClip = gltf.animations.find(a => a.name.toLowerCase() === 'hover')
+                || gltf.animations[0];
+            if (hoverClip) {
+                beeMixer = new THREE.AnimationMixer(beeRig);
+                hoverAction = beeMixer.clipAction(hoverClip);
+                hoverAction.setLoop(THREE.LoopRepeat, Infinity);
+                hoverAction.play();
+            }
+        }, undefined, err => {
+            console.error('GAX: failed to load 3D bee or textures', err);
+        });
+
+        window.addEventListener('resize', resizeHero3D);
+        heroSection.addEventListener('pointermove', e => {
+            const rect = heroSection.getBoundingClientRect();
+            heroPointerX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+            heroPointerY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+        }, {passive:true});
+        new IntersectionObserver(entries => {
+            heroVisible = entries[0]?.isIntersecting ?? false;
+        }).observe(heroSection);
+        resizeHero3D();
+        requestAnimationFrame(animateHero3D);
+    } catch(err) {
+        console.error('GAX: WebGL initialization failed; flower remains visible.', err);
+    }
+}
+
+function resizeHero3D() {
+    if (!heroRenderer) return;
+    const w = heroSection.clientWidth, h = heroSection.clientHeight;
+    if (!w || !h) return;
+    heroCamera.aspect = w / h;
+    heroCamera.updateProjectionMatrix();
+    heroRenderer.setSize(w, h, false);
 }
 
 function animateHero3D(time) {
-    if (heroVisible) {
-        mouseX += (targetMouseX - mouseX) * 0.05;
-        mouseY += (targetMouseY - mouseY) * 0.05;
-
-        if (beeGroup) {
-            const t = reduced ? 0 : time * 0.001;
-            
-            // Recorrido libre y amplio por todo el fondo del Hero
-            beeGroup.position.x = Math.sin(t * 0.6) * 3.2 + mouseX * 1.8;
-            beeGroup.position.y = Math.cos(t * 0.9) * 1.4 + mouseY * 1.2;
-            beeGroup.position.z = Math.sin(t * 0.4) * 0.8;
-
-            if (isSpinning) {
-                // Giro circular completo de 360 grados exactos en el eje Y al hacer clic
-                spinProgress += 0.06;
-                beeGroup.rotation.y = spinProgress * Math.PI * 2;
-                if (spinProgress >= 1) {
-                    isSpinning = false;
-                    spinProgress = 0;
-                }
-            } else {
-                // Seguimiento fluido de la mirada hacia el cursor
-                beeGroup.rotation.y = mouseX * 0.8 + Math.sin(t * 0.6) * 0.3;
-                beeGroup.rotation.x = -mouseY * 0.5;
-                beeGroup.rotation.z = Math.cos(t * 0.8) * 0.2;
-            }
+    if (!heroRenderer) return;
+    requestAnimationFrame(animateHero3D);
+    const dt = heroLastTime ? Math.min((time - heroLastTime) / 1000, .05) : 0;
+    heroLastTime = time;
+    if (!heroVisible) return;
+    if (beeRig && flightRoot) {
+        if (!beePrefersStill) {
+            beeFlightElapsed += dt;
+            if (beeMixer) beeMixer.update(dt);
         }
-
-        renderer.render(scene, camera);
+        const cycle = beePrefersStill ? 0 : (beeFlightElapsed % 11) / 11;
+        const ease = x => {const t=Math.max(0,Math.min(1,x));return t*t*(3-2*t);};
+        let x = -2.7, y = 0.35, roll = 0;
+        if (cycle < .30) {
+            const p = ease(cycle/.30);
+            x = -2.7 + 3.1*p; y = .35 + .28*p;
+        } else if (cycle < .46) {
+            const p = (cycle-.30)/.16;
+            x = .4 + .10*Math.sin(p*Math.PI*2);
+            y = .63 + .09*Math.sin(p*Math.PI*4);
+        } else if (cycle < .76) {
+            const p = ease((cycle-.46)/.30);
+            const angle = p*Math.PI*2;
+            x = .4 - .65*Math.sin(angle);
+            y = .63 + .65*(1-Math.cos(angle));
+            roll = -angle; // side-profile looping (no edge-on collapse)
+        } else {
+            const p = ease((cycle-.76)/.24);
+            x = .4 - 3.1*p; y = .63 - .28*p;
+        }
+        flightRoot.position.set(x, y + (beePrefersStill?0:.04*Math.sin(beeFlightElapsed*8)), .5);
+        beeOrientation.rotation.set(
+            beePrefersStill ? 0 : -heroPointerY*.06,
+            beePrefersStill ? 0 : heroPointerX*.12,
+            roll
+        );
     }
-    if (!reduced) {
-        requestAnimationFrame(animateHero3D);
-    }
+    heroRenderer.render(heroScene, heroCamera);
 }
-
 initHero3D();
 </script>
 </body>
