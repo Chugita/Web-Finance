@@ -1393,24 +1393,20 @@ if (portrait) {
     animatePortraitReveal();
 }
 
-/* GAX V6 — 3D bee, silver x-ray finish, flight around the Hero, opt-in cursor follow and return-to-top.
+/* GAX V6 — 3D bee, silver x-ray finish, flight around the Hero with a 360-degree axial spin on click.
    Three.js r128, GLTFLoader and scene.gltf (including the 'hover' action).
    The flower remains anchored to the Hero; the bee lives in a fixed,
    transparent WebGL canvas; interaction is via pointer proximity, not an overlay. */
 const heroSection = $('inicio');
 const beeCanvas = $('heroCanvas');
-let beeScene, beeCamera, beeRenderer, beeFlight, beeFacing, beeRig, beeMixer;
+let beeScene, beeCamera, beeRenderer, beeFlight, beeSpinPivot, beeFacing, beeRig, beeMixer;
 let beeClock = 0, beePrevFrame = null, beeLoaded = false;
 let beeViewportW = innerWidth, beeViewportH = innerHeight;
 let beeModelVisible = true;
 const flightDuration = 17.0; // approach, flower interaction, turn, free flight
-let beeMode='autonomous'; // autonomous | following | returning
 let beeScreenX=.14, beeScreenY=.43;
-let beeTargetX=.14, beeTargetY=.43;
-let beeMouseX=.5, beeMouseY=.5;
-let beeReturnStart=0, beeReturnFromX=0, beeReturnFromY=0;
-let beeRevealStart=0;
-let beeWorldRotation=0;
+let beeSpinStart=-1;
+const beeSpinSeconds=1.25;
 
 const mixBee = (a,b,t) => a + (b-a)*t;
 const easeBee = value => {
@@ -1477,8 +1473,10 @@ function initBeeAcrossPage() {
         beeRenderer.outputEncoding=THREE.sRGBEncoding;
 
         beeFlight=new THREE.Group();
+        beeSpinPivot=new THREE.Group();
         beeFacing=new THREE.Group();
-        beeFlight.add(beeFacing);
+        beeFlight.add(beeSpinPivot);
+        beeSpinPivot.add(beeFacing);
         beeScene.add(beeFlight);
         const loader=new THREE.GLTFLoader();
         loader.load('scene.gltf',gltf=>{
@@ -1529,32 +1527,19 @@ function initBeeAcrossPage() {
             window.GAXLoading?.done();
             } catch (err) { console.error('GAX: error while preparing the bee 3D model',err); window.GAXLoading?.done(); }
         },undefined,error=>{console.error('GAX: failed to load bee scene.gltf',error);window.GAXLoading?.done();});
-        window.addEventListener('pointermove',event=>{
-            beeMouseX=Math.max(.04,Math.min(.96,event.clientX/Math.max(1,innerWidth)));
-            beeMouseY=Math.max(.07,Math.min(.93,event.clientY/Math.max(1,innerHeight)));
-            const nearBee=Math.hypot((beeMouseX-beeScreenX)*innerWidth,(beeMouseY-beeScreenY)*innerHeight)<85;
-            if(!event.target.closest('a,button,input,select,textarea,[role="button"]')){
-                document.body.style.cursor=nearBee&&beeLoaded?'pointer':'';
-            }
+        document.addEventListener('pointermove',event=>{
+            const mx=event.clientX/Math.max(1,innerWidth);
+            const my=event.clientY/Math.max(1,innerHeight);
+            const nearBee=beeLoaded && Math.hypot((mx-beeScreenX)*innerWidth,(my-beeScreenY)*innerHeight)<85;
+            if(!event.target.closest('a,button,input,select,textarea,[role="button"],label'))
+                document.body.style.cursor=nearBee?'pointer':'';
         },{passive:true});
         document.addEventListener('click',event=>{
             if(!beeLoaded||event.target.closest('a,button,input,select,textarea,[role="button"],label'))return;
             const mx=event.clientX/Math.max(1,innerWidth);
             const my=event.clientY/Math.max(1,innerHeight);
-            // As the model is drawn over the page with pointer-events:none,
-            // use its visible screen position as the click hit area.
-            const distance=Math.hypot((mx-beeScreenX)*innerWidth,(my-beeScreenY)*innerHeight);
-            if(distance>95)return;
-            if(beeMode==='following'){
-                beeMode='returning';
-                beeReturnStart=performance.now()/1000;
-                beeReturnFromX=beeScreenX;
-                beeReturnFromY=beeScreenY;
-                window.scrollTo({top:0,behavior:reduced?'instant':'smooth'});
-            }else if(beeMode==='autonomous'){
-                beeMode='following';
-                beeMouseX=mx;beeMouseY=my;
-            }
+            if(Math.hypot((mx-beeScreenX)*innerWidth,(my-beeScreenY)*innerHeight)>95)return;
+            beeSpinStart=beeClock;
         },true);
         window.addEventListener('resize',resizeBeeViewport,{passive:true});
         document.addEventListener('visibilitychange',()=>{
@@ -1597,24 +1582,6 @@ function animateBeeAcrossPage(now){
         let x=beeScreenX,y=beeScreenY;
         let yaw=0,roll=0,pitch=0;
         let visible=true;
-        if(beeMode==='following'){
-            // Only the explicit click activates cursor-follow across ALL sections.
-            x=mixBee(beeScreenX,Math.max(.06,Math.min(.94,beeMouseX+.055)),.10);
-            y=mixBee(beeScreenY,Math.max(.10,Math.min(.90,beeMouseY-.06)),.10);
-            const dx=x-beeScreenX,dy=y-beeScreenY;
-            roll=Math.max(-.28,Math.min(.28,-dy*4));
-            yaw=Math.max(-.20,Math.min(.20,dx*4));
-        }else if(beeMode==='returning'){
-            const p=easeBee((now/1000-beeReturnStart)/2.3);
-            x=mixBee(beeReturnFromX,.15,p);
-            y=mixBee(beeReturnFromY,.38,p)-Math.sin(p*Math.PI)*.25;
-            roll=-Math.sin(p*Math.PI)*.35;
-            if(p>=1){
-                beeMode='autonomous';
-                beeClock=0;
-                beePrevFrame=now;
-            }
-        }else{
             // Autonomous bee is a HERO scene, not an automatic scroll follower.
             // Every cycle approaches the flower sideways, hovers, turns and
             // explores the hero perimeter without covering the title.
@@ -1648,9 +1615,14 @@ function animateBeeAcrossPage(now){
                 y=mixBee(.63,.41,p);
                 yaw=Math.PI*(1-p);
             }
-        }
         // Keep the skeletal side profile near frontal-camera plane.
-        beeFacing.rotation.set(pitch*.2,0,roll);
+        beeFacing.rotation.set(pitch*.2,0,Math.PI/2+roll);
+        // Separate pivot: full 360 around the horizontally aligned body axis.
+        if(beeSpinStart>=0){
+            const p=Math.max(0,Math.min(1,(beeClock-beeSpinStart)/beeSpinSeconds));
+            beeSpinPivot.rotation.x=2*Math.PI*easeBee(p);
+            if(p>=1){beeSpinStart=-1;beeSpinPivot.rotation.x=0;}
+        }
         beeScreenX=x;beeScreenY=y;
         beeFlight.position.copy(beePositionFromScreen(x,y));
         beeFlight.scale.setScalar(innerWidth<650?.72:.93);
