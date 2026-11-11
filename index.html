@@ -414,11 +414,11 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
    Once gax-flor.png is uploaded, the fallback original disappears automatically. */
 .hero {
     background-color:#080909;
-    /* Reconstructed original scan-film grain and pollen, now flower-free. */
-    background-image:linear-gradient(rgba(1,4,2,.12),rgba(1,4,2,.16)),url('gax-polen-scan.svg');
-    background-position:center,center;
-    background-repeat:no-repeat,no-repeat;
-    background-size:cover,cover;
+    /* Exact original scan-photo grain, extracted from its flower-free section. */
+    background-image:url('gax-polen-original.svg');
+    background-position:center center;
+    background-size:cover;
+    background-repeat:no-repeat;
 
 }
 .hero::before {
