@@ -1552,18 +1552,19 @@ let beeDepthLayer='behind';
 let beeScreenX=.055,beeScreenY=.34;
 const mixBee=(a,b,t)=>a+(b-a)*t;
 const clampBee=(x,low,high)=>Math.max(low,Math.min(high,x));
-/* The rig is normalized nose-forward along +X. A positive +90 degree
-   yaw is the bee's FACE toward the camera in this asset, not its abdomen.
-   Actual 3D model inspection on the site is still recommended. */
+/* Anatomy verified from rig: +X points from abdomen toward the head.
+   Three.js positive Y rotation sends +X to -Z (away from the viewer).
+   Therefore yaw=-PI/2 sends the EYES toward camera at +Z.
+   The prior +PI/2 erroneously showed the bee's abdomen/rear. */
 const beeFlightPath=[
  // Unwrapped angles ensure a continuous turn; no stop-and-go easing.
  // The first three waypoints keep advancing right while looking outwards.
- {t:0,    x:.06,y:.33,yaw:Math.PI/2,pitch:0,    roll:0,   size:.67,layer:'front'},
- {t:.115, x:.24,y:.26,yaw:Math.PI/2,pitch:-.02,roll:-.05,size:.84,layer:'front'},
- {t:.225, x:.46,y:.32,yaw:Math.PI/2,pitch:0,   roll:.02, size:1.48,layer:'front'},
+ {t:0,    x:.06,y:.33,yaw:-Math.PI/2,pitch:0,    roll:0,   size:.67,layer:'front'},
+ {t:.115, x:.24,y:.26,yaw:-Math.PI/2,pitch:-.02,roll:-.05,size:.84,layer:'front'},
+ {t:.225, x:.46,y:.32,yaw:-Math.PI/2,pitch:0,   roll:.02, size:1.48,layer:'front'},
  // Move away from the glass as she banks toward the lettering.
- {t:.32,  x:.55,y:.25,yaw:.45,      pitch:-.05,roll:-.10,size:1.01,layer:'front'},
- {t:.41,  x:.65,y:.22,yaw:.10,      pitch:.04, roll:.11,size:.81,layer:'behind'},
+ {t:.32,  x:.55,y:.25,yaw:-.45,     pitch:-.05,roll:-.10,size:1.01,layer:'front'},
+ {t:.41,  x:.65,y:.22,yaw:-.10,     pitch:.04, roll:.11,size:.81,layer:'behind'},
  // Carry momentum into the flower, rather than snapping or reversing.
  {t:.52,  x:.83,y:.32,yaw:-.32,     pitch:.07, roll:.10,size:.77,layer:'behind'},
  {t:.615, x:.77,y:.41,yaw:-.70,     pitch:.14, roll:-.10,size:.69,layer:'behind'},
