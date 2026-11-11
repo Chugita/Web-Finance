@@ -1,240 +1,1363 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" id="htmlRoot">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modelo 3D Interactivo - Vuelo y Seguimiento</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #0d0f12;
-            font-family: sans-serif;
-        }
-        #webgl-container {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-        .ui-overlay {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.8);
-            padding: 12px 24px;
-            border-radius: 30px;
-            color: #f8fafc;
-            font-size: 14px;
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            pointer-events: none;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            z-index: 100;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080a09">
+<meta name="description" content="GAX. Explorá tu punto de partida financiero, visualizá escenarios y conocé cómo planificar tu futuro.">
+<title id="pageTitle">GAX — El futuro se diseña</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&family=Geist+Pixel&display=swap" rel="stylesheet">
+<!-- THREE.JS PARA ANIMACIÓN 3D PROFESIONAL -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{--bg:#080a09;--fg:#f2f4f1;--muted:#9eaaa0;--line:#222c23;--green:#70bd8c;--soft:rgba(17,27,20,0.65);--mono:'Geist Mono',monospace;--pixel:'Geist Pixel',monospace}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:82px}
+body{
+    margin:0;
+    background:var(--bg);
+    color:var(--fg);
+    font:300 15px/1.65 var(--mono);
+    overflow-x:hidden;
+    background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+button,input{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--green);outline-offset:3px}[hidden]{display:none!important}h1,h2,h3,p{margin:0}.mono{font-family:var(--mono)}.pixel{font-family:var(--pixel)}.micro{font:400 10px/1.6 var(--pixel);letter-spacing:.09em;color:var(--green);text-transform:uppercase}.muted{color:var(--muted)}.wrap{max-width:1180px;margin:auto;padding:0 32px}
 
-    <!-- Carga directa y segura de Three.js y GLTFLoader global -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+/* SCROLL REVEAL ANIMATIONS */
+.section{padding:108px 0;border-top:1px solid var(--line);opacity:0;transform:translateY(30px);transition:opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)}
+.section.active{opacity:1;transform:translateY(0)}
+
+.section-label{display:flex;justify-content:space-between;gap:16px;padding-bottom:24px;margin-bottom:52px;border-bottom:1px solid var(--line)}.big{font:400 clamp(29px,4.2vw,62px)/1.13 var(--pixel);letter-spacing:-.065em;max-width:940px}.section-lead{color:#b7c2b8;max-width:650px;margin:20px 0 35px;font-weight:300;font-family:var(--mono)}
+
+/* BOTONES */
+.btn{
+    border:1px solid rgba(112, 189, 140, 0.4);
+    padding:14px 24px;
+    background: rgba(112, 189, 140, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: var(--green);
+    font: 600 11px var(--pixel);
+    border-radius: 8px;
+    min-height: 46px;
+    transition: background .25s, transform .2s, box-shadow .25s, border-color .25s, color .25s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+}
+.btn:hover{
+    background: var(--green);
+    color: #07120a;
+    transform: translateY(-1px);
+    box-shadow: 0 0 20px rgba(112,189,140,0.5);
+    border-color: var(--green);
+}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+
+.btn-outline{
+    background: rgba(17, 27, 20, 0.4);
+    backdrop-filter: blur(10px);
+    border-color: var(--line);
+    color: var(--fg);
+}
+.btn-outline:hover{
+    background: rgba(112, 189, 140, 0.2);
+    color: var(--green);
+    border-color: var(--green);
+    box-shadow: 0 0 15px rgba(112,189,140,0.25);
+}
+.accent{color:var(--green)}
+
+/* ESTELA DEL CURSOR */
+.cursor-trail {position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;overflow:hidden}
+.trail-char {position:absolute;font:400 13px var(--pixel);color:var(--green);user-select:none;pointer-events:none;animation:fadeTrail 0.9s forwards ease-out;text-shadow:0 0 8px rgba(112, 189, 140, 0.6)}
+@keyframes fadeTrail {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.6); }
+}
+
+/* HEADER */
+header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template-columns:130px minmax(0,1fr) auto;align-items:center;gap:26px;padding:11px 3.5%;border-bottom:1px solid var(--line);background:rgba(8,10,9,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.brand{font:500 23px var(--pixel);letter-spacing:-.08em}
+.brand img{max-width:105px;height:25px;object-fit:contain;display:block}
+.nav-info{display:flex;gap:22px;overflow:hidden;align-items:center;font:400 10px var(--pixel);color:var(--muted)}
+.clock{white-space:nowrap;flex-shrink:0}
+.dot{display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;margin-right:8px}
+.ticker-window{overflow:hidden;flex:1}
+.ticker-track{display:flex;width:max-content;gap:28px;white-space:nowrap;animation:marquee 36s linear infinite}
+.ticker-track:hover{animation-play-state:paused}
+@keyframes marquee{to{transform:translateX(-50%)}}
+.ticker-item{display:flex;align-items:center;gap:0.4rem}
+.ticker-symbol{color:var(--muted)}
+.ticker-price{color:#fff;font-weight:700}
+.ticker-up{color:#70bd8c;font-size:0.7rem}
+.ticker-down{color:#e65252;font-size:0.7rem}
+.nav-actions{display:flex;gap:9px}
+.lang{font:400 10px var(--pixel);padding:12px;background:transparent;border:1px solid var(--line);color:var(--fg);border-radius:6px;transition:border-color .2s}
+.lang:hover{border-color:var(--green)}
+
+.hero{position:relative;min-height:100svh;display:grid;place-items:center;text-align:center;isolation:isolate;padding:130px 24px 90px;overflow:hidden;background:#080808;opacity:1;transform:none}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;z-index:-2;cursor:pointer}
+.hero::after{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at 50% 45%,rgba(8,10,9,.5),rgba(8,10,9,.08) 80%);pointer-events:none}
+.hero-content{max-width:1100px;pointer-events:none}
+.hero-content *{pointer-events:auto}
+.hero h1{font:700 clamp(36px,5.2vw,74px)/1.15 var(--mono);letter-spacing:-.04em;margin:28px 0;text-transform:uppercase;}
+.hero h1 span{display:block}
+.hero-desc{font:300 clamp(14px,1.4vw,18px)/1.8 var(--mono);max-width:625px;margin:0 auto 34px;color:#cbd3cc;text-shadow:0 2px 13px #000}
+.scroll-cue{position:absolute;bottom:22px;font:400 10px var(--pixel);color:var(--muted)}
+
+.diag-head{max-width:760px}
+.diag-head h2{font:400 clamp(27px,3.4vw,48px)/1.22 var(--pixel);letter-spacing:-.06em}
+.progress-line{height:2px;background:#243026;margin:10px 0 43px}
+.progress-fill{height:100%;width:25%;background:var(--green);transition:width .3s}
+.progress-labels{display:flex;justify-content:space-between;color:var(--muted);font:400 10px var(--pixel);margin-top:38px}
+
+.question h3{font:400 clamp(22px,2.8vw,36px)/1.25 var(--pixel);letter-spacing:-.04em;margin:16px 0 12px}
+.question>p{color:var(--muted);margin-bottom:30px;font-family:var(--mono)}
+
+.answers{border-top:1px solid var(--line)}
+.answer{display:grid;grid-template-columns:40px 1fr 24px;align-items:center;gap:15px;width:100%;text-align:left;background:none;color:var(--fg);border:0;border-bottom:1px solid var(--line);padding:22px 14px;transition:background .2s, padding-left .2s}
+.answer:hover,.answer[aria-pressed=true]{background:rgba(17,27,20,0.8);padding-left:20px}
+.answer-index{font:400 11px var(--pixel);color:var(--green)}
+.answer-title{display:block;font:400 15px var(--mono)}
+.answer-sub{display:block;color:var(--muted);font:300 13px var(--mono);margin-top:5px}
+.actions{display:flex;justify-content:space-between;gap:12px;margin-top:34px}
+.small-note{color:#8e9c90;font:400 10px/1.7 var(--pixel);margin-top:30px}
+.result-grid{display:grid;grid-template-columns:200px 1fr;border-top:1px solid var(--line);margin:40px 0 22px}
+.result-grid dt, .result-grid dd{padding:16px 0;border-bottom:1px solid var(--line);margin:0}
+.result-grid dt{color:var(--muted);font:400 11px var(--pixel)}
+.result-grid dd{font:400 13px var(--pixel)}
+
+.sim{margin-top:45px;display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.9fr);gap:70px}
+.control{margin-bottom:35px}
+.control-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:13px;font:400 12px var(--pixel)}
+.control-head output{font-weight:600}
+.control input[type=range]{width:100%;accent-color:var(--green);cursor:pointer}
+.ratio{height:10px;display:flex;gap:2px;margin:20px 0 9px}
+.ratio span{display:block}
+.legend{display:flex;flex-wrap:wrap;gap:17px;color:var(--muted);font:400 10px var(--pixel)}
+
+.currency-toggle-bar {display: flex; gap: 10px; margin-bottom: 25px; align-items: center;}
+.curr-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font: 400 10px var(--pixel);
+    padding: 8px 14px;
+    border-radius: 6px;
+    transition: all .2s;
+}
+.curr-btn.active {
+    background: var(--green);
+    border-color: var(--green);
+    color: #07120a;
+    font-weight: 700;
+}
+.fx-note {font-size: 10px; color: var(--muted); font-family: var(--pixel);}
+
+.sim-output{background:var(--soft);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(112,189,140,0.18);padding:30px;align-self:start;box-shadow:0 10px 30px rgba(0,0,0,0.4);border-radius:12px;}
+.metric{display:flex;justify-content:space-between;gap:15px;align-items:baseline;padding:15px 0;border-bottom:1px solid var(--line);font:400 12px var(--pixel)}
+.metric:last-child{border:0}
+.metric strong{font-size:clamp(14px,2vw,25px);font-weight:500;text-align:right}
+.chart{display:grid;gap:23px;margin-top:30px}
+.bar-row{display:grid;grid-template-columns:170px 1fr 130px;gap:16px;align-items:center;font:400 11px/1.5 var(--pixel)}
+.bar-bg{height:25px;background:#18231b}
+.bar{height:100%;background:var(--green);transition:width .3s}
+.bar.secondary{background:#818d85}
+.bar-row strong{text-align:right;font-weight:500}
+.difference{border-top:1px solid var(--line);padding-top:24px;margin-top:30px;font:400 clamp(17px,2.6vw,28px) var(--pixel);color:var(--green)}
+
+/* MÉTODO GAX */
+.method-list{margin-top:42px;border-top:1px solid var(--line)}
+.method-item{display:grid;grid-template-columns:80px minmax(0,1fr) 60px;gap:20px;padding:27px 0;border-bottom:1px solid var(--line);transition:background .2s, padding-left .2s;cursor:pointer;align-items:center;}
+.method-item:hover{background:rgba(17,27,20,0.5);padding-left:10px}
+.method-item h3{font:400 clamp(20px,2.2vw,30px) var(--pixel);letter-spacing:-.04em;margin:0 0 8px}
+.method-item p{color:var(--muted);font-family:var(--mono)}
+.method-action-btn {
+    background: rgba(112, 189, 140, 0.1);
+    border: 1px solid rgba(112, 189, 140, 0.3);
+    color: var(--green);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--pixel);
+    transition: all .2s;
+}
+.method-item:hover .method-action-btn {
+    background: var(--green);
+    color: #07120a;
+    box-shadow: 0 0 12px rgba(112,189,140,0.6);
+}
+
+.advisor-grid{display:grid;grid-template-columns:minmax(240px,390px) 1fr;gap:65px;align-items:start}
+
+.matrix-portrait {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    isolation: isolate;
+    background: #080a09;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    cursor: crosshair;
+    touch-action: pan-y;
+    --mouse-x: 50%;
+    --mouse-y: 50%;
+    --radius: 0px;
+}
+.portrait-real {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 20%;display:block}
+.portrait-matrix {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 20%;
+    z-index: 2;
+    display: block;
+    -webkit-mask-image: radial-gradient(circle var(--radius) at var(--mouse-x) var(--mouse-y), transparent 0%, transparent 55%, rgba(0,0,0,0.4) 75%, black 100%);
+    mask-image: radial-gradient(circle var(--radius) at var(--mouse-x) var(--mouse-y), transparent 0%, transparent 55%, rgba(0,0,0,0.4) 75%, black 100%);
+    pointer-events: none;
+}
+.portrait-glow {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background: radial-gradient(circle calc(var(--radius) + 6px) at var(--mouse-x) var(--mouse-y), transparent 0%, transparent 65%, rgba(101, 230, 135, 0.12) 80%, transparent 100%);
+    opacity: 0.6;
+}
+.portrait-label {position:absolute;bottom:12px;left:12px;z-index:4;font:400 10px var(--pixel);letter-spacing:2px;color:#ffffff;text-shadow:0 2px 8px #000;pointer-events:none}
+
+.advisor-copy h2{font:400 clamp(24px,3.2vw,42px)/1.2 var(--pixel);letter-spacing:-.05em;margin:15px 0}
+.advisor-subtitle{color:var(--green);font:400 13px var(--mono);margin-bottom:18px}
+.advisor-copy p{color:var(--muted);margin-top:14px;font-size:14px;line-height:1.7;font-family:var(--mono)}
+.advisor-contact{margin-top:24px;display:grid;gap:12px}
+
+.contact-card, .abax-box{
+    background: var(--soft);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(112, 189, 140, 0.18);
+    border-radius: 10px;
+    transition: border-color .2s, box-shadow .2s;
+}
+.contact-card:hover, .abax-box:hover{
+    border-color: rgba(112, 189, 140, 0.4);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.contact-card{padding:14px 18px;display:flex;flex-direction:column;gap:4px}
+.contact-label{font:400 10px var(--pixel);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.contact-val{font:500 15px var(--pixel);color:var(--fg)}
+
+.abax-section{margin-top:40px;border-top:1px solid var(--line);padding-top:35px}
+.abax-title{font:500 18px var(--pixel);margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.abax-desc{color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:14px;font-family:var(--mono)}
+
+/* BOTONES ESTILIZADOS PARA WEB E INSTAGRAM DE ABAX */
+.abax-links{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.abax-pill{
+    background: rgba(112, 189, 140, 0.08);
+    border: 1px solid rgba(112, 189, 140, 0.25);
+    color: var(--green);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font: 400 11px var(--pixel);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all .2s;
+}
+.abax-pill:hover{
+    background: var(--green);
+    color: #07120a;
+    border-color: var(--green);
+    box-shadow: 0 0 12px rgba(112,189,140,0.4);
+}
+
+.abax-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.abax-box{padding:18px 12px;text-align:center}
+.abax-metric{font:600 clamp(18px,2vw,24px) var(--pixel);color:var(--green);margin-bottom:4px}
+.abax-sub{font:400 11px var(--pixel);color:var(--muted);text-transform:uppercase}
+
+.closing{min-height:65vh;display:flex;flex-direction:column;justify-content:center}
+.closing h2{font:700 clamp(28px,4vw,56px)/1.2 var(--mono);letter-spacing:-.03em;margin:25px 0;text-transform:uppercase;}
+.closing p{max-width:650px;color:var(--muted);margin-bottom:30px;font-family:var(--mono)}
+.footer{border-top:1px solid var(--line);padding:25px 0;display:flex;justify-content:space-between;gap:20px;color:var(--muted);font:400 10px var(--pixel)}
+
+/* MODAL HOLOGRAFICA */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:18px}
+.modal.open{display:flex}
+.modal-box{position:relative;background:rgba(12,20,15,0.9);backdrop-filter:blur(20px);border:1px solid rgba(112,189,140,0.4);border-radius:14px;max-width:640px;width:100%;padding:40px;max-height:90vh;overflow:auto;box-shadow:0 25px 60px rgba(0,0,0,0.7), inset 0 0 30px rgba(112,189,140,0.05)}
+.modal-close{position:absolute;right:18px;top:15px;color:var(--fg);border:1px solid var(--line);background:rgba(0,0,0,0.3);width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-close:hover{background:var(--green);color:#07120a;border-color:var(--green)}
+.modal h2{font:400 28px var(--pixel);letter-spacing:-.05em;margin:15px 0 10px;color:var(--green)}
+.modal-subtitle{font:400 13px var(--mono);color:#b7c2b8;margin-bottom:24px;border-bottom:1px solid var(--line);padding-bottom:15px}
+.modal-body-content{font-family:var(--mono);font-size:14px;line-height:1.7;color:var(--muted)}
+.modal-feature-list{margin:20px 0;padding:0;list-style:none;display:grid;gap:12px}
+.modal-feature-list li{display:flex;gap:10px;align-items:flex-start;color:var(--fg);background:rgba(17,27,20,0.5);padding:12px 16px;border-radius:8px;border-left:3px solid var(--green)}
+.modal-feature-list strong{color:var(--green);font-family:var(--pixel);font-size:11px;display:block;margin-bottom:3px}
+
+.field{display:block;margin:18px 0}
+.field span{display:block;font:400 11px var(--pixel);color:var(--muted);margin-bottom:8px}
+.field input{width:100%;padding:13px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font-family:var(--mono);transition:border-color .2s}
+.field input:focus{border-color:var(--green);outline:none}
+
+@media(max-width:900px){header{grid-template-columns:auto auto;justify-content:space-between}.nav-info{display:none}.sim{grid-template-columns:1fr;gap:22px}.advisor-grid{grid-template-columns:1fr;gap:35px}.abax-grid{grid-template-columns:1fr}}
+@media(max-width:650px){.wrap{padding:0 22px}.section{padding:78px 0}.section-label{margin-bottom:35px}.hero h1{font-size:clamp(28px,7.5vw,46px)}.hero{padding:105px 15px 80px}.nav-actions .btn{padding:11px;font-size:9px}.answer{grid-template-columns:24px 1fr 16px;gap:8px;padding:17px 5px}.answer-title{font-size:13px}.answer-sub{font-size:12px}.sim-output{padding:17px}.bar-row{grid-template-columns:1fr 80px;gap:7px}.bar-bg{grid-column:1/-1;grid-row:2}.bar-row strong{text-align:right}.result-grid{grid-template-columns:1fr}.result-grid dt{border-bottom:0;padding-bottom:0}.result-grid dd{padding-top:4px}.footer{flex-wrap:wrap}.method-item{grid-template-columns:40px 1fr 20px;gap:12px}.lang{padding:8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.section{opacity:1;transform:none}*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* GAX fallback: the page stays readable even if animation JS fails. */
+.section { opacity:1; transform:none; }
+</style>
 </head>
 <body>
 
-    <div id="webgl-container"></div>
+<div class="cursor-trail" id="cursorTrail"></div>
 
-    <div class="ui-overlay">
-        <span>✨ Mueve el cursor para que te siga</span>
-        <span>•</span>
-        <span>🖱️ Haz clic para giro 360° aleatorio</span>
+<header>
+    <a class="brand" href="#inicio" aria-label="GAX inicio"><img src="gax-logo.png" alt="GAX" onerror="this.outerHTML='GAX.'"></a>
+    <div class="nav-info">
+        <span class="clock"><span class="dot"></span><span id="liveTimeDisplay" class="pixel">BUE --:--:-- HS</span></span>
+        <div class="ticker-window">
+            <div class="ticker-track" id="tickerTrack" aria-label="Cotizaciones en tiempo real">
+                <div class="ticker-item"><span class="ticker-symbol">Cargando mercados...</span></div>
+            </div>
+        </div>
     </div>
+    <div class="nav-actions">
+        <button class="lang" id="langBtn" type="button">ES / EN</button>
+        <button class="btn" type="button" data-open-modal id="navBtnMeeting">AGENDAR REUNIÓN ↗</button>
+    </div>
+</header>
 
-    <script>
-        let scene, camera, renderer, model, mixer;
-        let clock = new THREE.Clock();
+<main>
+<section class="hero" id="inicio">
+    <canvas id="heroCanvas" aria-hidden="true"></canvas>
+    <div class="hero-content">
+        <div class="micro" id="tHeroMicro">GAX / PLANIFICACIÓN FINANCIERA</div>
+        <h1 id="tHeroTitle"><span>EL FUTURO</span><span>NO SE ESPERA.</span><span class="accent">SE DISEÑA.</span></h1>
+        <p class="hero-desc" id="tHeroDesc">Transformá lo que construís hoy en el patrimonio y la tranquilidad que querés para mañana.</p>
+        <a class="btn" href="#diagnostico" id="tHeroBtn">DESCUBRÍ TU PUNTO DE PARTIDA ↗</a>
+    </div>
+    <a class="scroll-cue" href="#diagnostico" id="tScrollCue">↓ EXPLORAR</a>
+</section>
+
+<section class="section" id="diagnostico">
+    <div class="wrap">
+        <div class="section-label"><span class="micro" id="tDiagMicro1">01 / AUTODIAGNÓSTICO</span><span class="micro muted" id="tDiagMicro2">4 PREGUNTAS · SIN REGISTRO</span></div>
+        <div class="diag-head">
+            <h2 id="tDiagTitle">Antes de pensar en el futuro, entendamos tu presente.</h2>
+            <p class="section-lead" id="tDiagLead">Cuatro preguntas para explorar tus prioridades, tu organización y el próximo paso que te gustaría dar.</p>
+        </div>
+        <div id="questionPanel">
+            <div class="progress-labels"><span id="progressText" class="pixel">PREGUNTA 01 / 04</span><span id="progressPct" class="pixel">25%</span></div>
+            <div class="progress-line"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="question" id="question"></div>
+            <div class="actions"><button class="btn btn-outline" id="prevQuestion" type="button">← VOLVER</button><button class="btn" id="nextQuestion" type="button" disabled>CONTINUAR →</button></div>
+        </div>
+        <div id="resultPanel" hidden>
+            <div class="micro" id="tResMicro">02 / TU ORIENTACIÓN INICIAL</div>
+            <h2 class="big" id="resultTitle" style="margin-top:22px"></h2>
+            <p class="section-lead" id="resultDescription"></p>
+            <dl class="result-grid" id="resultGrid"></dl>
+            <p class="section-lead" id="resultAdvice"></p>
+            <p class="small-note" id="tResNote">Esta es una orientación preliminar basada en tus respuestas, no un diagnóstico ni una recomendación financiera personalizada.</p>
+            <div class="actions"><button class="btn btn-outline" id="restart" type="button">↻ VOLVER A EMPEZAR</button><a href="#capacidad" class="btn" id="tResBtn">EXPLORAR MI CAPACIDAD →</a></div>
+        </div>
+        <p class="small-note" id="tDiagFooter">TUS RESPUESTAS PERMANECEN EN ESTA PÁGINA. NO SE ENVÍAN A UN SERVIDOR.</p>
+    </div>
+</section>
+
+<section class="section" id="capacidad">
+    <div class="wrap">
+        <div class="section-label"><span class="micro" id="tCapMicro1">03 / CAPACIDAD FINANCIERA</span><span class="micro muted" id="tCapMicro2">SIMULADOR INTERACTIVO</span></div>
+        <h2 class="big" id="tCapTitle">¿Cuánto de lo que ganás podés ahorrar hoy?</h2>
+        <p class="section-lead" id="tCapLead">Conocer tu margen de maniobra es el primer paso. Evaluá tus ingresos y definí qué porcentaje podés destinar al ahorro de manera consistente para ver su proyección.</p>
         
-        let flightTime = 0;
-        let targetPosition = new THREE.Vector3();
+        <div class="currency-toggle-bar">
+            <span class="pixel" style="color:var(--muted); font-size:11px;">MONEDA:</span>
+            <button class="curr-btn active" id="btnCurrUSD" type="button">USD (Dólar)</button>
+            <button class="curr-btn" id="btnCurrARS" type="button">ARS (Pesos)</button>
+            <span class="fx-note" id="fxRateDisplay">Tipo de cambio oficial ref: $1,570 ARS</span>
+        </div>
+
+        <div class="sim">
+            <div>
+                <div class="control">
+                    <div class="control-head"><label for="income" id="tLabelIncome">Ingreso mensual estimado</label><output id="incomeOut" class="pixel">USD 3,000</output></div>
+                    <input id="income" type="range" min="500" max="15000" step="100" value="3000">
+                </div>
+                <div class="control">
+                    <div class="control-head"><label for="fixed" id="tLabelFixed">Gastos fijos</label><output id="fixedOut" class="pixel">50%</output></div>
+                    <input id="fixed" type="range" min="0" max="100" value="50">
+                </div>
+                <div class="control">
+                    <div class="control-head"><label for="variable" id="tLabelVar">Gastos variables</label><output id="variableOut" class="pixel">30%</output></div>
+                    <input id="variable" type="range" min="0" max="100" value="30">
+                </div>
+                <div class="micro muted" id="tLabelDist">DISTRIBUCIÓN ESTIMADA</div>
+                <div class="ratio" aria-label="Distribución de gastos y ahorro">
+                    <span id="fixedBand" style="background:#626d65;width:50%"></span>
+                    <span id="variableBand" style="background:#abb7ae;width:30%"></span>
+                    <span id="savingBand" style="background:#70bd8c;width:20%"></span>
+                </div>
+                <div class="legend">
+                    <span id="fixedLegend" class="pixel">FIJOS 50%</span>
+                    <span id="variableLegend" class="pixel">VARIABLES 30%</span>
+                    <span id="savingLegend" class="accent pixel">AHORRO 20%</span>
+                </div>
+            </div>
+            <div class="sim-output">
+                <div class="metric"><span id="tMetSave">AHORRO MENSUAL ESTIMADO</span><strong id="savingsOut" class="accent pixel">USD 600</strong></div>
+                <div class="metric"><span id="tMet10">ACUMULADO A 10 AÑOS</span><strong id="tenOut" class="pixel">—</strong></div>
+                <div class="metric"><span id="tMet20">ACUMULADO A 20 AÑOS</span><strong id="twentyOut" class="pixel">—</strong></div>
+            </div>
+        </div>
+        <p class="small-note" id="tCapNote">50/30/20 ES UNA REFERENCIA, NO UNA REGLA. PROYECCIÓN CON APORTES AL FINAL DE CADA MES, TASA NOMINAL ANUAL HIPOTÉTICA DEL 7% Y CAPITALIZACIÓN MENSUAL. SIN INFLACIÓN, IMPUESTOS, COMISIONES NI VOLATILIDAD. NO GARANTIZA RESULTADOS.</p>
+    </div>
+</section>
+
+<section class="section" id="tiempo">
+    <div class="wrap">
+        <div class="section-label"><span class="micro" id="tTimeMicro1">04 / EL VALOR DEL TIEMPO Y LOS PLAZOS</span><span class="micro muted" id="tTimeMicro2">COMPARADOR DE HORIZONTES</span></div>
+        <h2 class="big" id="tTimeTitle">El poder del tiempo: compará plazos y objetivos.</h2>
+        <p class="section-lead" id="tTimeLead">Ajustá tu aporte mensual y elegí dos plazos diferentes para comparar cómo crece tu capital según el horizonte temporal que elijas.</p>
         
-        let isSpinning = false;
-        let spinProgress = 0;
-        let spinAxis = new THREE.Vector3();
-        let startQuaternion = new THREE.Quaternion();
-        let targetQuaternion = new THREE.Quaternion();
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:820px; margin-bottom:25px;">
+            <div class="control" style="margin-bottom:0;">
+                <div class="control-head"><label for="compareMonthly" id="tLabelAporte">Aporte mensual</label><output id="compareOut" class="pixel">USD 300</output></div>
+                <input type="range" min="50" max="1500" value="300" step="50" id="compareMonthly">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="control" style="margin-bottom:0;">
+                    <div class="control-head"><label for="yearsA">Plazo A (Años)</label><output id="yearsAOut" class="pixel">10 años</output></div>
+                    <input type="range" min="1" max="30" value="10" step="1" id="yearsA">
+                </div>
+                <div class="control" style="margin-bottom:0;">
+                    <div class="control-head"><label for="yearsB">Plazo B (Años)</label><output id="yearsBOut" class="pixel">20 años</output></div>
+                    <input type="range" min="1" max="30" value="20" step="1" id="yearsB">
+                </div>
+            </div>
+        </div>
 
-        let mouse = new THREE.Vector2();
-        let raycaster = new THREE.Raycaster();
-        let planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-        let mouseWorldPos = new THREE.Vector3();
+        <div class="chart">
+            <div class="bar-row">
+                <span id="tBarNowLabel">PLAZO A<br><span class="muted pixel" id="tBarNowSub">10 años</span></span>
+                <div class="bar-bg"><div class="bar" id="nowBar" style="width:50%"></div></div>
+                <strong id="nowValue" class="pixel">—</strong>
+            </div>
+            <div class="bar-row">
+                <span id="tBarLaterLabel">PLAZO B<br><span class="muted pixel" id="tBarLaterSub">20 años</span></span>
+                <div class="bar-bg"><div class="bar secondary" id="laterBar" style="width:100%"></div></div>
+                <strong id="laterValue" class="pixel">—</strong>
+            </div>
+        </div>
+        <div class="difference pixel" id="difference">DIFERENCIA ENTRE PLAZOS: —</div>
+        <p class="small-note" id="tTimeNote">ESCENARIO ILUSTRATIVO CON 7% NOMINAL ANUAL CONSTANTE, CAPITALIZACIÓN MENSUAL Y APORTES AL FINAL DE CADA MES. NO CONTEMPLA INFLACIÓN, IMPUESTOS, COMISIONES NI VARIACIONES DE MERCADO.</p>
+    </div>
+</section>
 
-        init();
-        animate();
+<section class="section" id="metodo">
+    <div class="wrap">
+        <div class="section-label"><span class="micro" id="tMethodMicro1">05 / PLANIFICACIÓN INTEGRAL</span><span class="micro muted" id="tMethodMicro2">MÉTODO GAX</span></div>
+        <h2 class="big" id="tMethodTitle">Un plan. Tres dimensiones.</h2>
+        <p class="section-lead" id="tMethodLead">Una buena planificación no empieza por elegir un producto. Empieza por conocerte mejor, ordenar tus finanzas personales y diseñar tu tranquilidad a lo largo de la vida.</p>
+        
+        <div class="method-list">
+            <div class="method-item" data-method-modal="organizar">
+                <span class="micro">01</span>
+                <div>
+                    <h3 id="tM1Title">ORGANIZAR</h3>
+                    <p id="tM1Desc">Tus finanzas personales: ingresos, gastos y saber exactamente a dónde se va tu dinero y en qué lo gastás.</p>
+                </div>
+                <div class="method-action-btn">↗</div>
+            </div>
+            <div class="method-item" data-method-modal="proteger">
+                <span class="micro">02</span>
+                <div>
+                    <h3 id="tM2Title">PROTEGER</h3>
+                    <p id="tM2Desc">Protección patrimonial, familiar y resguardo financiero ante la pérdida de tu capacidad productiva.</p>
+                </div>
+                <div class="method-action-btn">↗</div>
+            </div>
+            <div class="method-item" data-method-modal="proyectar">
+                <span class="micro">03</span>
+                <div>
+                    <h3 id="tM3Title">PROYECTAR</h3>
+                    <p id="tM3Desc">Inversiones para hacer rendir tus ahorros y un plan sistemático para tu retiro y etapa pasiva.</p>
+                </div>
+                <div class="method-action-btn">↗</div>
+            </div>
+        </div>
+    </div>
+</section>
 
-        function init() {
-            const container = document.getElementById('webgl-container');
-
-            scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x0d0f12, 0.01);
-
-            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 0, 15);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.outputEncoding = THREE.sRGBEncoding;
-            container.appendChild(renderer.domElement);
-
-            // Luces de la escena
-            const ambientLight = new THREE.AmbientLight(0xffffff, 2.0);
-            scene.add(ambientLight);
-
-            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2.0);
-            hemiLight.position.set(0, 50, 0);
-            scene.add(hemiLight);
-
-            const dirLight = new THREE.DirectionalLight(0x38bdf8, 2.5);
-            dirLight.position.set(10, 20, 15);
-            scene.add(dirLight);
-
-            // Intentar cargar el modelo scene.gltf
-            loadModel();
-
-            window.addEventListener('resize', onWindowResize);
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('click', onClick);
-        }
-
-        function loadModel() {
-            const loader = new THREE.GLTFLoader();
-
-            loader.load('./scene.gltf', function (gltf) {
-                model = gltf.scene;
-                scene.add(model);
-
-                model.traverse((child) => {
-                    if (child.isMesh) {
-                        child.castShadow = true;
-                        child.receiveShadow = true;
-                        if (child.material) child.material.side = THREE.DoubleSide;
-                    }
-                });
-
-                // Escalar y centrar
-                const box = new THREE.Box3().setFromObject(model);
-                const center = box.getCenter(new THREE.Vector3());
-                const size = box.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
+<section class="section" id="asesor">
+    <div class="wrap">
+        <div class="section-label"><span class="micro" id="tAdvMicro1">06 / ASESORAMIENTO PERSONAL</span><span class="micro muted" id="tAdvMicro2">CONOCÉ A TU ASESOR</span></div>
+        <div class="advisor-grid">
+            <div class="matrix-portrait" id="matrixPortrait" tabindex="0" role="img" aria-label="Retrato interactivo">
+                <img src="juan-patt.jpg" class="portrait-real" alt="Retrato profesional Juan Martín Patt Llano" draggable="false">
+                <img src="juan-patt-verde.jpg" class="portrait-matrix" alt="Retrato estilo matriz Juan Martín Patt Llano" draggable="false">
+                <div class="portrait-glow"></div>
+                <span class="portrait-label">GAX / IDENTITY SCAN</span>
+            </div>
+            <div class="advisor-copy">
+                <div class="micro" id="tAdvMicro3">UNA CONVERSACIÓN, UN PLAN PERSONAL</div>
+                <h2>Juan Martín Patt Llano</h2>
+                <div class="advisor-subtitle" id="tAdvSub">Licenciado en Administración de Empresas (UCA)</div>
+                <p id="tAdvDesc">Más de 10 años de trayectoria en análisis financiero y operativo, combinando experiencia en firmas como Citi y EY con la creación y dirección de mi propia PyME. Haber estado también del lado del emprendedor me permitió comprender la importancia de una buena gestión financiera y los riesgos de no planificar. Hoy vuelco esa experiencia en análisis y estrategia para ayudar a personas, profesionales y PyMEs a ordenar sus finanzas, hacer rendir su patrimonio y construir un futuro sólido e inteligente.</p>
                 
-                if (maxDim > 0) {
-                    model.scale.multiplyScalar(4 / maxDim);
-                }
-                model.position.sub(center);
+                <div class="advisor-contact">
+                    <div class="contact-card">
+                        <span class="contact-label" id="tLabelDirect">Contacto directo</span>
+                        <a href="https://wa.me/5491161342197" target="_blank" class="contact-val">+54 9 11 6134-2197</a>
+                    </div>
+                    <div class="contact-card">
+                        <span class="contact-label" id="tLabelEmail">Email corporativo</span>
+                        <a href="mailto:jmpatt@grupoabax.com" class="contact-val">jmpatt@grupoabax.com</a>
+                    </div>
+                </div>
 
-                if (gltf.animations && gltf.animations.length > 0) {
-                    mixer = new THREE.AnimationMixer(model);
-                    gltf.animations.forEach((clip) => mixer.clipAction(clip).play());
-                }
-            }, undefined, function (error) {
-                console.warn("Fallo al cargar scene.gltf, generando figura interactiva:", error);
-                createFallbackShape();
-            });
+                <div class="abax-section">
+                    <div class="abax-title" id="tAbaxTitle">🏛️ Respaldo Institucional Grupo ABAX</div>
+                    <p class="abax-desc" id="tAbaxDesc">Consultora de planificación financiera, patrimonial y corporativa de alcance federal. Actuamos como nexo independiente con las instituciones bursátiles y aseguradoras más sólidas.</p>
+                    
+                    <div class="abax-links">
+                        <a class="abax-pill" href="https://grupoabax.com/" target="_blank" rel="noopener">🌐 Sitio Web ↗</a>
+                        <a class="abax-pill" href="https://www.instagram.com/abaxgrupo/" target="_blank" rel="noopener">📸 Instagram @abaxgrupo ↗</a>
+                    </div>
+
+                    <div class="abax-grid">
+                        <div class="abax-box">
+                            <div class="abax-metric">+10k</div>
+                            <div class="abax-sub"><span id="tAbaxCli">Clientes</span><br><span style="font-size:9px;color:var(--muted)" id="tAbaxCliSub">Cuentas activas</span></div>
+                        </div>
+                        <div class="abax-box">
+                            <div class="abax-metric">+70</div>
+                            <div class="abax-sub"><span id="tAbaxCon">Consultores</span><br><span style="font-size:9px;color:var(--muted)" id="tAbaxConSub">Alcance nacional</span></div>
+                        </div>
+                        <div class="abax-box">
+                            <div class="abax-metric" style="font-size:16px;padding-top:2px">CNV</div>
+                            <div class="abax-sub" style="font-size:9px">AAGI N° 2685<br><span style="color:var(--muted)" id="tAbaxReg">Supervisión SSN</span></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section closing" id="contacto">
+    <div class="wrap">
+        <div class="section-label"><span class="micro" id="tCloseMicro1">07 / TU PRÓXIMO PASO</span><span class="micro muted" id="tCloseMicro2">GAX / CONTACTO</span></div>
+        <h2 id="tCloseTitle">YA CONOCÉS TU<br>PUNTO DE PARTIDA.<br><span class="accent">AHORA, DISEÑEMOS<br>LO QUE SIGUE.</span></h2>
+        <p id="tCloseDesc">Una conversación para profundizar en tus objetivos, evaluar tu situación y explorar los próximos pasos que tengan sentido para vos.</p>
+        <button type="button" class="btn" data-open-modal id="tCloseBtn">SOLICITAR UNA REUNIÓN ↗</button>
+        <p class="small-note" id="tCloseNote">SIN COMPROMISO DE CONTRATACIÓN · EL DIAGNÓSTICO WEB ES ORIENTATIVO</p>
+    </div>
+</section>
+</main>
+
+<footer>
+    <div class="wrap footer"><strong>GAX.</strong><span id="tFooterText">PLANIFICACIÓN FINANCIERA / DISEÑÁ TU FUTURO</span><span class="pixel">© 2026</span></div>
+</footer>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-box">
+        <button class="modal-close" type="button" id="closeModal" aria-label="Cerrar">×</button>
+        <span class="micro" id="tModalMicro">GAX / CONTACTO</span>
+        <h2 id="modalTitle">Solicitar una reunión</h2>
+        <p id="tModalDesc" style="color:var(--muted);margin-bottom:24px;font-family:var(--mono)">Una conversación inicial para entender tus objetivos. Este formulario es una demostración y todavía no envía solicitudes.</p>
+        <form id="contactForm">
+            <label class="field"><span id="tField1">NOMBRE Y APELLIDO</span><input name="name" autocomplete="name" required></label>
+            <label class="field"><span id="tField2">CORREO ELECTRÓNICO</span><input type="email" name="email" autocomplete="email" required></label>
+            <label class="field"><span id="tField3">TELÉFONO / WHATSAPP</span><input type="tel" name="phone" autocomplete="tel" required></label>
+            <button class="btn" type="submit" id="tModalBtn" style="width:100%;margin-top:10px;">CONTINUAR ↗</button>
+            <p id="formFeedback" class="small-note" role="status" style="margin-top:15px;text-align:center;">El envío real requiere conectar un correo, calendario o servidor.</p>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="methodModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-box">
+        <button class="modal-close" type="button" id="closeMethodModal" aria-label="Cerrar">×</button>
+        <span class="micro" id="methodModalMicro">GAX / ESTRATEGIA INTEGRAL</span>
+        <h2 id="methodModalTitle">Título de la dimensión</h2>
+        <div class="modal-subtitle" id="methodModalSubtitle">Subtítulo explicativo</div>
+        <div class="modal-body-content">
+            <p id="methodModalDesc">Descripción detallada del alcance.</p>
+            <ul class="modal-feature-list" id="methodModalList"></ul>
+        </div>
+        <div style="margin-top:30px; display:flex; gap:12px; justify-content:flex-end;">
+            <button class="btn btn-outline" type="button" id="closeMethodBtn">CERRAR VENTANA</button>
+            <button class="btn" type="button" data-open-modal onclick="closeMethodDetails(); openModal();">CONSULTAR SOBRE LA ESTRATEGIA INTEGRAL ↗</button>
+        </div>
+    </div>
+</div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let currentCurrency = 'USD';
+let currentOfficialRate = 1570;
+
+const formatMoney=(n)=>{
+    if(currentCurrency === 'ARS') {
+        return '$ ' + Math.round(n).toLocaleString('es-AR');
+    }
+    return 'USD ' + Math.round(n).toLocaleString('en-US');
+};
+
+const smooth=x=>{const t=Math.max(0,Math.min(1,x));return t*t*(3-2*t)};
+const future=(monthly,months)=>{const r=.07/12;return monthly*(Math.pow(1+r,months)-1)/r};
+
+const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
+const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+            obs.unobserve(entry.target);
         }
+    });
+}, observerOptions);
+document.querySelectorAll('.section').forEach(section => { observer.observe(section); });
 
-        function createFallbackShape() {
-            // Figura geométrica 3D interactiva garantizada si el GLTF antiguo falla por compatibilidad
-            const geometry = new THREE.IcosahedronGeometry(2.5, 1);
-            const textureLoader = new THREE.TextureLoader();
+if(!reduced) {
+    const trailContainer = $('cursorTrail');
+    const chars = ['$', '0', '1', '7', '9', '2', '5', '%', '3', '8', 'USD'];
+    const portraitEl = $('matrixPortrait');
+    
+    document.addEventListener('pointermove', (e) => {
+        if (portraitEl) {
+            const rect = portraitEl.getBoundingClientRect();
+            if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) return;
+        }
+        for (let i = 0; i < 3; i++) {
+            const span = document.createElement('span');
+            span.className = 'trail-char';
+            span.textContent = chars[Math.floor(Math.random() * chars.length)];
+            const offsetX = (Math.random() - 0.5) * 45;
+            const offsetY = (Math.random() - 0.5) * 45;
+            const dx = (Math.random() - 0.5) * 65 + 'px';
+            const dy = (-25 - Math.random() * 45) + 'px';
+            span.style.left = (e.clientX + offsetX) + 'px';
+            span.style.top = (e.clientY + offsetY) + 'px';
+            span.style.setProperty('--dx', dx);
+            span.style.setProperty('--dy', dy);
+            trailContainer.appendChild(span);
+            setTimeout(() => { span.remove(); }, 900);
+        }
+    });
+}
+
+const methodDetailsData = {
+    organizar: {
+        micro: "GAX / DIMENSIÓN 01: TU PRESENTE",
+        title: "ORGANIZAR",
+        subtitle: "Conocete mejor: ingresos, gastos y visibilidad total de tu dinero.",
+        desc: "Una buena planificación personal parte de la base de conocer con exactitud a dónde se va tu dinero cada mes. Analizamos tus ingresos, tus hábitos de consumo y tus gastos fijos y variables para darte claridad absoluta y recuperar capacidad de ahorro sin descuidar tu calidad de vida.",
+        items: [
+            { title: "Radiografía de tus Finanzas Personales", desc: "Mapeo completo de tus entradas y salidas reales para identificar fugas de dinero y optimizar tu flujo mensual." },
+            { title: "Prioridades y Hábitos de Consumo", desc: "Entender en qué gastás hoy para alinear tus recursos con lo que realmente te importa y querés lograr." },
+            { title: "Punto de Partida Financiero", desc: "Establecer un sistema de organización simple y sostenible que te permita saber siempre dónde estás parado." }
+        ]
+    },
+    proteger: {
+        micro: "GAX / DIMENSIÓN 02: TU ESTABILIDAD",
+        title: "PROTEGER",
+        subtitle: "Protección familiar, patrimonial y blindaje ante la pérdida de capacidad productiva.",
+        desc: "Tus ingresos y tu capacidad de generar dinero son tu activo más valioso. En esta dimensión resolvemos la problemática crítica de proteger tu estabilidad y la de tu familia frente a imprevistos que puedan interrumpir tus ingresos o afectar tu patrimonio.",
+        items: [
+            { title: "Blindaje ante la Pérdida de Capacidad Productiva", desc: "Herramientas de blindaje financiero para garantizar que tus ingresos y proyectos no se detengan ante un imprevisto de salud o accidente." },
+            { title: "Protección Familiar & Sucesoria", desc: "Resguardo del bienestar de quienes dependen económicamente de vos y planificación de la tranquilidad a largo plazo." },
+            { title: "Protección Patrimonial Integral", desc: "Cuidado de tus bienes y activos construidos con esfuerzo frente a vaivenes o contingencias externas." }
+        ]
+    },
+    proyectar: {
+        micro: "GAX / DIMENSIÓN 03: TU FUTURO",
+        title: "PROYECTAR",
+        subtitle: "Inversiones para hacer rendir tu dinero y un plan sistemático para tu retiro.",
+        desc: "Resolvemos dos problemáticas clave de tu futuro financiero: por un lado, evitar que tu dinero pierda valor frente a la inflación mediante inversiones inteligentes; por el otro, construir un ahorro sistemático que te asegure llegar a tu etapa pasiva manteniendo tu misma calidad de vida.",
+        items: [
+            { title: "Inversiones (Evitar que el dinero pierda valor)", desc: "Estrategias para que tus ahorros en mano generen rentabilidad y crecimiento constante a través de instrumentos eficientes en mercados locales e internacionales." },
+            { title: "Ahorro Sistemático para el Retiro", desc: "Construcción de un plan a mediano y largo plazo para resolver la problemática de vivir más años y llegar a la etapa pasiva con total autonomía financiera." },
+            { title: "Mantenimiento del Estilo de Vida", desc: "Planificar los años en que ya no trabajaremos asegurando los recursos necesarios para disfrutar plenamente sin sobresaltos económicos." }
+        ]
+    }
+};
+
+function openMethodDetails(key) {
+    const data = methodDetailsData[key];
+    if(!data) return;
+    
+    $('methodModalMicro').textContent = data.micro;
+    $('methodModalTitle').textContent = data.title;
+    $('methodModalSubtitle').textContent = data.subtitle;
+    $('methodModalDesc').textContent = data.desc;
+    
+    const listEl = $('methodModalList');
+    listEl.replaceChildren();
+    data.items.forEach(item => {
+        const li = document.createElement('li');
+        const content = document.createElement('div');
+        const strong = document.createElement('strong');
+        strong.textContent = item.title;
+        const p = document.createElement('p');
+        p.style.margin = '0';
+        p.style.color = 'var(--muted)';
+        p.style.fontSize = '13px';
+        p.textContent = item.desc;
+        content.append(strong, p);
+        li.append(content);
+        listEl.append(li);
+    });
+
+    $('methodModal').classList.add('open');
+    $('methodModal').setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMethodDetails() {
+    $('methodModal').classList.remove('open');
+    $('methodModal').setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+}
+
+document.querySelectorAll('.method-item').forEach(item => {
+    item.addEventListener('click', () => {
+        const key = item.getAttribute('data-method-modal');
+        openMethodDetails(key);
+    });
+});
+
+$('closeMethodModal').addEventListener('click', closeMethodDetails);
+$('closeMethodBtn').addEventListener('click', closeMethodDetails);
+$('methodModal').addEventListener('click', e => { if(e.target === $('methodModal')) closeMethodDetails(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && $('methodModal').classList.contains('open')) closeMethodDetails(); });
+
+/* SISTEMA BILINGÜE ES / EN */
+let currentLang = 'es';
+const dict = {
+    es: {        pageTitle: "GAX — El futuro se diseña",
+        navMeeting: "AGENDAR REUNIÓN ↗",
+        tHeroMicro: "GAX / PLANIFICACIÓN FINANCIERA",
+        tHeroTitle: "<span>EL FUTURO</span><span>NO SE ESPERA.</span><span class=\"accent\">SE DISEÑA.</span>",
+        tHeroDesc: "Transformá lo que construís hoy en el patrimonio y la tranquilidad que querés para mañana.",
+        tHeroBtn: "DESCUBRÍ TU PUNTO DE PARTIDA ↗",
+        tScrollCue: "↓ EXPLORAR",
+        tDiagMicro1: "01 / AUTODIAGNÓSTICO",
+        tDiagMicro2: "4 PREGUNTAS · SIN REGISTRO",
+        tDiagTitle: "Antes de pensar en el futuro, entendamos tu presente.",
+        tDiagLead: "Cuatro preguntas para explorar tus prioridades, tu organización y el próximo paso que te gustaría dar.",
+        tDiagFooter: "TUS RESPUESTAS PERMANECEN EN ESTA PÁGINA. NO SE ENVÍAN A UN SERVIDOR.",
+        tResMicro: "02 / TU ORIENTACIÓN INICIAL",
+        tResNote: "Esta es una orientación preliminar basada en tus respuestas, no un diagnóstico ni una recomendación financiera personalizada.",
+        tResBtn: "EXPLORAR MI CAPACIDAD →",
+        tCapMicro1: "03 / CAPACIDAD FINANCIERA",
+        tCapMicro2: "SIMULADOR INTERACTIVO",
+        tCapTitle: "¿Cuánto de lo que ganás podés ahorrar hoy?",
+        tCapLead: "Conocer tu margen de maniobra es el primer paso. Evaluá tus ingresos y definí qué porcentaje podés destinar al ahorro de manera consistente para ver su proyección.",
+        tLabelIncome: "Ingreso mensual estimado",
+        tLabelFixed: "Gastos fijos",
+        tLabelVar: "Gastos variables",
+        tLabelDist: "DISTRIBUCIÓN ESTIMADA",
+        tFixedLeg: "FIJOS",
+        tVarLeg: "VARIABLES",
+        tSaveLeg: "AHORRO",
+        tMetSave: "AHORRO MENSUAL ESTIMADO",
+        tMet10: "ACUMULADO A 10 AÑOS",
+        tMet20: "ACUMULADO A 20 AÑOS",
+        tCapNote: "50/30/20 ES UNA REFERENCIA, NO UNA REGLA. PROYECCIÓN CON APORTES AL FINAL DE CADA MES, TASA NOMINAL ANUAL HIPOTÉTICA DEL 7% Y CAPITALIZACIÓN MENSUAL. SIN INFLACIÓN, IMPUESTOS, COMISIONES NI VOLATILIDAD. NO GARANTIZA RESULTADOS.",
+        tTimeMicro1: "04 / EL VALOR DEL TIEMPO Y LOS PLAZOS",
+        tTimeMicro2: "COMPARADOR DE HORIZONTES",
+        tTimeTitle: "El poder del tiempo: compará plazos y objetivos.",
+        tTimeLead: "Ajustá tu aporte mensual y elegí dos plazos diferentes para comparar cómo crece tu capital según el horizonte temporal que elijas.",
+        tLabelAporte: "Aporte mensual",
+        tDiff: "DIFERENCIA ENTRE PLAZOS: ",
+        tTimeNote: "ESCENARIO ILUSTRATIVO CON 7% NOMINAL ANUAL CONSTANTE, CAPITALIZACIÓN MENSUAL Y APORTES AL FINAL DE CADA MES. NO CONTEMPLA INFLACIÓN, IMPUESTOS, COMISIONES NI VARIACIONES DE MERCADO.",
+        tMethodMicro1: "05 / PLANIFICACIÓN INTEGRAL",
+        tMethodMicro2: "MÉTODO GAX",
+        tMethodTitle: "Un plan. Tres dimensiones.",
+        tMethodLead: "Una buena planificación no empieza por elegir un producto. Empieza por conocerte mejor, ordenar tus finanzas personales y diseñar tu tranquilidad a lo largo de la vida.",
+        tM1Title: "ORGANIZAR", tM1Desc: "Tus finanzas personales: ingresos, gastos y saber exactamente a dónde se va tu dinero y en qué lo gastás.",
+        tM2Title: "PROTEGER", tM2Desc: "Protección patrimonial, familiar y resguardo financiero ante la pérdida de tu capacidad productiva.",
+        tM3Title: "PROYECTAR", tM3Desc: "Inversiones para hacer rendir tus ahorros y un plan sistemático para tu retiro y etapa pasiva.",
+        tAdvMicro1: "06 / ASESORAMIENTO PERSONAL",
+        tAdvMicro2: "CONOCÉ A TU ASESOR",
+        tAdvMicro3: "UNA CONVERSACIÓN, UN PLAN PERSONAL",
+        tAdvSub: "Licenciado en Administración de Empresas (UCA)",
+        tAdvDesc: "Más de 10 años de trayectoria en análisis financiero y operativo, combinando experiencia en firmas como Citi y EY con la creación y dirección de mi propia PyME. Haber estado también del lado del emprendedor me permitió comprender la importancia de una buena gestión financiera y los riesgos de no planificar. Hoy vuelco esa experiencia en análisis y estrategia para ayudar a personas, profesionales y PyMEs a ordenar sus finanzas, hacer rendir su patrimonio y construir un futuro sólido e inteligente.",
+        tLabelDirect: "Contacto directo",
+        tLabelEmail: "Email corporativo",
+        tAbaxTitle: "🏛️ Respaldo Institucional Grupo ABAX",
+        tAbaxDesc: "Consultora de planificación financiera, patrimonial y corporativa de alcance federal. Actuamos como nexo independiente con las instituciones bursátiles y aseguradoras más sólidas.",
+        tAbaxCli: "Clientes", tAbaxCliSub: "Cuentas activas",
+        tAbaxCon: "Consultores", tAbaxConSub: "Alcance nacional",
+        tAbaxReg: "Supervisión SSN",
+        tCloseMicro1: "07 / TU PRÓXIMO PASO",
+        tCloseMicro2: "GAX / CONTACTO",
+        tCloseTitle: "YA CONOCÉS TU<br>PUNTO DE PARTIDA.<br><span class=\"accent\">AHORA, DISEÑEMOS<br>LO QUE SIGUE.</span>",
+        tCloseDesc: "Una conversación para profundizar en tus objetivos, evaluar tu situación y explorar los próximos pasos que tengan sentido para vos.",
+        tCloseBtn: "SOLICITAR UNA REUNIÓN ↗",
+        tCloseNote: "SIN COMPROMISO DE CONTRATACIÓN · EL DIAGNÓSTICO WEB ES ORIENTATIVO",
+        tFooterText: "PLANIFICACIÓN FINANCIERA / DISEÑÁ TU FUTURO",
+        tModalMicro: "GAX / CONTACTO",
+        tModalTitle: "Solicitar una reunión",
+        tModalDesc: "An initial conversation to understand your goals. This form is a demo and does not send requests yet.",
+        tField1: "NOMBRE Y APELLIDO",
+        tField2: "CORREO ELECTRÓNICO",
+        tField3: "TELÉFONO / WHATSAPP",
+        tModalBtn: "CONTINUAR ↗"
+    },
+    en: {
+        pageTitle: "GAX — The Future is Designed",
+        navMeeting: "BOOK A MEETING ↗",
+        tHeroMicro: "GAX / FINANCIAL PLANNING",
+        tHeroTitle: "<span>THE FUTURE</span><span>IS NOT WAITED FOR.</span><span class=\"accent\">IT IS DESIGNED.</span>",
+        tHeroDesc: "Transform what you build today into the wealth and peace of mind you want for tomorrow.",
+        tHeroBtn: "DISCOVER YOUR STARTING POINT ↗",
+        tScrollCue: "↓ EXPLORE",
+        tDiagMicro1: "01 / SELF-DIAGNOSIS",
+        tDiagMicro2: "4 QUESTIONS · NO REGISTRATION",
+        tDiagTitle: "Before thinking about the future, let's understand your present.",
+        tDiagLead: "Four questions to explore your priorities, organization, and the next step you'd like to take.",
+        tDiagFooter: "YOUR ANSWERS STAY ON THIS PAGE. THEY ARE NOT SENT TO A SERVER.",
+        tResMicro: "02 / INITIAL ORIENTATION",
+        tResNote: "This is a preliminary orientation based on your answers, not a diagnosis or personalized financial recommendation.",
+        tResBtn: "EXPLORE MY CAPACITY →",
+        tCapMicro1: "03 / FINANCIAL CAPACITY",
+        tCapMicro2: "INTERACTIVE SIMULATOR",
+        tCapTitle: "How much of what you earn can you save today?",
+        tCapLead: "Knowing your margin is the first step. Evaluate your income and define what percentage you can consistently allocate to savings.",
+        tLabelIncome: "Estimated monthly income",
+        tLabelFixed: "Fixed expenses",
+        tLabelVar: "Variable expenses",
+        tLabelDist: "ESTIMATED DISTRIBUTION",
+        tFixedLeg: "FIXED",
+        tVarLeg: "VARIABLE",
+        tSaveLeg: "SAVINGS",
+        tMetSave: "ESTIMATED MONTHLY SAVINGS",
+        tMet10: "ACCUMULATED AT 10 YEARS",
+        tMet20: "ACCUMULATED AT 20 YEARS",
+        tCapNote: "50/30/20 IS A REFERENCE, NOT A RULE. PROJECTION WITH END-OF-MONTH CONTRIBUTIONS, HYPOTHETICAL 7% ANNUAL NOMINAL RATE, AND MONTHLY COMPOUNDING. EXCLUDES INFLATION, TAXES, COMMISSIONS, AND VOLATILITY. DOES NOT GUARANTEE RESULTS.",
+        tTimeMicro1: "04 / THE VALUE OF TIME AND HORIZONS",
+        tTimeMicro2: "HORIZON COMPARISON",
+        tTimeTitle: "The power of time: compare terms and goals.",
+        tTimeLead: "Adjust your monthly contribution and choose two different terms to compare how your capital grows.",
+        tLabelAporte: "Monthly contribution",
+        tDiff: "DIFFERENCE BETWEEN TERMS: ",
+        tTimeNote: "ILLUSTRATIVE SCENARIO WITH 7% CONSTANT ANNUAL NOMINAL RATE, MONTHLY COMPOUNDING, AND END-OF-MONTH CONTRIBUTIONS. DOES NOT INCLUDE INFLATION, TAXES, COMMISSIONS, OR MARKET FLUCTUATIONS.",
+        tMethodMicro1: "05 / COMPREHENSIVE PLANNING",
+        tMethodMicro2: "GAX METHOD",
+        tMethodTitle: "One plan. Three dimensions.",
+        tMethodLead: "Good planning doesn't start with picking a product. It starts with knowing yourself better, organizing your personal finances, and designing your peace of mind throughout life.",
+        tM1Title: "ORGANIZE", tM1Desc: "Your personal finances: income, expenses, and knowing exactly where your money goes and what you spend it on.",
+        tM2Title: "PROTECT", tM2Desc: "Asset and family protection, and financial shielding against the loss of productive capacity.",
+        tM3Title: "PROJECT", tM3Desc: "Investments to make your savings grow and a systematic plan for your retirement and passive stage.",
+        tAdvMicro1: "06 / PERSONAL ADVISORY",
+        tAdvMicro2: "MEET YOUR ADVISOR",
+        tAdvMicro3: "A CONVERSATION, A PERSONAL PLAN",
+        tAdvSub: "Bachelor in Business Administration (UCA)",
+        tAdvDesc: "Over 10 years of experience in financial and operational analysis, combining background at firms like Citi and EY with founding and running my own SME. Having also experienced the entrepreneurial side helped me understand the importance of sound financial management and the risks of failing to plan. Today, I channel that experience into analysis and strategy to help individuals, professionals, and SMEs organize their finances, grow their wealth, and build a solid and intelligent future.",
+        tLabelDirect: "Direct contact",
+        tLabelEmail: "Corporate email",
+        tAbaxTitle: "🏛️ Institutional Backing Grupo ABAX",
+        tAbaxDesc: "Federal financial, wealth, and corporate planning consultancy. We act as an independent nexus with the most solid brokerage and insurance institutions.",
+        tAbaxCli: "Clients", tAbaxCliSub: "Active accounts",
+        tAbaxCon: "Consultants", tAbaxConSub: "Nationwide reach",
+        tAbaxReg: "SSN Supervision",
+        tCloseMicro1: "07 / YOUR NEXT STEP",
+        tCloseMicro2: "GAX / CONTACT",
+        tCloseTitle: "NOW YOU KNOW YOUR<br>STARTING POINT.<br><span class=\"accent\">NOW, LET'S DESIGN<br>WHAT'S NEXT.</span>",
+        tCloseDesc: "A conversation to dive deeper into your goals, assess your situation, and explore the next steps that make sense for you.",
+        tCloseBtn: "REQUEST A MEETING ↗",
+        tCloseNote: "NO OBLIGATION TO HIRE · WEB DIAGNOSIS IS ORIENTATIVO",
+        tFooterText: "FINANCIAL PLANNING / DESIGN YOUR FUTURE",
+        tModalMicro: "GAX / CONTACT",
+        tModalTitle: "Request a meeting",
+        tModalDesc: "An initial conversation to understand your goals. This form is a demo and does not send requests yet.",
+        tField1: "FULL NAME",
+        tField2: "EMAIL ADDRESS",
+        tField3: "PHONE / WHATSAPP",
+        tModalBtn: "CONTINUE ↗"
+    }
+};
+
+const questionsES = [
+    {title:'¿Qué te gustaría mejorar hoy de tus finanzas?',subtitle:'Elegí tu prioridad actual.',options:[['Tener más control','Organizar mis ingresos, gastos y decisiones.'],['Construir patrimonio','Transformar mis ahorros en oportunidades futuras.'],['Proteger lo que tengo','Prepararme mejor ante los imprevistos.'],['Encontrar un punto de partida','Entender qué debería hacer primero.']]},
+    {title:'¿Cómo manejás tus finanzas actualmente?',subtitle:'No hay respuestas correctas.',options:[['Tengo todo bastante organizado','Conozco mis números y suelo planificar.'],['Ahorro, pero sin un plan claro','Guardo dinero cuando puedo.'],['Me cuesta mantener el orden','Mis gastos y prioridades cambian bastante.'],['Estoy empezando a organizarme','Todavía no tengo un sistema definido.']]},
+    {title:'¿Cuándo te gustaría alcanzar tus próximos objetivos?',subtitle:'Pensá en el objetivo que más te importa.',options:[['En el corto plazo','Durante los próximos 12 meses.'],['En los próximos años','Entre 1 y 5 años.'],['En el largo plazo','Más de 5 años.'],['Todavía no lo definí','Quiero explorar mis opciones.']]},
+    {title:'¿Qué sentís que te impide avanzar?',subtitle:'Identificar obstáculos es parte de comenzar.',options:[['No tengo suficiente claridad','Me falta información para decidir.'],['Me cuesta ser constante','Quiero sostener mejores hábitos.'],['Me preocupa equivocarme','Necesito comprender mejor los riesgos.'],['No sé qué priorizar','Tengo varios objetivos al mismo tiempo.']]}
+];
+
+const questionsEN = [
+    {title:'What would you like to improve in your finances today?',subtitle:'Choose your current priority.',options:[['Have more control','Organize my income, expenses, and decisions.'],['Build wealth','Transform my savings into future opportunities.'],['Protect what I have','Better prepare for unexpected events.'],['Find a starting point','Understand what I should do first.']]},
+    {title:'How do you currently manage your finances?',subtitle:'There are no right answers.',options:[['I have everything well organized','I know my numbers and plan ahead.'],['I save, but without a clear plan','I keep money when I can.'],['I struggle to maintain order','My expenses and priorities change a lot.'],['I am starting to get organized','I do not have a defined system yet.']]},
+    {title:'When would you like to reach your next goals?',subtitle:'Think about the goal that matters most to you.',options:[['Short term','During the next 12 months.'],['Next few years','Between 1 and 5 years.'],['Long term','More than 5 years.'],['Not defined yet','I want to explore my options.']]},
+    {title:'What do you feel is holding you back?',subtitle:'Identifying obstacles is part of starting.',options:[['I lack enough clarity','I miss information to decide.'],['I struggle with consistency','I want to sustain better habits.'],['I worry about making mistakes','I need to better understand the risks.'],['I do not know what to prioritize','I have multiple goals at the same time.']]}
+];
+
+const profilesES = [
+    {title:'Organización y control',description:'Tu prioridad es obtener visibilidad y tomar decisiones informadas sobre tus recursos.'},
+    {title:'Construcción de patrimonio',description:'Querés transformar tus recursos actuales en una base más sólida para tus objetivos futuros.'},
+    {title:'Protección y previsión',description:'Buscás fortalecer tu estabilidad ante imprevistos y cuidar lo que construiste.'},
+    {title:'Claridad y planificación',description:'Querés entender tu situación y elegir un primer paso realista.'}
+];
+
+const profilesEN = [
+    {title:'Organization and Control',description:'Your priority is to gain visibility and make informed decisions about your resources.'},
+    {title:'Wealth Building',description:'You want to turn your current resources into a stronger foundation for your future goals.'},
+    {title:'Protection and Foresight',description:'You seek to strengthen your stability against unforeseen events and protect what you built.'},
+    {title:'Clarity and Planning',description:'You want to understand your situation and choose a realistic first step.'}
+];
+
+const orgTipsES = ['Ya contás con una base de organización que puede servir para planificar objetivos.','Podría ayudarte transformar el ahorro ocasional en un sistema con objetivos definidos.','Antes de proyectar inversiones, puede ser útil ordenar el flujo mensual.','Comenzar con un registro sencillo de ingresos y gastos puede darte claridad.'];
+const orgTipsEN = ['You already have an organizational foundation that can help plan goals.','It could help to turn occasional savings into a system with defined goals.','Before projecting investments, it can be useful to organize your monthly cash flow.','Starting with a simple income and expense record can give you clarity.'];
+
+const obsTipsES = ['Buscá información comprensible y contrastá alternativas antes de decidir.','Empezá con un hábito pequeño y repetible, en vez de depender de esfuerzos ocasionales.','Evaluá riesgos, liquidez y plazos antes de asumir compromisos.','Ordená tus objetivos por urgencia e importancia y elegí uno para empezar.'];
+const obsTipsEN = ['Look for understandable information and compare alternatives before deciding.','Start with a small, repeatable habit instead of relying on occasional efforts.','Evaluate risks, liquidity, and timelines before making commitments.','Order your goals by urgency and importance and choose one to start.'];
+
+let step=0,answers=[null,null,null,null];
+
+function getQuestions(){ return currentLang === 'es' ? questionsES : questionsEN; }
+function getProfiles(){ return currentLang === 'es' ? profilesES : profilesEN; }
+function getOrgTips(){ return currentLang === 'es' ? orgTipsES : orgTipsEN; }
+function getObsTips(){ return currentLang === 'es' ? obsTipsES : obsTipsEN; }
+
+function renderQuestion(){
+    const q=getQuestions()[step];
+    $('questionPanel').hidden=false;
+    $('resultPanel').hidden=true;
+    $('progressText')?$('progressText').textContent=(currentLang==='es'?'PREGUNTA ':'QUESTION ')+String(step+1).padStart(2,'0')+' / 04':'';
+    $('progressPct').textContent=((step+1)*25)+'%';
+    $('progressFill').style.width=((step+1)*25)+'%';
+    $('nextQuestion').textContent=step===3?(currentLang==='es'?'VER MI RESULTADO →':'SEE MY RESULT →'):(currentLang==='es'?'CONTINUAR →':'CONTINUE →');
+    $('prevQuestion').textContent=currentLang==='es'?'← VOLVER':'← BACK';
+    $('prevQuestion').disabled=step===0;
+    $('nextQuestion').disabled=answers[step]===null;
+    
+    const root=$('question');
+    root.replaceChildren();
+    
+    const eyebrow=document.createElement('div');
+    eyebrow.className='micro';
+    eyebrow.textContent='/ '+String(step+1).padStart(2,'0');
+    
+    const title=document.createElement('h3');
+    title.className='pixel';
+    title.textContent=q.title;
+    
+    const subtitle=document.createElement('p');
+    subtitle.textContent=q.subtitle;
+    
+    const list=document.createElement('div');
+    list.className='answers';
+    
+    q.options.forEach((option,i)=>{
+        const b=document.createElement('button');
+        b.type='button';
+        b.className='answer';
+        b.setAttribute('aria-pressed',String(answers[step]===i));
+        const n=document.createElement('span');
+        n.className='answer-index pixel';
+        n.textContent=String(i+1).padStart(2,'0');
+        const copy=document.createElement('span');
+        const strong=document.createElement('span');
+        strong.className='answer-title';
+        strong.textContent=option[0];
+        const sub=document.createElement('span');
+        sub.className='answer-sub';
+        sub.textContent=option[1];
+        copy.append(strong,sub);
+        const arrow=document.createElement('span');
+        arrow.className='pixel';
+        arrow.textContent=answers[step]===i?'✓':'↗';
+        b.append(n,copy,arrow);
+        b.addEventListener('click',()=>{answers[step]=i;renderQuestion()});
+        list.append(b);
+    });
+    root.append(eyebrow,title,subtitle,list);
+}
+
+function renderResult(){
+    if(answers.some(a=>a===null))return;
+    $('questionPanel').hidden=true;
+    $('resultPanel').hidden=false;
+    const p=getProfiles()[answers[0]];
+    $('resultTitle').textContent=p.title;
+    $('resultDescription').textContent=p.description+' '+getOrgTips()[answers[1]];
+    const fields=currentLang==='es'?['TU PRIORIDAD','TU ORGANIZACIÓN','TU HORIZONTE','TU OBSTÁCULO']:['YOUR PRIORITY','YOUR ORGANIZATION','YOUR HORIZONTE','YOUR OBSTACLE'];
+    const grid=$('resultGrid');
+    grid.replaceChildren();
+    answers.forEach((a,i)=>{
+        const dt=document.createElement('dt');
+        dt.textContent=fields[i];
+        const dd=document.createElement('dd');
+        dd.className='pixel';
+        dd.textContent=getQuestions()[i].options[a][0];
+        grid.append(dt,dd);
+    });
+    $('resultAdvice').textContent=(currentLang==='es'?'PRÓXIMO PASO: ':'NEXT STEP: ')+getObsTips()[answers[3]]+' '+(currentLang==='es'?'Considerá tu horizonte (':'Consider your horizon (')+getQuestions()[2].options[answers[2]][0].toLowerCase()+') '+(currentLang==='es'?'al definir el plan.':'when defining the plan.');
+}
+
+$('prevQuestion').addEventListener('click',()=>{if(step>0){step--;renderQuestion()}});
+$('nextQuestion').addEventListener('click',()=>{if(answers[step]===null)return;if(step===3)renderResult();else{step++;renderQuestion()}});
+$('restart').addEventListener('click',()=>{step=0;answers=[null,null,null,null];renderQuestion();$('diagnostico').scrollIntoView({behavior:reduced?'auto':'smooth'})});
+renderQuestion();
+
+/* CLOCK */
+function clock(){ $('liveTimeDisplay').textContent='BUE '+new Date().toLocaleTimeString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour12:false})+' HS' }clock();setInterval(clock,1000);
+
+/* TICKER */
+async function fetchLiveMarketData() {
+    const track = document.getElementById('tickerTrack');
+    let itemsHTML = '';
+
+    try {
+        const resDolar = await fetch('https://cotizacionya.ar/api/v1/argentina/dollars');
+        const dolares = await resDolar.json();
+
+        const oficial = dolares.find(d => d.source === 'oficial') || { sell: 1570 };
+        const blue = dolares.find(d => d.source === 'blue') || { sell: 1555 };
+        const mep = dolares.find(d => d.source === 'bolsa') || { sell: 1549 };
+        const cripto = dolares.find(d => d.source === 'cripto') || { sell: 1661 };
+
+        currentOfficialRate = oficial.sell;
+        $('fxRateDisplay').textContent = `Tipo de cambio oficial ref: $${currentOfficialRate.toLocaleString()} ARS`;
+
+        itemsHTML += `
+            <div class="ticker-item"><span class="ticker-symbol">USD/ARS (Oficial):</span> <span class="ticker-price pixel">$${oficial.sell.toLocaleString()}</span> <span class="ticker-up">▲ Live</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">USD/ARS (Blue):</span> <span class="ticker-price pixel">$${blue.sell.toLocaleString()}</span> <span class="ticker-up">▲ Live</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">USD/ARS (MEP):</span> <span class="ticker-price pixel">$${mep.sell.toLocaleString()}</span> <span class="ticker-up">▲ Live</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">USD/ARS (Cripto):</span> <span class="ticker-price pixel">$${cripto.sell.toLocaleString()}</span> <span class="ticker-up">▲ Live</span></div>
+        `;
+    } catch (e) {
+        itemsHTML += `
+            <div class="ticker-item"><span class="ticker-symbol">USD/ARS (Oficial):</span> <span class="ticker-price pixel">$1,570.00</span> <span class="ticker-up">▲ Live</span></div>
+            <div class="ticker-item"><span class="ticker-symbol">USD/ARS (Blue):</span> <span class="ticker-price pixel">$1,555.00</span> <span class="ticker-up">▲ Live</span></div>
+        `;
+    }
+
+    try {
+        const resCrypto = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
+        const cryptoData = await resCrypto.json();
+        const btcPrice = cryptoData.bitcoin.usd;
+        const btcChange = cryptoData.bitcoin.usd_24h_change;
+        const changeClass = btcChange >= 0 ? 'ticker-up' : 'ticker-down';
+        const changeSign = btcChange >= 0 ? '▲ +' : '▼ ';
+
+        itemsHTML += `
+            <div class="ticker-item"><span class="ticker-symbol">BTC/USD:</span> <span class="ticker-price pixel">$${btcPrice.toLocaleString()}</span> <span class="${changeClass} pixel">${changeSign}${btcChange.toFixed(2)}%</span></div>
+        `;
+    } catch (e) {
+        itemsHTML += `
+            <div class="ticker-item"><span class="ticker-symbol">BTC/USD:</span> <span class="ticker-price pixel">$74,884</span> <span class="ticker-up pixel">▲ +1.14%</span></div>
+        `;
+    }
+
+    itemsHTML += `
+        <div class="ticker-item"><span class="ticker-symbol">S&P 500:</span> <span class="ticker-price pixel">752.96</span> <span class="ticker-up pixel">▲ +2.40%</span></div>
+        <div class="ticker-item"><span class="ticker-symbol">NASDAQ 100:</span> <span class="ticker-price pixel">679.35</span> <span class="ticker-up pixel">▲ +3.54%</span></div>
+    `;
+
+    track.innerHTML = itemsHTML + itemsHTML;
+    updateSim();
+}
+fetchLiveMarketData();
+setInterval(fetchLiveMarketData, 180000);
+
+/* CAMBIO DE MONEDA */
+$('btnCurrUSD').addEventListener('click', () => {
+    if(currentCurrency === 'USD') return;
+    currentCurrency = 'USD';
+    $('btnCurrUSD').classList.add('active');
+    $('btnCurrARS').classList.remove('active');
+    const incomeInput = $('income');
+    incomeInput.min = 500;
+    incomeInput.max = 15000;
+    incomeInput.step = 100;
+    incomeInput.value = 3000;
+    updateSim();
+});
+
+$('btnCurrARS').addEventListener('click', () => {
+    if(currentCurrency === 'ARS') return;
+    currentCurrency = 'ARS';
+    $('btnCurrARS').classList.add('active');
+    $('btnCurrUSD').classList.remove('active');
+    const incomeInput = $('income');
+    incomeInput.min = 500000;
+    incomeInput.max = 15000000;
+    incomeInput.step = 50000;
+    incomeInput.value = 4500000;
+    updateSim();
+});
+
+/* SIMULADOR */
+function updateSim(){
+    let rawIncome = +$('income').value;
+    let incomeInUSD = currentCurrency === 'ARS' ? rawIncome / currentOfficialRate : rawIncome;
+
+    const f = +$('fixed').value;
+    const v = +$('variable').value;
+    const pct = 100 - f - v;
+    const saveUSD = incomeInUSD * pct / 100;
+    
+    $('fixed').max = 100 - v;
+    $('variable').max = 100 - f;
+
+    $('incomeOut').textContent = formatMoney(rawIncome);
+    $('fixedOut').textContent = f + '% (' + formatMoney(rawIncome * f / 100) + ')';
+    $('variableOut').textContent = v + '% (' + formatMoney(rawIncome * v / 100) + ')';
+    
+    $('fixedBand').style.width = f + '%';
+    $('variableBand').style.width = v + '%';
+    $('savingBand').style.width = pct + '%';
+    
+    const d = dict[currentLang];
+    $('fixedLegend').textContent = d.tFixedLeg + ' ' + f + '%';
+    $('variableLegend').textContent = d.tVarLeg + ' ' + v + '%';
+    $('savingLegend').textContent = d.tSaveLeg + ' ' + pct + '%';
+
+    const saveRaw = currentCurrency === 'ARS' ? saveUSD * currentOfficialRate : saveUSD;
+    $('savingsOut').textContent = formatMoney(saveRaw) + ' (' + pct + '%)';
+
+    const tenUSD = future(saveUSD, 120);
+    const twentyUSD = future(saveUSD, 240);
+
+    $('tenOut').textContent = formatMoney(currentCurrency === 'ARS' ? tenUSD * currentOfficialRate : tenUSD);
+    $('twentyOut').textContent = formatMoney(currentCurrency === 'ARS' ? twentyUSD * currentOfficialRate : twentyUSD);
+}
+['income','fixed','variable'].forEach(id=>$(id).addEventListener('input',updateSim));
+
+function updateTime(){
+    const amountRaw = +$('compareMonthly').value;
+    const amountUSD = currentCurrency === 'ARS' ? amountRaw / currentOfficialRate : amountRaw;
+    
+    const yearsA = +$('yearsA').value;
+    const yearsB = +$('yearsB').value;
+
+    $('yearsAOut').textContent = yearsA + (yearsA === 1 ? ' año' : ' años');
+    $('yearsBOut').textContent = yearsB + (yearsB === 1 ? ' año' : ' años');
+
+    $('tBarNowSub').textContent = yearsA + (yearsA === 1 ? ' año' : ' años');
+    $('tBarLaterSub').textContent = yearsB + (yearsB === 1 ? ' año' : ' años');
+
+    const valA = future(amountUSD, yearsA * 12);
+    const valB = future(amountUSD, yearsB * 12);
+
+    const mult = currentCurrency === 'ARS' ? currentOfficialRate : 1;
+
+    $('compareOut').textContent = formatMoney(amountRaw);
+    $('nowValue').textContent = formatMoney(valA * mult);
+    $('laterValue').textContent = formatMoney(valB * mult);
+
+    const maxVal = Math.max(valA, valB, 1);
+    $('nowBar').style.width = (valA / maxVal * 100) + '%';
+    $('laterBar').style.width = (valB / maxVal * 100) + '%';
+    
+    const diff = Math.abs(valA - valB);
+    $('difference').textContent = dict[currentLang].tDiff + formatMoney(diff * mult);
+}
+['compareMonthly', 'yearsA', 'yearsB'].forEach(id=>$(id).addEventListener('input',updateTime));
+
+/* MODAL DE CONTACTO */
+let modalFocus=null;
+function openModal(){modalFocus=document.activeElement;$('modal').classList.add('open');$('modal').setAttribute('aria-hidden','false');document.body.style.overflow='hidden';$('modal').querySelector('input').focus()}
+function closeModal(){$('modal').classList.remove('open');$('modal').setAttribute('aria-hidden','true');document.body.style.overflow='';modalFocus?.focus()}
+document.querySelectorAll('[data-open-modal]').forEach(b=>b.addEventListener('click',openModal));
+$('closeModal').addEventListener('click',closeModal);
+$('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('modal').classList.contains('open'))closeModal()});
+$('contactForm').addEventListener('submit',e=>{e.preventDefault();$('formFeedback').textContent=currentLang==='es'?'Versión de demostración: aún no se envió ninguna solicitud.':'Demo version: no request sent yet.'});
+
+/* RETRATO INTERACTIVO */
+const portrait = document.getElementById('matrixPortrait');
+let targetX = 50, targetY = 50, currentX = 50, currentY = 50;
+let targetRadius = 0, currentRadius = 0;
+const maxRadius = 100;
+const easing = 0.13;
+
+portrait.addEventListener('pointermove', (e) => {
+    const rect = portrait.getBoundingClientRect();
+    targetX = ((e.clientX - rect.left) / rect.width) * 100;
+    targetY = ((e.clientY - rect.top) / rect.height) * 100;
+    targetRadius = maxRadius;
+});
+portrait.addEventListener('pointerenter', () => { targetRadius = maxRadius; });
+portrait.addEventListener('pointerleave', () => { targetRadius = 0; });
+portrait.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') return;
+    const rect = portrait.getBoundingClientRect();
+    targetX = ((e.clientX - rect.left) / rect.width) * 100;
+    targetY = ((e.clientY - rect.top) / rect.height) * 100;
+    targetRadius = targetRadius > 0 ? 0 : maxRadius;
+});
+portrait.addEventListener('focus', () => { targetX = 50; targetY = 45; targetRadius = maxRadius; });
+portrait.addEventListener('blur', () => { targetRadius = 0; });
+
+function animatePortrait() {
+    const factor = reduced ? 1 : easing;
+    currentX += (targetX - currentX) * factor;
+    currentY += (targetY - currentY) * factor;
+    currentRadius += (targetRadius - currentRadius) * factor;
+
+    portrait.style.setProperty('--mouse-x', currentX + '%');
+    portrait.style.setProperty('--mouse-y', currentY + '%');
+    portrait.style.setProperty('--radius', currentRadius + 'px');
+
+    if (!reduced) { requestAnimationFrame(animatePortrait); }
+}
+animatePortrait();
+
+/* HERO 3D SCENE (THREE.JS + VOLUMEN 3D, VUELO LIBRE, SEGUIMIENTO Y GIRO 360 CIRCULAR) */
+const heroSection = $('inicio');
+const heroCanvas = $('heroCanvas');
+let scene, camera, renderer, beeGroup, beeMesh, flowerBgMesh;
+let raycaster, mouseVec;
+let mouseX = 0, mouseY = 0, targetMouseX = 0, targetMouseY = 0;
+let heroVisible = true;
+let isSpinning = false;
+let spinProgress = 0;
+
+function initHero3D() {
+    const width = heroSection.clientWidth;
+    const height = heroSection.clientHeight;
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+    camera.position.z = 5;
+
+    renderer = new THREE.WebGLRenderer({ canvas: heroCanvas, alpha: true, antialias: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    raycaster = new THREE.Raycaster();
+    mouseVec = new THREE.Vector2();
+
+    // Iluminación escénica neón
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
+    scene.add(ambientLight);
+
+    const greenNeonLight = new THREE.PointLight(0x70bd8c, 3, 14);
+    greenNeonLight.position.set(2, 2, 3);
+    scene.add(greenNeonLight);
+
+    const textureLoader = new THREE.TextureLoader();
+
+    // Flor / Néctar de fondo ensanchada para ocupar todo el Hero
+    textureLoader.load('nectar-scan.jpg', (flowerTex) => {
+        const bgGeo = new THREE.PlaneGeometry(20, 11);
+        const bgMat = new THREE.MeshBasicMaterial({ map: flowerTex, transparent: true, opacity: 0.4 });
+        flowerBgMesh = new THREE.Mesh(bgGeo, bgMat);
+        flowerBgMesh.position.z = -3;
+        scene.add(flowerBgMesh);
+    });
+
+    // Grupo de la abeja con volumen 3D real (Caja 3D fina con textura mapeada)
+    beeGroup = new THREE.Group();
+    scene.add(beeGroup);
+
+    textureLoader.load('bee-sprite.png', (beeTex) => {
+        const beeGeo = new THREE.BoxGeometry(2.2, 1.8, 0.3);
+        const beeMat = new THREE.MeshStandardMaterial({ 
+            map: beeTex, 
+            transparent: true, 
+            alphaTest: 0.3,
+            roughness: 0.3,
+            metalness: 0.3
+        });
+        beeMesh = new THREE.Mesh(beeGeo, beeMat);
+        beeGroup.add(beeMesh);
+    });
+
+    window.addEventListener('resize', onHeroResize);
+    window.addEventListener('pointermove', onHeroPointerMove);
+    window.addEventListener('click', onHeroClick);
+
+    new IntersectionObserver(entries => {
+        heroVisible = entries[0]?.isIntersecting ?? false;
+    }).observe(heroSection);
+
+    animateHero3D(0);
+}
+
+function onHeroResize() {
+    if (!heroSection || !renderer) return;
+    const width = heroSection.clientWidth;
+    const height = heroSection.clientHeight;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+}
+
+function onHeroPointerMove(e) {
+    targetMouseX = (e.clientX / window.innerWidth) * 2 - 1;
+    targetMouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+    mouseVec.x = targetMouseX;
+    mouseVec.y = targetMouseY;
+}
+
+function onHeroClick(e) {
+    if (!beeMesh || isSpinning) return;
+    
+    raycaster.setFromCamera(mouseVec, camera);
+    const intersects = raycaster.intersectObject(beeMesh);
+
+    if (intersects.length > 0) {
+        isSpinning = true;
+        spinProgress = 0;
+    }
+}
+
+function animateHero3D(time) {
+    if (heroVisible) {
+        mouseX += (targetMouseX - mouseX) * 0.05;
+        mouseY += (targetMouseY - mouseY) * 0.05;
+
+        if (beeGroup) {
+            const t = reduced ? 0 : time * 0.001;
             
-            const material = new THREE.MeshStandardMaterial({
-                color: 0x38bdf8,
-                roughness: 0.2,
-                metalness: 0.8,
-                wireframe: true
-            });
+            // Recorrido libre y amplio por todo el fondo del Hero
+            beeGroup.position.x = Math.sin(t * 0.6) * 3.2 + mouseX * 1.8;
+            beeGroup.position.y = Math.cos(t * 0.9) * 1.4 + mouseY * 1.2;
+            beeGroup.position.z = Math.sin(t * 0.4) * 0.8;
 
-            // Si existe la textura diffuse la aplicamos
-            textureLoader.load('./material_0_diffuse.png', (tex) => {
-                material.map = tex;
-                material.wireframe = false;
-                material.needsUpdate = true;
-            });
-
-            model = new THREE.Mesh(geometry, material);
-            scene.add(model);
-        }
-
-        function onMouseMove(event) {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            raycaster.ray.intersectPlane(planeZ, mouseWorldPos);
-        }
-
-        function onClick() {
-            if (!model || isSpinning) return;
-
-            isSpinning = true;
-            spinProgress = 0;
-            startQuaternion.copy(model.quaternion);
-
-            spinAxis.set(
-                (Math.random() - 0.5),
-                (Math.random() - 0.5),
-                (Math.random() - 0.5)
-            ).normalize();
-
-            let randomAngle = Math.PI * 2;
-            let extraRot = new THREE.Quaternion().setFromAxisAngle(spinAxis, randomAngle);
-            targetQuaternion.copy(startQuaternion).multiply(extraRot);
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            const delta = clock.getDelta();
-            if (mixer) mixer.update(delta);
-
-            if (model) {
-                flightTime += delta * 0.8;
-
-                targetPosition.x = Math.sin(flightTime * 0.7) * 4;
-                targetPosition.y = Math.cos(flightTime * 0.5) * 2.5;
-                targetPosition.z = Math.sin(flightTime * 0.3) * 1.5;
-
-                if (!isSpinning) {
-                    model.position.lerp(targetPosition, 0.05);
-
-                    let lookTarget = new THREE.Vector3(
-                        mouseWorldPos.x * 0.5,
-                        mouseWorldPos.y * 0.5,
-                        model.position.z + 2
-                    );
-                    model.lookAt(lookTarget);
-                } else {
-                    spinProgress += delta * 4;
-                    if (spinProgress >= 1) {
-                        spinProgress = 1;
-                        isSpinning = false;
-                    }
-                    model.quaternion.slerpQuaternions(startQuaternion, targetQuaternion, spinProgress);
+            if (isSpinning) {
+                // Giro circular completo de 360 grados exactos en el eje Y al hacer clic
+                spinProgress += 0.06;
+                beeGroup.rotation.y = spinProgress * Math.PI * 2;
+                if (spinProgress >= 1) {
+                    isSpinning = false;
+                    spinProgress = 0;
                 }
+            } else {
+                // Seguimiento fluido de la mirada hacia el cursor
+                beeGroup.rotation.y = mouseX * 0.8 + Math.sin(t * 0.6) * 0.3;
+                beeGroup.rotation.x = -mouseY * 0.5;
+                beeGroup.rotation.z = Math.cos(t * 0.8) * 0.2;
             }
-
-            renderer.render(scene, camera);
         }
 
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-    </script>
+        renderer.render(scene, camera);
+    }
+    if (!reduced) {
+        requestAnimationFrame(animateHero3D);
+    }
+}
+
+initHero3D();
+</script>
 </body>
 </html>
