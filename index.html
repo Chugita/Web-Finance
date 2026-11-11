@@ -770,31 +770,71 @@ const methodDetailsData = {
     }
 };
 
-function openMethodDetails(key) {
-    const data = methodDetailsData[key];
-    if(!data) return;
-    
-    $('methodModalMicro').textContent = data.micro;
-    $('methodModalTitle').textContent = data.title;
-    $('methodModalSubtitle').textContent = data.subtitle;
-    $('methodModalDesc').textContent = data.desc;
-    
-    const listEl = $('methodModalList');
+const methodDetailsEN = {
+    organizar:{
+        micro:"GAX / DIMENSION 01: YOUR PRESENT",title:"ORGANIZE",
+        subtitle:"Understand your income, spending and overall cash flow.",
+        desc:"Financial planning begins with knowing where your money goes every month. Together, we examine your income, spending habits, fixed and variable costs to give you clarity and help you build sustainable savings without compromising your lifestyle.",
+        items:[
+            {title:"Personal Finance Assessment",desc:"Map your actual income and expenses, identify avoidable spending and improve your monthly cash flow."},
+            {title:"Spending Habits and Priorities",desc:"Understand your current spending and align your resources with what matters most."},
+            {title:"Your Financial Starting Point",desc:"Build a simple, sustainable system so you always know where you stand."}
+        ]
+    },
+    proteger:{
+        micro:"GAX / DIMENSION 02: YOUR STABILITY",title:"PROTECT",
+        subtitle:"Safeguard your family, assets and earning capacity.",
+        desc:"Your ability to generate income is one of your most valuable assets. This dimension explores ways to protect your family and financial stability from unexpected events that could interrupt income or affect your wealth.",
+        items:[
+            {title:"Protecting Your Earning Capacity",desc:"Explore financial safeguards for illness, accidents or other events that affect your ability to work."},
+            {title:"Family and Estate Protection",desc:"Plan for the long-term well-being of the people who depend on you."},
+            {title:"Comprehensive Asset Protection",desc:"Consider ways to protect the assets you have built from unexpected risks."}
+        ]
+    },
+    proyectar:{
+        micro:"GAX / DIMENSION 03: YOUR FUTURE",title:"PROJECT",
+        subtitle:"Grow your savings and plan systematically for retirement.",
+        desc:"Long-term planning addresses two important challenges: preserving the purchasing power of your savings and building resources for the years after work. We explore investments and systematic saving aligned with your goals, time horizon and risk tolerance.",
+        items:[
+            {title:"Investment Planning",desc:"Explore appropriate instruments to pursue growth while understanding risk, costs and liquidity."},
+            {title:"Systematic Retirement Savings",desc:"Build consistent savings habits to prepare for a longer retirement."},
+            {title:"Maintaining Your Lifestyle",desc:"Plan ahead for financial independence and your quality of life later on."}
+        ]
+    }
+};
+let activeMethodKey=null;
+
+function renderMethodDetails(key){
+    const data=(typeof currentLang!=='undefined'&&currentLang==='en'?methodDetailsEN:methodDetailsData)[key];
+    if(!data)return;
+    $('methodModalMicro').textContent=data.micro;
+    $('methodModalTitle').textContent=data.title;
+    $('methodModalSubtitle').textContent=data.subtitle;
+    $('methodModalDesc').textContent=data.desc;
+    const listEl=$('methodModalList');
     listEl.replaceChildren();
-    data.items.forEach(item => {
-        const li = document.createElement('li');
-        const content = document.createElement('div');
-        const strong = document.createElement('strong');
-        strong.textContent = item.title;
-        const p = document.createElement('p');
-        p.style.margin = '0';
-        p.style.color = 'var(--muted)';
-        p.style.fontSize = '13px';
-        p.textContent = item.desc;
-        content.append(strong, p);
+    data.items.forEach(item=>{
+        const li=document.createElement('li');
+        const content=document.createElement('div');
+        const strong=document.createElement('strong');
+        strong.textContent=item.title;
+        const p=document.createElement('p');
+        p.style.margin='0';
+        p.style.color='var(--muted)';
+        p.style.fontSize='13px';
+        p.textContent=item.desc;
+        content.append(strong,p);
         li.append(content);
         listEl.append(li);
     });
+}
+
+function openMethodDetails(key) {
+    activeMethodKey=key;
+    const data = methodDetailsData[key];
+    if(!data) return;
+    
+    renderMethodDetails(key);
 
     $('methodModal').classList.add('open');
     $('methodModal').setAttribute('aria-hidden', 'false');
@@ -1137,10 +1177,7 @@ function setGaxLanguage(next){
     if(methodCTA)methodCTA.textContent=captions.m2;
     const formFeedback=$('formFeedback');
     if(formFeedback)formFeedback.textContent=next==='es'?'El envío real requiere conectar un correo, calendario o servidor.':'Submitting this form requires connecting email, calendar, or a server.';
-    if($('methodModal')?.classList.contains('open')){
-        const openKey=document.querySelector('.method-item[data-method-modal]')?.getAttribute('data-method-modal');
-        // Open content is handled by method-language data in the next section.
-    }
+    if($('methodModal')?.classList.contains('open') && activeMethodKey) renderMethodDetails(activeMethodKey);
 }
 $('langBtn').addEventListener('click',()=>{
     setGaxLanguage(currentLang==='es'?'en':'es');
