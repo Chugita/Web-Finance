@@ -321,13 +321,13 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
 /* GAX V6 — reduced flower brightness, crisp hero typography and persistent 3D flight */
 .hero {
     background-color: #080909;
-    background-image: linear-gradient(rgba(3,7,5,.72),rgba(3,7,5,.77)),
+    background-image: linear-gradient(rgba(3,7,5,.56),rgba(3,7,5,.63)),
                       url('nectar-scan.jpg');
     background-position: center;
     background-size: cover;
 }
 .hero::after {
-    background:radial-gradient(ellipse at 50% 49%,rgba(2,5,3,.70) 0%,rgba(2,5,3,.42) 56%,rgba(2,5,3,.15) 100%);
+    background:radial-gradient(ellipse at 50% 49%,rgba(2,5,3,.57) 0%,rgba(2,5,3,.31) 56%,rgba(2,5,3,.11) 100%);
 }
 .hero-content {position:relative; z-index:3;}
 .hero h1 {text-shadow:0 2px 28px rgba(0,0,0,.95),0 2px 5px #000; color:#f5f7f5;}
@@ -1298,17 +1298,24 @@ if (portrait) {
     animatePortraitReveal();
 }
 
-/* GAX V6 — 3D bee, silver x-ray finish, uninterrupted flight across the page.
+/* GAX V6 — 3D bee, silver x-ray finish, flight around the Hero, opt-in cursor follow and return-to-top.
    Three.js r128, GLTFLoader and scene.gltf (including the 'hover' action).
    The flower remains anchored to the Hero; the bee lives in a fixed,
-   transparent WebGL canvas and never intercepts clicks or form inputs. */
+   transparent WebGL canvas; interaction is via pointer proximity, not an overlay. */
 const heroSection = $('inicio');
 const beeCanvas = $('heroCanvas');
 let beeScene, beeCamera, beeRenderer, beeFlight, beeFacing, beeRig, beeMixer;
 let beeClock = 0, beePrevFrame = null, beeLoaded = false;
 let beeViewportW = innerWidth, beeViewportH = innerHeight;
 let beeModelVisible = true;
-const flightDuration = 16.0; // approach 4s, hover 4s, backflip 3s, depart 5s
+const flightDuration = 17.0; // approach, flower interaction, turn, free flight
+let beeMode='autonomous'; // autonomous | following | returning
+let beeScreenX=.14, beeScreenY=.43;
+let beeTargetX=.14, beeTargetY=.43;
+let beeMouseX=.5, beeMouseY=.5;
+let beeReturnStart=0, beeReturnFromX=0, beeReturnFromY=0;
+let beeRevealStart=0;
+let beeWorldRotation=0;
 
 const mixBee = (a,b,t) => a + (b-a)*t;
 const easeBee = value => {
@@ -1392,7 +1399,10 @@ function initBeeAcrossPage() {
             const recentered=new THREE.Box3().setFromObject(beeRig);
             beeRig.position.sub(recentered.getCenter(new THREE.Vector3()));
             // Model's longitudinal axis is Y. Rotate into horizontal side-profile.
-            beeRig.rotation.z=-Math.PI/2;
+            // The body extends along the original Y axis. Rotate its length
+            // onto the horizontal screen X axis and keep the broad lateral
+            // surface facing the camera (avoid an edge-on rear perspective).
+            beeRig.rotation.set(0,0,-Math.PI/2);
             beeFacing.add(beeRig);
             beeRig.traverse(obj=>{
                 if(!obj.isMesh)return;
@@ -1424,6 +1434,33 @@ function initBeeAcrossPage() {
             window.GAXLoading?.done();
             } catch (err) { console.error('GAX: error while preparing the bee 3D model',err); window.GAXLoading?.done(); }
         },undefined,error=>{console.error('GAX: failed to load bee scene.gltf',error);window.GAXLoading?.done();});
+        window.addEventListener('pointermove',event=>{
+            beeMouseX=Math.max(.04,Math.min(.96,event.clientX/Math.max(1,innerWidth)));
+            beeMouseY=Math.max(.07,Math.min(.93,event.clientY/Math.max(1,innerHeight)));
+            const nearBee=Math.hypot((beeMouseX-beeScreenX)*innerWidth,(beeMouseY-beeScreenY)*innerHeight)<85;
+            if(!event.target.closest('a,button,input,select,textarea,[role="button"]')){
+                document.body.style.cursor=nearBee&&beeLoaded?'pointer':'';
+            }
+        },{passive:true});
+        document.addEventListener('click',event=>{
+            if(!beeLoaded||event.target.closest('a,button,input,select,textarea,[role="button"],label'))return;
+            const mx=event.clientX/Math.max(1,innerWidth);
+            const my=event.clientY/Math.max(1,innerHeight);
+            // As the model is drawn over the page with pointer-events:none,
+            // use its visible screen position as the click hit area.
+            const distance=Math.hypot((mx-beeScreenX)*innerWidth,(my-beeScreenY)*innerHeight);
+            if(distance>95)return;
+            if(beeMode==='following'){
+                beeMode='returning';
+                beeReturnStart=performance.now()/1000;
+                beeReturnFromX=beeScreenX;
+                beeReturnFromY=beeScreenY;
+                window.scrollTo({top:0,behavior:reduced?'instant':'smooth'});
+            }else if(beeMode==='autonomous'){
+                beeMode='following';
+                beeMouseX=mx;beeMouseY=my;
+            }
+        },true);
         window.addEventListener('resize',resizeBeeViewport,{passive:true});
         document.addEventListener('visibilitychange',()=>{
             beeModelVisible=!document.hidden;
@@ -1451,63 +1488,78 @@ function resizeBeeViewport(){
 function animateBeeAcrossPage(now){
     if(!beeRenderer)return;
     requestAnimationFrame(animateBeeAcrossPage);
-    if(!beeModelVisible) return;
+    if(!beeModelVisible)return;
     const dt=beePrevFrame===null?0:Math.min(.05,(now-beePrevFrame)/1000);
     beePrevFrame=now;
-    if(!reduced) {
+    if(!reduced){
         beeClock+=dt;
         if(beeMixer)beeMixer.update(dt);
     }
     if(beeLoaded){
         const heroHeight=Math.max(1,heroSection.offsetHeight);
-        const currentScroll=Math.max(0,window.scrollY||0);
-        const outsideHero=currentScroll>heroHeight*.65;
-        // Move with the visitor after the opening sequence: the bee stays
-        // on the reading margins and travels through every subsequent section.
-        const documentTravel=Math.max(1,document.documentElement.scrollHeight-innerHeight);
-        const pageProgress=Math.min(1,currentScroll/documentTravel);
-        const t=Math.min(1,beeClock/flightDuration);
-        let x=.17,y=.44,spin=0;
-        if(t<.25){
-            const p=easeBee(t/.25);
-            x=mixBee(.13,.71,p);
-            y=mixBee(.43,.34,p)+.012*Math.sin(beeClock*6);
-        }else if(t<.50){
-            // Pause and feed near the blossom for four seconds.
-            const p=(t-.25)/.25;
-            x=.71+.015*Math.sin(p*4*Math.PI);
-            y=.34+.022*Math.sin(p*6*Math.PI);
-        }else if(t<.69){
-            // One complete backflip in the image plane: never edge-on.
-            const p=easeBee((t-.5)/.19);
-            const angle=p*2*Math.PI;
-            x=.71-.085*Math.sin(angle);
-            y=.34-.085*(1-Math.cos(angle));
-            spin=-angle;
+        const scrollY=window.scrollY||0;
+        const inHero=scrollY<heroHeight-50;
+        let x=beeScreenX,y=beeScreenY;
+        let yaw=0,roll=0,pitch=0;
+        let visible=true;
+        if(beeMode==='following'){
+            // Only the explicit click activates cursor-follow across ALL sections.
+            x=mixBee(beeScreenX,Math.max(.06,Math.min(.94,beeMouseX+.055)),.10);
+            y=mixBee(beeScreenY,Math.max(.10,Math.min(.90,beeMouseY-.06)),.10);
+            const dx=x-beeScreenX,dy=y-beeScreenY;
+            roll=Math.max(-.28,Math.min(.28,-dy*4));
+            yaw=Math.max(-.20,Math.min(.20,dx*4));
+        }else if(beeMode==='returning'){
+            const p=easeBee((now/1000-beeReturnStart)/2.3);
+            x=mixBee(beeReturnFromX,.15,p);
+            y=mixBee(beeReturnFromY,.38,p)-Math.sin(p*Math.PI)*.25;
+            roll=-Math.sin(p*Math.PI)*.35;
+            if(p>=1){
+                beeMode='autonomous';
+                beeClock=0;
+                beePrevFrame=now;
+            }
         }else{
-            const p=easeBee((t-.69)/.31);
-            x=mixBee(.71,.87,p);
-            y=mixBee(.34,.62,p);
+            // Autonomous bee is a HERO scene, not an automatic scroll follower.
+            // Every cycle approaches the flower sideways, hovers, turns and
+            // explores the hero perimeter without covering the title.
+            visible=inHero;
+            const t=(beeClock%flightDuration)/flightDuration;
+            if(t<.29){
+                const p=easeBee(t/.29);
+                x=mixBee(.13,.73,p);
+                y=mixBee(.41,.34,p)+.015*Math.sin(beeClock*6);
+            }else if(t<.51){
+                const p=(t-.29)/.22;
+                x=.73+.018*Math.sin(p*Math.PI*4);
+                y=.34+.020*Math.sin(p*Math.PI*8);
+                pitch=.09*Math.sin(p*Math.PI*6);
+            }else if(t<.64){
+                const p=easeBee((t-.51)/.13);
+                x=mixBee(.73,.65,p);
+                y=mixBee(.34,.31,p);
+                // Deliberate change of heading; rear view appears only briefly.
+                yaw=Math.PI*p;
+                roll=-.15*Math.sin(p*Math.PI);
+            }else if(t<.89){
+                const p=easeBee((t-.64)/.25);
+                x=mixBee(.65,.12,p);
+                y=mixBee(.31,.63,p)+.03*Math.sin(p*Math.PI*3);
+                yaw=Math.PI;
+                roll=-.12*Math.sin(p*Math.PI*2);
+            }else{
+                const p=easeBee((t-.89)/.11);
+                x=mixBee(.12,.13,p);
+                y=mixBee(.63,.41,p);
+                yaw=Math.PI*(1-p);
+            }
         }
-        if(outsideHero && t>.68){
-            const secondsSinceFlyaway=Math.max(0,beeClock-flightDuration);
-            const blend=easeBee(Math.min(1,(currentScroll/heroHeight-.65)/.65));
-            // The bee follows the visitor downward and continues free flight.
-            const afterX=.85+.055*Math.sin(secondsSinceFlyaway*.54+pageProgress*16);
-            const afterY=.54+.22*Math.sin(secondsSinceFlyaway*.37+pageProgress*21);
-            x=mixBee(x,afterX,blend);
-            y=mixBee(y,afterY,blend);
-            spin=0;
-        }else if(t>=1){
-            x=.85+.055*Math.sin((beeClock-flightDuration)*.54);
-            y=.54+.19*Math.sin((beeClock-flightDuration)*.37);
-        }
-        // Slightly smaller and quieter over the page's informational sections.
-        const mainBlend=easeBee(Math.max(0,Math.min(1,(currentScroll/heroHeight-.70)*2.5)));
-        const baseScale=beeViewportW<650?.78:1;
-        beeFlight.scale.setScalar(baseScale*(1-mainBlend*.23));
+        // Keep the skeletal side profile near frontal-camera plane.
+        beeFacing.rotation.set(pitch,yaw,roll);
+        beeScreenX=x;beeScreenY=y;
         beeFlight.position.copy(beePositionFromScreen(x,y));
-        beeFacing.rotation.set(0,0,spin);
+        beeFlight.scale.setScalar(innerWidth<650?.72:.93);
+        beeCanvas.style.opacity=visible?'1':'0';
     }
     beeRenderer.render(beeScene,beeCamera);
 }
