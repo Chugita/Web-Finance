@@ -1547,36 +1547,35 @@ let beeScene, beeCamera, beeRenderer, beeFlight, beeFacing, beeRig, beeMixer;
 let beeClock = 0, beePrevFrame = null, beeLoaded = false;
 let beeViewportW = innerWidth, beeViewportH = innerHeight;
 let beeModelVisible = true;
-const flightDuration = 33.0; // living flight: visitor, lettering, flower, exploration, retreat
+const flightDuration=29.0; // continuous living bee circuit
 let beeDepthLayer='behind';
-let beeScreenX=.08,beeScreenY=.32;
+let beeScreenX=.055,beeScreenY=.34;
 const mixBee=(a,b,t)=>a+(b-a)*t;
-const clampBee=(n,a,b)=>Math.max(a,Math.min(b,n));
-const smoothBee=t=>{const v=clampBee(t,0,1);return v*v*(3-2*v);};
-// Intentional flight waypoints: unlike per-segment ease-in/out, Hermite
-// interpolation carries velocity through each waypoint without robotic stops.
+const clampBee=(x,low,high)=>Math.max(low,Math.min(high,x));
+/* The rig is normalized nose-forward along +X. A positive +90 degree
+   yaw is the bee's FACE toward the camera in this asset, not its abdomen.
+   Actual 3D model inspection on the site is still recommended. */
 const beeFlightPath=[
- // t      position      head direction   bank    size     text layer
- {t:0,    x:.08,y:.32, yaw:-Math.PI/2, pitch:0,    roll:0,    size:.73,layer:'front'},
- {t:.11,  x:.27,y:.23, yaw:-Math.PI/2, pitch:-.03, roll:-.08,size:.96,layer:'front'},
- // Brake naturally, keep the eyes facing the user, and approach the glass.
- {t:.21,  x:.47,y:.32, yaw:-Math.PI/2, pitch:0,    roll:.015,size:1.96,layer:'front'},
- {t:.27,  x:.46,y:.30, yaw:-1.42,      pitch:.03,  roll:.04, size:1.76,layer:'front'},
- // Turn toward the typography and drift behind the letters.
- {t:.35,  x:.36,y:.23, yaw:-.72,       pitch:.08,  roll:-.12,size:1.12,layer:'behind'},
- {t:.43,  x:.52,y:.22, yaw:-.23,       pitch:-.08, roll:.13, size:.91,layer:'behind'},
- // Cross to the right. The nose leads the body into the flower.
- {t:.53,  x:.77,y:.28, yaw:.15,        pitch:.09,  roll:-.13,size:.80,layer:'behind'},
- {t:.61,  x:.78,y:.39, yaw:-.45,       pitch:-.12, roll:.09, size:.75,layer:'behind'},
- // Pollination: hover at the bloom center, dip the head and probe.
- {t:.67,  x:.735,y:.435,yaw:-.85,      pitch:.19,  roll:-.08,size:.70,layer:'behind'},
- {t:.73,  x:.725,y:.435,yaw:-.96,      pitch:.22,  roll:.05, size:.70,layer:'behind'},
- {t:.78,  x:.75,y:.40, yaw:-.64,       pitch:.07,  roll:.08, size:.76,layer:'behind'},
- // Lift, turn and sweep high across the top of the viewport.
- {t:.84,  x:.90,y:.19, yaw:.45,        pitch:-.19, roll:-.23,size:.81,layer:'behind'},
- {t:.91,  x:.42,y:.12, yaw:-1.7,       pitch:.06,  roll:.16, size:.78,layer:'behind'},
- {t:.97,  x:.035,y:.36,yaw:-1.57,      pitch:.06,  roll:-.07,size:.71,layer:'front'},
- {t:1,    x:.08,y:.32, yaw:-Math.PI/2, pitch:0,    roll:0,   size:.73,layer:'front'}
+ // Unwrapped angles ensure a continuous turn; no stop-and-go easing.
+ // The first three waypoints keep advancing right while looking outwards.
+ {t:0,    x:.06,y:.33,yaw:Math.PI/2,pitch:0,    roll:0,   size:.67,layer:'front'},
+ {t:.115, x:.24,y:.26,yaw:Math.PI/2,pitch:-.02,roll:-.05,size:.84,layer:'front'},
+ {t:.225, x:.46,y:.32,yaw:Math.PI/2,pitch:0,   roll:.02, size:1.48,layer:'front'},
+ // Move away from the glass as she banks toward the lettering.
+ {t:.32,  x:.55,y:.25,yaw:.45,      pitch:-.05,roll:-.10,size:1.01,layer:'front'},
+ {t:.41,  x:.65,y:.22,yaw:.10,      pitch:.04, roll:.11,size:.81,layer:'behind'},
+ // Carry momentum into the flower, rather than snapping or reversing.
+ {t:.52,  x:.83,y:.32,yaw:-.32,     pitch:.07, roll:.10,size:.77,layer:'behind'},
+ {t:.615, x:.77,y:.41,yaw:-.70,     pitch:.14, roll:-.10,size:.69,layer:'behind'},
+ // Short nectar inspection: still drifting, with a little probing motion.
+ {t:.69,  x:.72,y:.44,yaw:-.58,     pitch:.22, roll:.04,size:.67,layer:'behind'},
+ {t:.735, x:.76,y:.40,yaw:-.24,    pitch:.14, roll:.07,size:.70,layer:'behind'},
+ // Leave the flower with a broad banking U-turn; fly to the left,
+ // showing back briefly only AFTER the visitor has seen the eyes.
+ {t:.82,  x:.89,y:.19,yaw:-1.8,     pitch:-.10,roll:-.17,size:.76,layer:'behind'},
+ {t:.895, x:.46,y:.13,yaw:-3.0,     pitch:.04, roll:.12,size:.73,layer:'behind'},
+ {t:.96,  x:.07,y:.18,yaw:-4.55,    pitch:.08, roll:-.08,size:.66,layer:'behind'},
+ {t:1,    x:.06,y:.33,yaw:-Math.PI*1.5,pitch:0,roll:0,size:.67,layer:'front'}
 ];
 function beeHermite(a,b,m0,m1,u,span){
  const u2=u*u,u3=u2*u;
@@ -1587,20 +1586,16 @@ function sampleBeeFlight(t){
  let i=0;
  while(i<beeFlightPath.length-2&&t>beeFlightPath[i+1].t)i++;
  const a=beeFlightPath[i],b=beeFlightPath[i+1];
- const span=b.t-a.t, u=clampBee((t-a.t)/span,0,1);
- const before=beeFlightPath[Math.max(0,i-1)],after=beeFlightPath[Math.min(beeFlightPath.length-1,i+2)];
- const slope=(key,p,q)=> (q[key]-p[key])/Math.max(.0001,q.t-p.t);
- const axis=key=>beeHermite(a[key],b[key],slope(key,before,b),slope(key,a,after),u,span);
- const ease=smoothBee(u);
+ const span=b.t-a.t,u=clampBee((t-a.t)/span,0,1);
+ const prev=beeFlightPath[Math.max(0,i-1)];
+ const next=beeFlightPath[Math.min(beeFlightPath.length-1,i+2)];
+ const slope=(key,p,q)=>(q[key]-p[key])/Math.max(.00001,q.t-p.t);
+ const axis=key=>beeHermite(a[key],b[key],slope(key,prev,b),slope(key,a,next),u,span);
  return {
-  x:axis('x'),y:axis('y'),
-  yaw:axis('yaw'),pitch:axis('pitch'),roll:axis('roll'),
-  size:Math.max(.5,axis('size')),
-  // Depth transitions occur away from flower's delicate details.
+  x:axis('x'), y:axis('y'), yaw:axis('yaw'), pitch:axis('pitch'),
+  roll:axis('roll'),size:Math.max(.55,axis('size')),
   layer:u<.5?a.layer:b.layer,
-  // Flutter has more time to express itself during pollination.
-  nectar:t>=.60&&t<=.79?Math.pow(Math.sin(Math.PI*(t-.60)/.19),.6):0,
-  braking:t>=.16&&t<=.30?Math.sin(Math.PI*(t-.16)/.14)**2:0
+  nectar:t>.59&&t<.75?Math.sin(Math.PI*(t-.59)/.16)**2:0
  };
 }
 function beePositionFromScreen(fx,fy) {
@@ -1759,6 +1754,8 @@ function initBeeAcrossPage() {
                 beeMixer=new THREE.AnimationMixer(beeRig);
                 beeMixer.clipAction(clip).setLoop(THREE.LoopRepeat,Infinity).play();
             }
+            beeClock=0; // Begin left-to-right AFTER GLTF finishes loading.
+            beePrevFrame=null;
             beeLoaded=true;
             window.GAXLoading?.done();
             } catch (err) { console.error('GAX: error while preparing the bee 3D model',err); window.GAXLoading?.done(); }
@@ -1807,21 +1804,17 @@ function animateBeeAcrossPage(now){
             visible=inHero;
             const t=(beeClock%flightDuration)/flightDuration;
             const motion=reduced
-              ?{x:.75,y:.40,yaw:-.35,pitch:.05,roll:0,size:.75,layer:'behind',nectar:0,braking:0}
+              ?{x:.73,y:.39,yaw:0,pitch:.04,roll:0,size:.71,layer:'behind',nectar:0}
               :sampleBeeFlight(t);
-            // Three non-synchronized frequencies emulate a flying insect's
-            // constant tiny corrections, rather than large robotic swaying.
+            // Never ease to zero at each waypoint. Continuous spline velocity
+            // plus small aperiodic-looking wing/body corrections.
             const flutter=reduced?0:1;
-            const bodyBob=.006*Math.sin(beeClock*4.6)+.0027*Math.sin(beeClock*9.1+.8);
-            const courseCorrection=.003*Math.sin(beeClock*2.7+.5);
-            x=motion.x+flutter*(courseCorrection+motion.nectar*.006*Math.cos(beeClock*7.3));
-            y=motion.y+flutter*(bodyBob+motion.nectar*.006*Math.sin(beeClock*8.7));
-            yaw=motion.yaw+flutter*(.017*Math.sin(beeClock*3.9)+motion.nectar*.045*Math.sin(beeClock*4.1));
-            // During nectar collection the insect leans its head downward
-            // and makes delicate probing movements without spinning.
-            pitch=motion.pitch+flutter*(.018*Math.sin(beeClock*3.1)+motion.nectar*.06*Math.sin(beeClock*6.7));
-            roll=motion.roll+flutter*.025*Math.sin(beeClock*2.5+.6);
-            const depthScale=motion.size*(1+flutter*.009*Math.sin(beeClock*3.5));
+            x=motion.x+flutter*(.003*Math.sin(beeClock*3.1)+.002*Math.sin(beeClock*7.7));
+            y=motion.y+flutter*(.006*Math.sin(beeClock*4.2)+.002*Math.cos(beeClock*9.3));
+            yaw=motion.yaw+flutter*.012*Math.sin(beeClock*2.9);
+            pitch=motion.pitch+flutter*(.014*Math.sin(beeClock*3.7)+motion.nectar*.032*Math.sin(beeClock*7.0));
+            roll=motion.roll+flutter*.017*Math.sin(beeClock*3.0);
+            const depthScale=motion.size*(1+flutter*.006*Math.sin(beeClock*4.1));
             beeFacing.rotation.set(pitch,yaw,roll,'YXZ');
             if(beeDepthLayer!==motion.layer){
                 beeDepthLayer=motion.layer;
