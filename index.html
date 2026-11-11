@@ -415,11 +415,17 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
    on desktop. On narrow screens, extend it upward from its fixed stem. */
 .hero {
     background-color:#080909;
+    /* Full-bleed scanning/pollen texture, independent from flower size.
+       Fixes flat black bars at the sides on desktop. */
     background-image:
-      radial-gradient(ellipse at 60% 60%,rgba(22,32,27,.25),transparent 80%),
-      repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 1px,transparent 1px 5px);
+      radial-gradient(circle at 21% 37%,rgba(201,230,217,.22) 0 .65px,transparent 1.1px),
+      radial-gradient(circle at 78% 63%,rgba(203,225,218,.17) 0 .55px,transparent 1px),
+      radial-gradient(circle at 44% 83%,rgba(132,171,152,.13) 0 .7px,transparent 1.2px),
+      repeating-linear-gradient(0deg,rgba(215,237,221,.026) 0 1px,transparent 1px 5px),
+      radial-gradient(ellipse at 60% 60%,rgba(22,32,27,.25),transparent 80%);
     background-position:center;
-    background-size:cover;
+    background-size:151px 127px,213px 173px,97px 181px,100% 100%,cover;
+    background-repeat:repeat;
 }
 .hero::before {
     content:"";
@@ -432,9 +438,10 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
       url('nectar-scan.jpg');
     background-position:center,center bottom;
     background-repeat:no-repeat;
-    background-size:cover,min(80vw,1240px) auto;
+    /* Smaller whole flower; its stem stays pinned to the Hero divider. */
+    background-size:cover,min(64vw,1080px) auto;
     opacity:1;
-    -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);
+    -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 12%,#000 88%,transparent 100%);
     mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);
 }
 .hero::after {
