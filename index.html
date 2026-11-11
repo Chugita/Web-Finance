@@ -358,7 +358,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
   transition:opacity .65s ease,visibility .65s ease;
 }
 #gaxLoading.is-ready {opacity:0;visibility:hidden;pointer-events:none}
-.gax-loader-logo {font:400 clamp(32px,6vw,64px)/1 'Geist Mono',monospace;letter-spacing:-.08em}
+.gax-loader-logo {display:block;width:min(220px,60vw);height:auto;max-height:80px;object-fit:contain}
 .gax-loader-label {font:400 11px/1.8 'Geist Mono',monospace;color:#99b7a3;letter-spacing:.15em}
 .gax-loader-line {width:min(200px,52vw);height:2px;background:#26372b;overflow:hidden}
 .gax-loader-line::before {content:"";display:block;height:100%;width:32%;
@@ -370,7 +370,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
 <body>
 
 <div id="gaxLoading" role="status" aria-live="polite" aria-label="Preparando GAX">
-  <div class="gax-loader-logo">GAX.</div>
+  <img class="gax-loader-logo" src="gax-logo.png" alt="GAX" width="200" height="60">
   <div class="gax-loader-line" aria-hidden="true"></div>
   <div class="gax-loader-label">PREPARANDO EXPERIENCIA</div>
 </div>
@@ -1255,22 +1255,50 @@ $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('modal').classList.contains('open'))closeModal()});
 $('contactForm').addEventListener('submit',e=>{e.preventDefault();$('formFeedback').textContent=currentLang==='es'?'Versión de demostración: aún no se envió ninguna solicitud.':'Demo version: no request sent yet.'});
 
-/* RETRATO INTERACTIVO */
+/* RETRATO INTERACTIVO — reveal real portrait beneath the Matrix image */
 const portrait = document.getElementById('matrixPortrait');
-let targetX = 50, targetY = 50, currentX = 50, currentY = 50;
-let targetRadius = 0, currentRadius = 0;
-const maxRadius = 100;
-const easing = 0.13;
+if (portrait) {
+    let targetX = 50, targetY = 50, currentX = 50, currentY = 50;
+    let targetRadius = 0, currentRadius = 0;
+    const maxRadius = 150, easing = 0.19;
 
-portrait.addEventListener('pointermove', (e) => {
-    const rect = portrait.getBoundingClientRect();
-    targetX = ((e.clientX - rect.left) / rect.width) * 100;
-    targetY = ((e.clientY - rect.top) / rect.height) * 100;
-    targetRadius = maxRadius;
-});
-portrait.addEventListener('pointerenter', () => { targetRadius = maxRadius; });
-portrait.addEventListener('pointerleave', () => { targetRadius = 0; });
-portra/* GAX V6 — 3D bee, silver x-ray finish, uninterrupted flight across the page.
+    const pointerPosition = (event) => {
+        const rect = portrait.getBoundingClientRect();
+        targetX = Math.max(0,Math.min(100,(event.clientX-rect.left)/rect.width*100));
+        targetY = Math.max(0,Math.min(100,(event.clientY-rect.top)/rect.height*100));
+    };
+    portrait.addEventListener('pointermove', event => {
+        pointerPosition(event);
+        targetRadius=maxRadius;
+    });
+    portrait.addEventListener('pointerenter', event => {
+        pointerPosition(event);
+        targetRadius=maxRadius;
+    });
+    portrait.addEventListener('pointerleave', () => { targetRadius=0; });
+    portrait.addEventListener('pointerdown', event => {
+        if(event.pointerType!=='mouse'){
+            pointerPosition(event);
+            targetRadius=targetRadius>0 ? 0 : maxRadius;
+        }
+    });
+    portrait.addEventListener('focus',()=>{targetX=50;targetY=45;targetRadius=maxRadius;});
+    portrait.addEventListener('blur',()=>{targetRadius=0;});
+
+    function animatePortraitReveal() {
+        const factor=reduced?1:easing;
+        currentX += (targetX-currentX)*factor;
+        currentY += (targetY-currentY)*factor;
+        currentRadius += (targetRadius-currentRadius)*factor;
+        portrait.style.setProperty('--mouse-x',currentX+'%');
+        portrait.style.setProperty('--mouse-y',currentY+'%');
+        portrait.style.setProperty('--radius',currentRadius+'px');
+        if(!reduced)requestAnimationFrame(animatePortraitReveal);
+    }
+    animatePortraitReveal();
+}
+
+/* GAX V6 — 3D bee, silver x-ray finish, uninterrupted flight across the page.
    Three.js r128, GLTFLoader and scene.gltf (including the 'hover' action).
    The flower remains anchored to the Hero; the bee lives in a fixed,
    transparent WebGL canvas and never intercepts clicks or form inputs. */
@@ -1352,6 +1380,7 @@ function initBeeAcrossPage() {
         beeScene.add(beeFlight);
         const loader=new THREE.GLTFLoader();
         loader.load('scene.gltf',gltf=>{
+            try {
             beeRig=gltf.scene;
             const bounds=new THREE.Box3().setFromObject(beeRig);
             const size=bounds.getSize(new THREE.Vector3());
@@ -1393,6 +1422,7 @@ function initBeeAcrossPage() {
             }
             beeLoaded=true;
             window.GAXLoading?.done();
+            } catch (err) { console.error('GAX: error while preparing the bee 3D model',err); window.GAXLoading?.done(); }
         },undefined,error=>{console.error('GAX: failed to load bee scene.gltf',error);window.GAXLoading?.done();});
         window.addEventListener('resize',resizeBeeViewport,{passive:true});
         document.addEventListener('visibilitychange',()=>{
