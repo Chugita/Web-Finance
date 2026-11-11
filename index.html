@@ -1517,8 +1517,9 @@ function initBeeAcrossPage() {
                 const legPoint=location(rightLeg).add(location(leftLeg)).multiplyScalar(.5);
                 const forward=headPoint.sub(abdomenPoint).normalize();
                 // Dorsal direction must point toward the wings (legs downward).
-                const up=wingPoint.sub(legPoint).addScaledVector(forward,
-                    -wingPoint.sub(legPoint).dot(forward)).normalize();
+                const wingToLeg=wingPoint.clone().sub(legPoint);
+                const up=wingToLeg.clone().addScaledVector(forward,
+                    -wingToLeg.dot(forward)).normalize();
                 const normal=new THREE.Vector3().crossVectors(forward,up).normalize();
                 if(forward.lengthSq()>.5 && up.lengthSq()>.5 && normal.lengthSq()>.5) {
                     // Local +X is nose, local +Y is wing side, +Z is camera.
