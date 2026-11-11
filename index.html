@@ -1330,6 +1330,7 @@ function initBeeAcrossPage() {
                 const original=Array.isArray(obj.material)?obj.material:[obj.material];
                 const materials=original.map(mat=>{
                     const silver=new THREE.MeshBasicMaterial({
+                        skinning: !!obj.isSkinnedMesh,
                         color:0xffffff,
                         map:beeGrayTexture(mat&&mat.map),
                         transparent:true,
