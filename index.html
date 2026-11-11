@@ -1393,20 +1393,18 @@ if (portrait) {
     animatePortraitReveal();
 }
 
-/* GAX V6 — 3D bee, silver x-ray finish, flight around the Hero with a 360-degree axial spin on click.
+/* GAX V6 — 3D bee with anatomy-calibrated horizontal profile; no mouse interaction.
    Three.js r128, GLTFLoader and scene.gltf (including the 'hover' action).
    The flower remains anchored to the Hero; the bee lives in a fixed,
-   transparent WebGL canvas; interaction is via pointer proximity, not an overlay. */
+   transparent WebGL canvas without pointer interactions. */
 const heroSection = $('inicio');
 const beeCanvas = $('heroCanvas');
-let beeScene, beeCamera, beeRenderer, beeFlight, beeSpinPivot, beeFacing, beeRig, beeMixer;
+let beeScene, beeCamera, beeRenderer, beeFlight, beeFacing, beeRig, beeMixer;
 let beeClock = 0, beePrevFrame = null, beeLoaded = false;
 let beeViewportW = innerWidth, beeViewportH = innerHeight;
 let beeModelVisible = true;
 const flightDuration = 17.0; // approach, flower interaction, turn, free flight
 let beeScreenX=.14, beeScreenY=.43;
-let beeSpinStart=-1;
-const beeSpinSeconds=1.25;
 
 const mixBee = (a,b,t) => a + (b-a)*t;
 const easeBee = value => {
@@ -1473,10 +1471,8 @@ function initBeeAcrossPage() {
         beeRenderer.outputEncoding=THREE.sRGBEncoding;
 
         beeFlight=new THREE.Group();
-        beeSpinPivot=new THREE.Group();
         beeFacing=new THREE.Group();
-        beeFlight.add(beeSpinPivot);
-        beeSpinPivot.add(beeFacing);
+        beeFlight.add(beeFacing);
         beeScene.add(beeFlight);
         const loader=new THREE.GLTFLoader();
         loader.load('scene.gltf',gltf=>{
@@ -1495,7 +1491,48 @@ function initBeeAcrossPage() {
             // The body extends along the original Y axis. Rotate its length
             // onto the horizontal screen X axis and keep the broad lateral
             // surface facing the camera (avoid an edge-on rear perspective).
-            beeRig.rotation.set(Math.PI/2,0,-Math.PI/2);
+            // Calibrate the anatomical axes from the actual rig bones.
+            // This is independent of Sketchfab/Blender import Euler orientation.
+            beeRig.rotation.set(0,0,0);
+            beeRig.updateMatrixWorld(true);
+            const findBone=prefix=>{
+                let found=null;
+                beeRig.traverse(obj=>{
+                    if(!found && obj.name.toLowerCase().startsWith(prefix.toLowerCase()))found=obj;
+                });
+                return found;
+            };
+            const head=findBone('head_jnt');
+            const abdomen=findBone('abdomen_jnt03');
+            const rightWing=findBone('r_wingroot_jnt');
+            const leftWing=findBone('l_wingroot_jnt');
+            const rightLeg=findBone('r_foreleg_jnt01');
+            const leftLeg=findBone('l_foreleg_jnt01');
+            if(head&&abdomen&&rightWing&&leftWing&&rightLeg&&leftLeg) {
+                // Express landmarks in the local coordinate system of beeRig.
+                const location=obj=>beeRig.worldToLocal(obj.getWorldPosition(new THREE.Vector3()));
+                const headPoint=location(head);
+                const abdomenPoint=location(abdomen);
+                const wingPoint=location(rightWing).add(location(leftWing)).multiplyScalar(.5);
+                const legPoint=location(rightLeg).add(location(leftLeg)).multiplyScalar(.5);
+                const forward=headPoint.sub(abdomenPoint).normalize();
+                // Dorsal direction must point toward the wings (legs downward).
+                const up=wingPoint.sub(legPoint).addScaledVector(forward,
+                    -wingPoint.sub(legPoint).dot(forward)).normalize();
+                const normal=new THREE.Vector3().crossVectors(forward,up).normalize();
+                if(forward.lengthSq()>.5 && up.lengthSq()>.5 && normal.lengthSq()>.5) {
+                    // Local +X is nose, local +Y is wing side, +Z is camera.
+                    const basis=new THREE.Matrix4().makeBasis(forward,up,normal);
+                    const fromBody=new THREE.Quaternion().setFromRotationMatrix(basis);
+                    beeRig.quaternion.copy(fromBody.invert());
+                } else {
+                    beeRig.rotation.set(0,0,Math.PI/2);
+                }
+            } else {
+                console.warn('GAX: bee anatomy calibration unavailable; using horizontal fallback');
+                beeRig.rotation.set(0,0,Math.PI/2);
+            }
+            beeRig.updateMatrixWorld(true);
             beeFacing.add(beeRig);
             beeRig.traverse(obj=>{
                 if(!obj.isMesh)return;
@@ -1527,20 +1564,6 @@ function initBeeAcrossPage() {
             window.GAXLoading?.done();
             } catch (err) { console.error('GAX: error while preparing the bee 3D model',err); window.GAXLoading?.done(); }
         },undefined,error=>{console.error('GAX: failed to load bee scene.gltf',error);window.GAXLoading?.done();});
-        document.addEventListener('pointermove',event=>{
-            const mx=event.clientX/Math.max(1,innerWidth);
-            const my=event.clientY/Math.max(1,innerHeight);
-            const nearBee=beeLoaded && Math.hypot((mx-beeScreenX)*innerWidth,(my-beeScreenY)*innerHeight)<85;
-            if(!event.target.closest('a,button,input,select,textarea,[role="button"],label'))
-                document.body.style.cursor=nearBee?'pointer':'';
-        },{passive:true});
-        document.addEventListener('click',event=>{
-            if(!beeLoaded||event.target.closest('a,button,input,select,textarea,[role="button"],label'))return;
-            const mx=event.clientX/Math.max(1,innerWidth);
-            const my=event.clientY/Math.max(1,innerHeight);
-            if(Math.hypot((mx-beeScreenX)*innerWidth,(my-beeScreenY)*innerHeight)>95)return;
-            beeSpinStart=beeClock;
-        },true);
         window.addEventListener('resize',resizeBeeViewport,{passive:true});
         document.addEventListener('visibilitychange',()=>{
             beeModelVisible=!document.hidden;
@@ -1602,13 +1625,13 @@ function animateBeeAcrossPage(now){
                 y=mixBee(.34,.31,p);
                 // Deliberate change of heading; rear view appears only briefly.
                 yaw=Math.PI*p;
-                roll=-.15*Math.sin(p*Math.PI);
+                roll=-.10*Math.sin(p*Math.PI);
             }else if(t<.89){
                 const p=easeBee((t-.64)/.25);
                 x=mixBee(.65,.12,p);
                 y=mixBee(.31,.63,p)+.03*Math.sin(p*Math.PI*3);
                 yaw=Math.PI;
-                roll=-.12*Math.sin(p*Math.PI*2);
+                roll=-.08*Math.sin(p*Math.PI*2);
             }else{
                 const p=easeBee((t-.89)/.11);
                 x=mixBee(.12,.13,p);
@@ -1616,13 +1639,7 @@ function animateBeeAcrossPage(now){
                 yaw=Math.PI*(1-p);
             }
         // Keep the skeletal side profile near frontal-camera plane.
-        beeFacing.rotation.set(pitch*.2,0,Math.PI/2+roll);
-        // Separate pivot: full 360 around the horizontally aligned body axis.
-        if(beeSpinStart>=0){
-            const p=Math.max(0,Math.min(1,(beeClock-beeSpinStart)/beeSpinSeconds));
-            beeSpinPivot.rotation.x=2*Math.PI*easeBee(p);
-            if(p>=1){beeSpinStart=-1;beeSpinPivot.rotation.x=0;}
-        }
+        beeFacing.rotation.set(pitch*.2,0,roll);
         beeScreenX=x;beeScreenY=y;
         beeFlight.position.copy(beePositionFromScreen(x,y));
         beeFlight.scale.setScalar(innerWidth<650?.72:.93);
