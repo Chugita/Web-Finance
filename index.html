@@ -410,42 +410,22 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
     .hero h1{font-size:clamp(28px,7.5vw,46px)}
 }
 
-/* POLEN REAL DEL HERO: partículas discretas y distribuidas en toda la pantalla.
-   Capa independiente de la flor; sin imágenes repetidas ni franjas laterales. */
-.gax-pollen-field{
-    position:absolute;inset:0;z-index:2;overflow:hidden;
-    pointer-events:none;contain:paint;
-}
-.gax-pollen-grain{
-    position:absolute;display:block;width:var(--sz);height:var(--sz);
-    border-radius:50%;
-    background:radial-gradient(circle at 38% 35%,
-      rgba(225,247,231,.88) 0%,rgba(151,194,166,.59) 36%,
-      rgba(89,135,105,.24) 67%,transparent 100%);
-    box-shadow:0 0 var(--glow) rgba(135,186,149,.25);
-    opacity:var(--alpha);
-    transform:translate3d(0,0,0);
-    animation:gaxPollenDrift var(--duration) ease-in-out var(--delay) infinite alternate;
-}
-@keyframes gaxPollenDrift{
-    from{transform:translate3d(-2px,3px,0)}
-    to{transform:translate3d(5px,-8px,0)}
-}
-@media(prefers-reduced-motion:reduce){.gax-pollen-grain{animation:none}}
-
 /* GAX Hero — independent transparent flower + seamless full-width pollen.
    Once gax-flor.png is uploaded, the fallback original disappears automatically. */
 .hero {
     background-color:#080909;
+    /* Full-bleed scanning/pollen texture, independent from flower size.
+       Fixes flat black bars at the sides on desktop. */
     background-image:
-      radial-gradient(circle at 14% 22%,rgba(184,218,201,.17) 0 .6px,transparent 1.25px),
-      radial-gradient(circle at 72% 76%,rgba(168,199,181,.12) 0 .6px,transparent 1.2px),
-      radial-gradient(circle at 42% 58%,rgba(184,218,201,.14) 0 .7px,transparent 1.25px),
-      repeating-linear-gradient(0deg,rgba(188,221,199,.02) 0 1px,transparent 1px 5px),
-      radial-gradient(ellipse at 60% 50%,rgba(24,32,27,.20),transparent 80%);
-    background-size:137px 163px,223px 171px,181px 209px,100% 100%,cover;
-    background-repeat:repeat,repeat,repeat,no-repeat,no-repeat;
+      radial-gradient(circle at 21% 37%,rgba(201,230,217,.22) 0 .65px,transparent 1.1px),
+      radial-gradient(circle at 78% 63%,rgba(203,225,218,.17) 0 .55px,transparent 1px),
+      radial-gradient(circle at 44% 83%,rgba(132,171,152,.13) 0 .7px,transparent 1.2px),
+      repeating-linear-gradient(0deg,rgba(215,237,221,.026) 0 1px,transparent 1px 5px),
+      radial-gradient(ellipse at 60% 60%,rgba(22,32,27,.25),transparent 80%);
     background-position:center;
+    background-size:151px 127px,213px 173px,97px 181px,100% 100%,cover;
+    background-repeat:repeat;
+
 }
 .hero::before {
     content:"";
@@ -584,7 +564,6 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
          decoding="async" fetchpriority="high"
          onload="this.closest('.hero').classList.remove('flower-fallback')"
          onerror="this.hidden=true">
-    <div class="gax-pollen-field" id="gaxPollenField" aria-hidden="true"></div>
     <div class="hero-content">
         <div class="micro" id="tHeroMicro">GAX / PLANIFICACIÓN FINANCIERA</div>
         <h1 id="tHeroTitle"><span>EL FUTURO</span><span>NO SE ESPERA.</span><span class="accent">SE DISEÑA.</span></h1>
@@ -1837,31 +1816,6 @@ function animateBeeAcrossPage(now){
 }
 initBeeAcrossPage();
 </script>
-<script>
-/* Deterministic pollen points distributed across the entire Hero.
-   This uses the whole Hero viewport, NOT the cropped flower image. */
-(function(){
-    const field=document.getElementById('gaxPollenField');
-    if(!field)return;
-    let seed=26791;
-    const rand=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296};
-    const frag=document.createDocumentFragment();
-    for(let i=0;i<175;i++){
-        const dot=document.createElement('i');
-        dot.className='gax-pollen-grain';
-        const x=rand()*100,y=rand()*100;
-        const size=(.9+rand()*2.4).toFixed(2)+'px';
-        dot.style.left=x.toFixed(2)+'%';
-        dot.style.top=y.toFixed(2)+'%';
-        dot.style.setProperty('--sz',size);
-        dot.style.setProperty('--alpha',(.17+rand()*.47).toFixed(2));
-        dot.style.setProperty('--glow',(2+rand()*7).toFixed(1)+'px');
-        dot.style.setProperty('--duration',(6+rand()*11).toFixed(1)+'s');
-        dot.style.setProperty('--delay',(-rand()*13).toFixed(1)+'s');
-        frag.appendChild(dot);
-    }
-    field.appendChild(frag);
-})();
-</script>
+
 </body>
 </html>
