@@ -338,7 +338,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
     display:block;
     width:100vw;
     height:100vh;
-    z-index:12;
+    z-index:2;
     pointer-events:none;
     background:transparent;
 }
@@ -532,7 +532,6 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
   },true);
 })();
 </script>
-<canvas id="heroCanvas" aria-hidden="true"></canvas>
 
 <div class="cursor-trail" id="cursorTrail"></div>
 
@@ -554,6 +553,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
 
 <main>
 <section class="hero flower-fallback" id="inicio">
+    <canvas id="heroCanvas" aria-hidden="true"></canvas>
     <img class="gax-flower" src="gax-flor.png" alt="" aria-hidden="true"
          decoding="async" fetchpriority="high"
          onload="this.closest('.hero').classList.remove('flower-fallback')"
@@ -1547,7 +1547,8 @@ let beeScene, beeCamera, beeRenderer, beeFlight, beeFacing, beeRig, beeMixer;
 let beeClock = 0, beePrevFrame = null, beeLoaded = false;
 let beeViewportW = innerWidth, beeViewportH = innerHeight;
 let beeModelVisible = true;
-const flightDuration = 23.0; // organic loop: flower, viewer, turning flight
+const flightDuration = 38.0; // explore entire Hero, pollinate, face camera and bank/roll
+let beeDepthLayer='behind';
 let beeScreenX=.14, beeScreenY=.43;
 
 const mixBee = (a,b,t) => a + (b-a)*t;
@@ -1555,6 +1556,50 @@ const easeBee = value => {
     const x = Math.max(0,Math.min(1,value));
     return x*x*(3-2*x);
 };
+// Keyframes share the first and last position/rotation for a seamless loop.
+// Unwrapped yaw/roll create complete rotations; only changing layer while the
+// bee is away from the title avoids visible clipping or abrupt compositing.
+const beeFlightPath=[
+    // fraction, X, Y, yaw, pitch, roll, size, text depth
+    {t:0,    x:.77,y:.39,yaw:0,             pitch:0,    roll:0,             size:.85, depth:'behind'},
+    {t:.065, x:.91,y:.20,yaw:-.22,          pitch:-.14, roll:-.22,          size:.79, depth:'behind'},
+    {t:.14,  x:.55,y:.16,yaw:-.50,          pitch:.18,  roll:.22,           size:.95, depth:'front'},
+    {t:.205, x:.20,y:.29,yaw:-.04,          pitch:0,    roll:-.18,          size:.83, depth:'behind'},
+    {t:.27,  x:.08,y:.47,yaw:.46,           pitch:.20,  roll:.31,           size:.74, depth:'behind'},
+    {t:.335, x:.45,y:.51,yaw:-.45,          pitch:-.12, roll:-.24,          size:1.03,depth:'front'},
+    {t:.39,  x:.73,y:.44,yaw:-.65,          pitch:.10,  roll:.19,           size:.78, depth:'behind'},
+    // Short circular probing movements around the radiographic flower's center.
+    {t:.43,  x:.79,y:.37,yaw:-.18,          pitch:.14,  roll:-.16,          size:.73, depth:'behind'},
+    {t:.47,  x:.74,y:.46,yaw:-.65,          pitch:-.08, roll:.14,           size:.72, depth:'behind'},
+    {t:.50,  x:.68,y:.39,yaw:-1.03,         pitch:.06,  roll:-.12,          size:.83, depth:'behind'},
+    // Turn nose toward +Z camera and glide very near the viewer.
+    {t:.55,  x:.54,y:.33,yaw:-Math.PI/2,    pitch:.02,  roll:0,             size:1.35,depth:'front'},
+    {t:.60,  x:.49,y:.38,yaw:-Math.PI/2,    pitch:0,    roll:0,             size:2.30,depth:'front'},
+    {t:.645, x:.55,y:.40,yaw:-Math.PI/2,    pitch:-.08, roll:.06,           size:1.42,depth:'front'},
+    // Full free-flight corkscrew plus a belly/back view.
+    {t:.70,  x:.84,y:.25,yaw:-Math.PI*1.05, pitch:.38,  roll:Math.PI*.60,   size:1.00,depth:'front'},
+    {t:.77,  x:.92,y:.56,yaw:-Math.PI*1.52, pitch:-.28, roll:Math.PI*1.25,  size:.79, depth:'behind'},
+    {t:.84,  x:.54,y:.67,yaw:-Math.PI*1.80, pitch:.30,  roll:Math.PI*1.73,  size:.89, depth:'front'},
+    {t:.92,  x:.13,y:.44,yaw:-Math.PI*2.05, pitch:-.15, roll:Math.PI*2.10,  size:.78, depth:'behind'},
+    {t:.965, x:.49,y:.24,yaw:-Math.PI*2.15, pitch:.10,  roll:Math.PI*2.02,  size:.81, depth:'behind'},
+    {t:1,    x:.77,y:.39,yaw:-Math.PI*2,    pitch:0,    roll:Math.PI*2,     size:.85, depth:'behind'}
+];
+function sampleBeeFlight(t){
+    let i=0;
+    while(i<beeFlightPath.length-2 && t>beeFlightPath[i+1].t)i++;
+    const a=beeFlightPath[i],b=beeFlightPath[i+1];
+    const p=easeBee((t-a.t)/(b.t-a.t));
+    return {
+        x:mixBee(a.x,b.x,p),
+        y:mixBee(a.y,b.y,p),
+        yaw:mixBee(a.yaw,b.yaw,p),
+        pitch:mixBee(a.pitch,b.pitch,p),
+        roll:mixBee(a.roll,b.roll,p),
+        size:mixBee(a.size,b.size,p),
+        depth:p<.5?a.depth:b.depth
+    };
+}
+
 function beePositionFromScreen(fx,fy) {
     // Coordinates in percentages of the visible screen.
     const widthWorld = beeCamera.right - beeCamera.left;
@@ -1756,37 +1801,26 @@ function animateBeeAcrossPage(now){
         let x=beeScreenX,y=beeScreenY;
         let yaw=0,roll=0,pitch=0;
         let visible=true;
-            // Explore the flower, face the visitor, approach the screen,
-            // complete an aerial turn and return. One seamless 23-second loop.
             visible=inHero;
             const t=(beeClock%flightDuration)/flightDuration;
-            const stages=[
-                {t:0,   x:.72,y:.245,yaw:0,          scale:.93,bank:0,    tilt:0},
-                {t:.12, x:.79,y:.355,yaw:-.15,       scale:.91,bank:-.08,tilt:.03},
-                {t:.24, x:.735,y:.465,yaw:-.36,      scale:.82,bank:.12, tilt:-.12},
-                {t:.34, x:.748,y:.435,yaw:-.65,      scale:.83,bank:-.09,tilt:.10},
-                {t:.45, x:.80,y:.315,yaw:-Math.PI/2, scale:1.20,bank:-.08,tilt:.03},
-                {t:.53, x:.785,y:.300,yaw:-Math.PI/2,scale:1.35,bank:0,tilt:0},
-                {t:.67, x:.66,y:.24,yaw:-Math.PI*1.55,scale:1.02,bank:.24,tilt:.10},
-                {t:.79, x:.70,y:.39,yaw:-Math.PI*2,  scale:.88,bank:-.12,tilt:-.07},
-                {t:.91, x:.76,y:.45,yaw:-Math.PI*2.08,scale:.86,bank:.08,tilt:-.07},
-                {t:1,   x:.72,y:.245,yaw:-Math.PI*2,scale:.93,bank:0,tilt:0}
-            ];
-            let idx=0;
-            while(idx<stages.length-2 && t>stages[idx+1].t)idx++;
-            const from=stages[idx],to=stages[idx+1];
-            const p=easeBee((t-from.t)/(to.t-from.t));
-            x=mixBee(from.x,to.x,p);
-            y=mixBee(from.y,to.y,p);
-            yaw=mixBee(from.yaw,to.yaw,p);
-            roll=mixBee(from.bank,to.bank,p);
-            pitch=mixBee(from.tilt,to.tilt,p);
-            const depthScale=mixBee(from.scale,to.scale,p);
-            const hoverAmount=Math.sin(Math.PI*t);
-            x+=.007*Math.sin(beeClock*2.7)*hoverAmount;
-            y+=.009*Math.sin(beeClock*4.2)*hoverAmount;
-            // +X is the nose, +Y points toward wings, +Z is camera.
+            // Reduced motion keeps a stable, gently-hovering bee at the flower.
+            const motion=reduced?{
+                x:.76,y:.37,yaw:0,pitch:0,roll:0,size:.86,depth:'behind'
+            }:sampleBeeFlight(t);
+            const hoverWindow=Math.sin(Math.PI*t);
+            x=motion.x+(reduced?0:(.005*Math.sin(beeClock*4.1)+.003*Math.sin(beeClock*7.3))*hoverWindow);
+            y=motion.y+(reduced?0:(.009*Math.sin(beeClock*5.0)+.004*Math.cos(beeClock*2.5))*hoverWindow);
+            yaw=motion.yaw;
+            pitch=motion.pitch+(reduced?0:.035*Math.sin(beeClock*3.1)*hoverWindow);
+            roll=motion.roll+(reduced?0:.055*Math.sin(beeClock*2.4)*hoverWindow);
+            const depthScale=motion.size;
             beeFacing.rotation.set(pitch,yaw,roll,'YXZ');
+            if(beeDepthLayer!==motion.depth) {
+                beeDepthLayer=motion.depth;
+                // Canvas now belongs to the Hero's isolated stacking context:
+                // z=2 behind headline (z=3), z=6 in front of it.
+                beeCanvas.style.zIndex=beeDepthLayer==='front'?'6':'2';
+            }
         // Never let the rendered bee pass below the EXPLORE marker.
         // Leave enough clearance for the actual 3D silhouette, not only its pivot.
         const exploreCue=document.getElementById('tScrollCue');
@@ -1799,7 +1833,7 @@ function animateBeeAcrossPage(now){
         }
         beeScreenX=x;beeScreenY=y;
         beeFlight.position.copy(beePositionFromScreen(x,y));
-        beeFlight.scale.setScalar(depthScale*(innerWidth<650?.73:innerWidth<900?.83:1));
+        beeFlight.scale.setScalar(depthScale*(innerWidth<650?.62:innerWidth<900?.80:1));
         beeCanvas.style.opacity=visible?'1':'0';
     }
     beeRenderer.render(beeScene,beeCamera);
