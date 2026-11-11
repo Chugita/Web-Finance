@@ -410,33 +410,56 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
     .hero h1{font-size:clamp(28px,7.5vw,46px)}
 }
 
-/* GAX Hero — scale the flower upward from its planted stem.
-   Keep the lower stem anchored at the same divider; do not move the Hero or the bee. */
+/* GAX HERO — responsive framed flower on an edge-to-edge dark backdrop.
+   Separate the flower from the hero background to eliminate image rectangles
+   on desktop. On narrow screens, extend it upward from its fixed stem. */
 .hero {
     background-color:#080909;
     background-image:
+      radial-gradient(ellipse at 60% 60%,rgba(22,32,27,.25),transparent 80%),
+      repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 1px,transparent 1px 5px);
+    background-position:center;
+    background-size:cover;
+}
+.hero::before {
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    background-image:
       linear-gradient(rgba(3,7,5,.45),rgba(3,7,5,.48)),
       url('nectar-scan.jpg');
+    background-position:center,center bottom;
     background-repeat:no-repeat;
-    background-position:center,center calc(100% + 18px);
-    background-size:cover,min(108vw,1460px) auto;
+    background-size:cover,min(80vw,1240px) auto;
+    opacity:1;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);
+    mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);
 }
 .hero::after {
-    background:radial-gradient(ellipse at 50% 42%,
-        rgba(2,5,3,.52) 0%,
-        rgba(2,5,3,.25) 56%,
-        rgba(2,5,3,.04) 100%);
+    z-index:1;
+    background:radial-gradient(ellipse at 49% 43%,
+      rgba(2,5,3,.52) 0%,rgba(2,5,3,.25) 56%,rgba(2,5,3,.04) 100%);
 }
+.hero .hero-content {position:relative;z-index:3;}
+.hero .scroll-cue {z-index:4;}
 @media(max-width:900px) {
-    .hero {
-        background-position:center,center calc(100% + 22px);
-        background-size:cover,min(124vw,1060px) auto;
+    .hero::before {
+        background-position:center,center bottom;
+        background-size:cover,min(112vw,860px) auto;
+        -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 5%,#000 95%,transparent 100%);
+        mask-image:linear-gradient(90deg,transparent 0%,#000 5%,#000 95%,transparent 100%);
     }
 }
 @media(max-width:650px) {
-    .hero {
-        background-position:center,center calc(100% + 26px);
+    .hero::before {
         background-size:cover,max(116vw,790px) auto;
+        background-position:center,center bottom;
+        transform:scaleY(1.18);
+        transform-origin:center bottom;
+        -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 3%,#000 97%,transparent 100%);
+        mask-image:linear-gradient(90deg,transparent 0%,#000 3%,#000 97%,transparent 100%);
     }
 }
 
