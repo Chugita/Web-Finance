@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080a09">
+<meta name="description" content="GAX. Explorá tu punto de partida financiero, visualizá escenarios y conocé cómo planificar tu futuro.">
+<title id="pageTitle">GAX — El futuro se diseña</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&family=Geist+Pixel&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<style>
+:root{--bg:#080a09;--fg:#f2f4f1;--muted:#9eaaa0;--line:#222c23;--green:#70bd8c;--soft:rgba(17,27,20,0.65);--mono:'Geist Mono',monospace;--pixel:'Geist Pixel',monospace}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:82px}
+body{
+    margin:0;
+    background:var(--bg);
+    color:var(--fg);
+    font:300 15px/1.65 var(--mono);
+    overflow-x:hidden;
+    background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+button,input{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--green);outline-offset:3px}[hidden]{display:none!important}h1,h2,h3,p{margin:0}.mono{font-family:var(--mono)}.pixel{font-family:var(--pixel)}.micro{font:400 10px/1.6 var(--pixel);letter-spacing:.09em;color:var(--green);text-transform:uppercase}.muted{color:var(--muted)}.wrap{max-width:1180px;margin:auto;padding:0 32px}
+
+.section{padding:108px 0;border-top:1px solid var(--line);opacity:1;transform:none}
+.section-label{display:flex;justify-content:space-between;gap:16px;padding-bottom:24px;margin-bottom:52px;border-bottom:1px solid var(--line)}.big{font:400 clamp(29px,4.2vw,62px)/1.13 var(--pixel);letter-spacing:-.065em;max-width:940px}.section-lead{color:#b7c2b8;max-width:650px;margin:20px 0 35px;font-weight:300;font-family:var(--mono)}
+
+.btn{
+    border:1px solid rgba(112, 189, 140, 0.4);
+    padding:14px 24px;
+    background: rgba(112, 189, 140, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: var(--green);
+    font: 600 11px var(--pixel);
+    border-radius: 8px;
+    min-height: 46px;
+    transition: background .25s, transform .2s, box-shadow .25s, border-color .2s, color .25s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+}
+.btn:hover{
+    background: var(--green);
+    color: #07120a;
+    transform: translateY(-1px);
+    box-shadow: 0 0 20px rgba(112,189,140,0.5);
+    border-color: var(--green);
+}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-outline{
+    background: rgba(17, 27, 20, 0.4);
+    backdrop-filter: blur(10px);
+    border-color: var(--line);
+    color: var(--fg);
+}
+.btn-outline:hover{
+    background: rgba(112, 189, 140, 0.2);
+    color: var(--green);
+    border-color: var(--green);
+    box-shadow: 0 0 15px rgba(112,189,140,0.25);
+}
+.accent{color:var(--green)}
+
+.cursor-trail {position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;overflow:hidden}
+.trail-char {position:absolute;font:400 13px var(--pixel);color:var(--green);user-select:none;pointer-events:none;animation:fadeTrail 0.9s forwards ease-out;text-shadow:0 0 8px rgba(112, 189, 140, 0.6)}
+@keyframes fadeTrail {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.6); }
+}
+
+header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template-columns:130px minmax(0,1fr) auto;align-items:center;gap:26px;padding:11px 3.5%;border-bottom:1px solid var(--line);background:rgba(8,10,9,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.brand{font:500 23px var(--pixel);letter-spacing:-.08em}
+.brand img{max-width:105px;height:25px;object-fit:contain;display:block}
+.nav-info{display:flex;gap:22px;overflow:hidden;align-items:center;font:400 10px var(--pixel);color:var(--muted)}
+.clock{white-space:nowrap;flex-shrink:0}
+.dot{display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;margin-right:8px}
+.ticker-window{overflow:hidden;flex:1}
+.ticker-track{display:flex;width:max-content;gap:28px;white-space:nowrap;animation:marquee 36s linear infinite}
+.ticker-track:hover{animation-play-state:paused}
+@keyframes marquee{to{transform:translateX(-50%)}}
+.ticker-item{display:flex;align-items:center;gap:0.4rem}
+.ticker-symbol{color:var(--muted)}
+.ticker-price{color:#fff;font-weight:700}
+.ticker-up{color:#70bd8c;font-size:0.7rem}
+.ticker-down{color:#e65252;font-size:0.7rem}
+.nav-actions{display:flex;gap:9px}
+.lang{font:400 10px var(--pixel);padding:12px;background:transparent;border:1px solid var(--line);color:var(--fg);border-radius:6px;transition:border-color .2s}
+.lang:hover{border-color:var(--green)}
+
+.hero{position:relative;min-height:100svh;display:grid;place-items:center;text-align:center;isolation:isolate;padding:130px 24px 90px;overflow:hidden;background:#080909;background-size:cover;background-repeat:no-repeat;background-position:center}
+#heroCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.hero::after{content:"";position:absolute;inset:0;z-index:2;background:radial-gradient(ellipse at 50% 49%,rgba(2,5,3,.57) 0%,rgba(2,5,3,.31) 56%,rgba(2,5,3,.11) 100%);pointer-events:none}
+.hero-content{max-width:1100px;position:relative;z-index:3}
+.hero h1{font:700 clamp(36px,5.2vw,74px)/1.15 var(--mono);letter-spacing:-.04em;margin:28px 0;text-transform:uppercase;color:#f5f7f5;text-shadow:0 2px 28px rgba(0,0,0,.95)}
+.hero h1 span{display:block}
+.hero-desc{font:300 clamp(14px,1.4vw,18px)/1.8 var(--mono);max-width:625px;margin:0 auto 34px;color:#e2e9e4;text-shadow:0 2px 14px #000}
+.scroll-cue{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);font:400 10px var(--pixel);color:var(--muted);z-index:4}
+
+.sim{margin-top:45px;display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.9fr);gap:70px}
+.control{margin-bottom:35px}
+.control-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:13px;font:400 12px var(--pixel)}
+.control-head output{font-weight:600}
+.control input[type=range]{width:100%;accent-color:var(--green);cursor:pointer}
+.ratio{height:10px;display:flex;gap:2px;margin:20px 0 9px}
+.ratio span{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:17px;color:var(--muted);font:400 10px var(--pixel)}
+
+.currency-toggle-bar {display: flex; gap: 10px; margin-bottom: 25px; align-items: center;}
+.curr-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font: 400 10px var(--pixel);
+    padding: 8px 14px;
+    border-radius: 6px;
+    transition: all .2s;
+}
+.curr-btn.active {
+    background: var(--green);
+    border-color: var(--green);
+    color: #07120a;
+    font-weight: 700;
+}
+.fx-note {font-size: 10px; color: var(--muted); font-family: var(--pixel);}
+
+.sim-output{background:var(--soft);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(112,189,140,0.18);padding:30px;align-self:start;box-shadow:0 10px 30px rgba(0,0,0,0.4);border-radius:12px;}
+.metric{display:flex;justify-content:space-between;gap:15px;align-items:baseline;padding:15px 0;border-bottom:1px solid var(--line);font:400 12px var(--pixel)}
+.metric:last-child{border:0}
+.metric strong{font-size:clamp(14px,2vw,25px);font-weight:500;text-align:right}
+.difference{border-top:1px solid var(--line);padding-top:24px;margin-top:30px;font:400 clamp(17px,2.6vw,28px) var(--pixel);color:var(--green)}
+
+.footer{border-top:1px solid var(--line);padding:25px 0;display:flex;justify-content:space-between;gap:20px;color:var(--muted);font:400 10px var(--pixel)}
+</style>
+</head>
+<body>
+
+<header>
+    <a class="brand" href="#inicio" aria-label="GAX inicio">GAX.</a>
+    <div class="nav-info">
+        <span class="clock"><span class="dot"></span><span id="liveTimeDisplay" class="pixel">BUE 21:26:00 HS</span></span>
+        <div class="ticker-window">
+            <div class="ticker-track" id="tickerTrack">
+                <div class="ticker-item"><span class="ticker-symbol">S&P 500</span><span class="ticker-price">5,842.10</span><span class="ticker-up">+0.65%</span></div>
+                <div class="ticker-item"><span class="ticker-symbol">NASDAQ</span><span class="ticker-price">18,340.25</span><span class="ticker-up">+0.88%</span></div>
+                <div class="ticker-item"><span class="ticker-symbol">ORO</span><span class="ticker-price">$2,684.50</span><span class="ticker-up">+0.32%</span></div>
+                <div class="ticker-item"><span class="ticker-symbol">BTC</span><span class="ticker-price">$94,520.00</span><span class="ticker-up">+2.14%</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="nav-actions">
+        <button class="lang" id="langBtn" type="button">ES / EN</button>
+        <button class="btn" type="button" id="navBtnMeeting">AGENDAR REUNIÓN ↗</button>
+    </div>
+</header>
+
+<main>
+<section class="hero" id="inicio">
+    <canvas id="heroCanvas" aria-hidden="true"></canvas>
+    <div class="hero-content">
+        <div class="micro">GAX / PLANIFICACIÓN FINANCIERA</div>
+        <h1><span>EL FUTURO</span><span>NO SE ESPERA.</span><span class="accent">SE DISEÑA.</span></h1>
+        <p class="hero-desc">Transformá lo que construís hoy en el patrimonio y la tranquilidad que querés para mañana.</p>
+        <a class="btn" href="#capacidad">DESCUBRÍ TU PUNTO DE PARTIDA ↗</a>
+    </div>
+    <a class="scroll-cue" href="#capacidad">↓ EXPLORAR</a>
+</section>
+
+<section class="section" id="capacidad">
+    <div class="wrap">
+        <div class="section-label"><span class="micro">03 / CAPACIDAD FINANCIERA</span><span class="micro muted">SIMULADOR INTERACTIVO</span></div>
+        <h2 class="big">¿Cuánto de lo que ganás podés ahorrar hoy?</h2>
+        <p class="section-lead">Conocer tu margen de maniobra es el primer paso. Evaluá tus ingresos y definí qué porcentaje podés destinar al ahorro de manera consistente para ver su proyección.</p>
+        
+        <div class="currency-toggle-bar">
+            <span class="pixel" style="color:var(--muted); font-size:11px;">MONEDA:</span>
+            <button class="curr-btn active" id="btnCurrUSD" type="button">USD (Dólar)</button>
+            <button class="curr-btn" id="btnCurrARS" type="button">ARS (Pesos)</button>
+            <span class="fx-note" id="fxRateDisplay">Tipo de cambio oficial ref: $1,570 ARS</span>
+        </div>
+
+        <div class="sim">
+            <div>
+                <div class="control">
+                    <div class="control-head"><label for="income">Ingreso mensual estimado</label><output id="incomeOut" class="pixel">USD 3,000</output></div>
+                    <input id="income" type="range" min="500" max="15000" step="100" value="3000">
+                </div>
+                <div class="control">
+                    <div class="control-head"><label for="fixed">Gastos fijos</label><output id="fixedOut" class="pixel">50%</output></div>
+                    <input id="fixed" type="range" min="0" max="100" value="50">
+                </div>
+                <div class="control">
+                    <div class="control-head"><label for="variable">Gastos variables</label><output id="variableOut" class="pixel">30%</output></div>
+                    <input id="variable" type="range" min="0" max="100" value="30">
+                </div>
+                <div class="micro muted">DISTRIBUCIÓN ESTIMADA</div>
+                <div class="ratio" aria-label="Distribución de gastos y ahorro">
+                    <span id="fixedBand" style="background:#626d65;width:50%"></span>
+                    <span id="variableBand" style="background:#425247;width:30%"></span>
+                    <span id="savingBand" style="background:var(--green);width:20%"></span>
+                </div>
+                <div class="legend">
+                    <span>■ Fijos (<span id="legendFixed">50</span>%)</span>
+                    <span>■ Variables (<span id="legendVar">30</span>%)</span>
+                    <span>■ Ahorro (<span id="legendSaving">20</span>%)</span>
+                </div>
+            </div>
+            <div class="sim-output">
+                <div class="metric"><span>Ahorro mensual</span><strong id="savingMonthly" class="pixel">USD 600</strong></div>
+                <div class="metric"><span>Proyección 1 año</span><strong id="saving1Y" class="pixel">USD 7,440</strong></div>
+                <div class="metric"><span>Proyección 5 años (Compuesto)</span><strong id="saving5Y" class="pixel">USD 41,250</strong></div>
+                <div class="difference" id="savingSummary">Margen de optimización óptimo para inversión patrimonial.</div>
+            </div>
+        </div>
+    </div>
+</section>
+</main>
+
+<footer class="wrap">
+    <div class="footer">
+        <span>GAX © 2026. Todos los derechos reservados.</span>
+        <span>Diseño patrimonial y estratégico.</span>
+    </div>
+</footer>
+
+<script>
+// Three.js background animation
+const canvas = document.getElementById('heroCanvas');
+if(canvas && window.THREE){
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({canvas: canvas, alpha: true, antialias: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const particlesCount = 800;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particlesCount * 3);
+
+    for(let i=0; i<particlesCount*3; i+=3) {
+        positions[i] = (Math.random() - 0.5) * 20;
+        positions[i+1] = (Math.random() - 0.5) * 20;
+        positions[i+2] = (Math.random() - 0.5) * 20;
+    }
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const material = new THREE.PointsMaterial({color: 0x70bd8c, size: 0.04, transparent: true, opacity: 0.7});
+    const particles = new THREE.Points(geometry, material);
+    scene.add(particles);
+
+    camera.position.z = 5;
+
+    function animate() {
+        requestAnimationFrame(animate);
+        particles.rotation.y += 0.001;
+        particles.rotation.x += 0.0005;
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+}
+
+// Interactive simulator logic
+const incomeEl = document.getElementById('income');
+const fixedEl = document.getElementById('fixed');
+const variableEl = document.getElementById('variable');
+
+const incomeOut = document.getElementById('incomeOut');
+const fixedOut = document.getElementById('fixedOut');
+const variableOut = document.getElementById('variableOut');
+
+const fixedBand = document.getElementById('fixedBand');
+const variableBand = document.getElementById('variableBand');
+const savingBand = document.getElementById('savingBand');
+
+const legendFixed = document.getElementById('legendFixed');
+const legendVar = document.getElementById('legendVar');
+const legendSaving = document.getElementById('legendSaving');
+
+const savingMonthly = document.getElementById('savingMonthly');
+const saving1Y = document.getElementById('saving1Y');
+const saving5Y = document.getElementById('saving5Y');
+
+let currency = 'USD';
+const fxRate = 1570;
+
+function updateSim() {
+    let income = parseFloat(incomeEl.value);
+    let fixed = parseInt(fixedEl.value);
+    let variable = parseInt(variableEl.value);
+    
+    if (fixed + variable > 100) {
+        variable = 100 - fixed;
+        variableEl.value = variable;
+    }
+    let saving = 100 - fixed - variable;
+    
+    fixedOut.textContent = fixed + '%';
+    variableOut.textContent = variable + '%';
+    
+    fixedBand.style.width = fixed + '%';
+    variableBand.style.width = variable + '%';
+    savingBand.style.width = saving + '%';
+    
+    legendFixed.textContent = fixed;
+    legendVar.textContent = variable;
+    legendSaving.textContent = saving;
+    
+    let curSymbol = currency === 'USD' ? 'USD ' : 'ARS ';
+    let mult = currency === 'USD' ? 1 : fxRate;
+    
+    incomeOut.textContent = curSymbol + Math.round(income * mult).toLocaleString();
+    
+    let monthlySaveAmt = income * (saving / 100);
+    savingMonthly.textContent = curSymbol + Math.round(monthlySaveAmt * mult).toLocaleString();
+    
+    let annualSaveAmt = monthlySaveAmt * 12 * 1.04; // 4% annual return simulation
+    saving1Y.textContent = curSymbol + Math.round(annualSaveAmt * mult).toLocaleString();
+    
+    let fiveYearAmt = monthlySaveAmt * 12 * ((Math.pow(1 + 0.07, 5) - 1) / 0.07); // 7% annual compound
+    saving5Y.textContent = curSymbol + Math.round(fiveYearAmt * mult).toLocaleString();
+}
+
+[incomeEl, fixedEl, variableEl].forEach(el => {
+    el.addEventListener('input', updateSim);
+});
+
+document.getElementById('btnCurrUSD').addEventListener('click', (e) => {
+    currency = 'USD';
+    document.getElementById('btnCurrUSD').classList.add('active');
+    document.getElementById('btnCurrARS').classList.remove('active');
+    updateSim();
+});
+
+document.getElementById('btnCurrARS').addEventListener('click', (e) => {
+    currency = 'ARS';
+    document.getElementById('btnCurrARS').classList.add('active');
+    document.getElementById('btnCurrUSD').classList.remove('active');
+    updateSim();
+});
+
+updateSim();
+</script>
+</body>
+</html>
