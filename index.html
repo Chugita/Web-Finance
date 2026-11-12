@@ -1610,7 +1610,21 @@ function sampleBeeFlight(t){
  const prev=beeFlightPath[Math.max(0,i-1)];
  const next=beeFlightPath[Math.min(beeFlightPath.length-1,i+2)];
  const slope=(key,p,q)=>(q[key]-p[key])/Math.max(.00001,q.t-p.t);
- const axis=key=>beeHermite(a[key],b[key],slope(key,prev,b),slope(key,a,next),u,span);
+ // The first and last points are the SAME pose, modulo a 2PI yaw.
+ // Give both sides of the seam exactly the same cyclic derivative.
+ // Without this, the bee changed speed and direction at every repeat.
+ const seamSlope=key=>{
+   const before=beeFlightPath[beeFlightPath.length-2];
+   const after=beeFlightPath[1];
+   const afterValue=key==='yaw'?after[key]-Math.PI*2:after[key];
+   return (afterValue-before[key])/(1+after.t-before.t);
+ };
+ const axis=key=>beeHermite(
+   a[key],b[key],
+   i===0?seamSlope(key):slope(key,prev,b),
+   i===beeFlightPath.length-2?seamSlope(key):slope(key,a,next),
+   u,span
+ );
  return {
   x:axis('x'), y:axis('y'), yaw:axis('yaw'), pitch:axis('pitch'),
   roll:axis('roll'),size:Math.max(.55,axis('size')),
@@ -1955,8 +1969,16 @@ function animateBeeAcrossPage(now){
             const titleY=titleBounds
               ?clampBee((titleBounds.top+titleBounds.height*.50-heroBounds.top)/
                  Math.max(1,heroBounds.height),.43,.73):.64;
-            const openingWeight=1-clampBee((routePhase-.32)/.20,0,1);
-            const openingFade=openingWeight*openingWeight*(3-2*openingWeight);
+            // Closed periodic envelope: exactly zero at BOTH t=0 and t=1.
+            // It still reaches full height at the initial SE DISEÑA pose
+            // (routePhase=.32), so the approved starting location is kept.
+            const smooth01=v=>{
+              const a=clampBee(v,0,1);
+              return a*a*(3-2*a);
+            };
+            const titleEnter=smooth01(routePhase/.19);
+            const titleLeave=1-smooth01((routePhase-.37)/.19);
+            const openingFade=titleEnter*titleLeave;
             const baselineY=sampleBeeFlight(.32).y;
             const titleOffset=(titleY-baselineY)*openingFade;
             y=motion.y+titleOffset+flutter*(.006*Math.sin(beeClock*4.2)+.002*Math.cos(beeClock*9.3));
