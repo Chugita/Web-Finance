@@ -1626,10 +1626,10 @@ function beeGrayTexture(source) {
             const light=.2126*a[i]+.7152*a[i+1]+.0722*a[i+2];
             // The original yellow/black texture becomes ivory/silver
             // while retaining hairs, abdomen stripes and wing veins.
-            const gray=145+light*.43;
-            a[i]=Math.min(255,gray+8);
-            a[i+1]=Math.min(255,gray+12);
-            a[i+2]=Math.min(255,gray+15);
+            const gray=105+light*.35;
+            a[i]=Math.min(255,gray+2);
+            a[i+1]=Math.min(255,gray+4);
+            a[i+2]=Math.min(255,gray+6);
         }
         ctx.putImageData(pixels,0,0);
         const tex=new THREE.CanvasTexture(canvas);
@@ -1773,13 +1773,13 @@ function initBeeAcrossPage() {
                 const materials=original.map(mat=>{
                     const silver=new THREE.MeshBasicMaterial({
                         skinning: !!obj.isSkinnedMesh,
-                        color:0xffffff,
+                        color:0xd9dee2, // premium cool silver-gray, physically solid
                         map:beeGrayTexture(mat&&mat.map),
-                        transparent:true,
-                        opacity:.91, // keep the radiographic feel but reveal face and wing details
+                        transparent:false,
+                        opacity:1,
                         side:THREE.DoubleSide,
-                        depthWrite:false,
-                        alphaTest:0
+                        depthWrite:true,
+                        alphaTest:.08 // preserve silhouette cutouts in the source texture
                     });
                     silver.toneMapped=false;
                     return silver;
