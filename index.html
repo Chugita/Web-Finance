@@ -1838,7 +1838,7 @@ function animateBeeAcrossPage(now){
             const t=(beeClock%flightDuration)/flightDuration;
             const motion=reduced
               ?{x:.73,y:.39,yaw:0,pitch:.04,roll:0,size:.71,layer:'behind',nectar:0}
-              :sampleBeeFlight(t);
+              :sampleBeeFlight(1-t); // Play the entire existing movement in reverse.
             // Never ease to zero at each waypoint. Continuous spline velocity
             // plus small aperiodic-looking wing/body corrections.
             const flutter=reduced?0:1;
@@ -1848,14 +1848,9 @@ function animateBeeAcrossPage(now){
             pitch=motion.pitch+flutter*(.014*Math.sin(beeClock*3.7)+motion.nectar*.032*Math.sin(beeClock*7.0));
             roll=motion.roll+flutter*.017*Math.sin(beeClock*3.0);
             const depthScale=motion.size*(1+flutter*.006*Math.sin(beeClock*4.1));
-            // The yaw compensation is established using REAL bone positions:
-            // the visible camera-facing pose cannot accidentally be abdomen-first.
-            // Front-facing correction of the ACTUAL visible mesh:
-            // the previous bone-driven pose still showed its rear to the visitor.
-            // Keep that pose's anatomical calibration, then turn the entire
-            // visible bee exactly half a turn on its vertical axis so the
-            // opposite end of the insect faces the camera on close approach.
-            beeFacing.rotation.set(pitch,yaw+beeHeadFrontCorrection+Math.PI,roll,'YXZ');
+            // Invert the entire visible bee orientation relative to the
+            // previous version while the same route runs in reverse.
+            beeFacing.rotation.set(-pitch,yaw+beeHeadFrontCorrection+Math.PI*2,-roll,'YXZ');
             if(beeDepthLayer!==motion.layer){
                 beeDepthLayer=motion.layer;
                 beeCanvas.style.zIndex=beeDepthLayer==='front'?'6':'2';
