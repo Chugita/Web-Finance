@@ -508,7 +508,13 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
 /* Let the viewport-fixed bee live outside the Hero's scrolling clip.
    Positioned hero text still rises above the bee at its 'behind' depth. */
 .hero{isolation:auto}
-#heroCanvas{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none}
+#heroCanvas{
+    position:fixed!important;
+    top:0!important;left:0!important;right:auto!important;bottom:auto!important;
+    width:100vw!important;height:100vh!important;
+    transform:none!important;
+    pointer-events:none;
+}
 </style>
 </head>
 <body>
@@ -1816,7 +1822,7 @@ function initBeeAcrossPage() {
             }
             // Enter the existing path around the visual center of the screen
             // instead of materializing near the extreme left edge.
-            beeClock=flightDuration*.68;
+            beeClock=flightDuration*.64; // first frame: pathTime .36, near EL FUTURO rather than upper edge
             beePrevFrame=null;
             beeLoaded=true;
             document.addEventListener('pointerdown',handleBeePointerDown,{passive:true});
@@ -1903,9 +1909,10 @@ function animateBeeAcrossPage(now){
                 beeSpinActive=false;
             }
         }
-        const heroHeight=Math.max(1,heroSection.offsetHeight);
-        const scrollY=window.scrollY||0;
-        const inHero=scrollY<heroHeight-50;
+        // Scrolling controls ONLY whether the hero is visible. Never feed
+        // scroll offset into the bee camera or trajectory coordinates.
+        const heroRect=heroSection.getBoundingClientRect();
+        const inHero=heroRect.bottom>0 && heroRect.top<window.innerHeight;
         let x=beeScreenX,y=beeScreenY;
         let yaw=0,roll=0,pitch=0;
         let visible=true;
@@ -1918,7 +1925,13 @@ function animateBeeAcrossPage(now){
             // plus small aperiodic-looking wing/body corrections.
             const flutter=reduced?0:1;
             x=motion.x+flutter*(.003*Math.sin(beeClock*3.1)+.002*Math.sin(beeClock*7.7));
-            y=motion.y+flutter*(.006*Math.sin(beeClock*4.2)+.002*Math.cos(beeClock*9.3));
+            // Raise the FLIGHT'S on-screen Y coordinate (lower on the screen)
+            // around the opening/title part of the route, not the WebGL canvas.
+            // Leave the nectar segment's coordinates at the flower unchanged.
+            const routePhase=1-t;
+            const settle=clampBee((routePhase-.38)/.16,0,1);
+            const titleOffset=.11*(1-settle*settle*(3-2*settle));
+            y=motion.y+titleOffset+flutter*(.006*Math.sin(beeClock*4.2)+.002*Math.cos(beeClock*9.3));
             yaw=motion.yaw+flutter*.012*Math.sin(beeClock*2.9);
             pitch=motion.pitch+flutter*(.014*Math.sin(beeClock*3.7)+motion.nectar*.032*Math.sin(beeClock*7.0));
             roll=motion.roll+flutter*.017*Math.sin(beeClock*3.0);
@@ -1963,9 +1976,14 @@ function animateBeeAcrossPage(now){
             const lowestCenter=(exploreTop-silhouetteClearance)/Math.max(1,innerHeight);
             y=Math.min(y,Math.max(.12,lowestCenter));
         }
+        // Keep the wings inside the top of the viewport at every size;
+        // the previous low Y waypoints clipped the bee's silhouette.
+        const mobileFactor=innerWidth<650?1.08:innerWidth<900?.92:1;
+        const topClearance=Math.min(.37,.12+.125*depthScale*mobileFactor);
+        y=Math.max(y,topClearance);
         beeScreenX=x;beeScreenY=y;
         beeFlight.position.copy(beePositionFromScreen(x,y));
-        beeFlight.scale.setScalar(depthScale*(innerWidth<650?1.08:innerWidth<900?.92:1));
+        beeFlight.scale.setScalar(depthScale*mobileFactor);
         beeCanvas.style.opacity=visible?'1':'0';
     }
     beeRenderer.render(beeScene,beeCamera);
