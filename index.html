@@ -1481,7 +1481,7 @@ function setGaxLanguage(next){
     else renderQuestion();
     updateSim();
     updateTime();
-    if(typeof gaxSyncGoalLanguage==='function' && typeof gaxGoals!=='undefined')gaxSyncGoalLanguage();
+    if(window.gaxGoalReady)gaxSyncGoalLanguage();
     // Independent UI strings not in the original dictionary.
     const independent={
         es:{
@@ -1874,6 +1874,7 @@ $('goalChoices').addEventListener('click',event=>{
  gaxRenderGoalInputs();
 });
 gaxSyncGoalLanguage();
+window.gaxGoalReady=true;
 
 /* MODAL DE CONTACTO */
 let modalFocus=null;
