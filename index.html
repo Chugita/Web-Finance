@@ -75,9 +75,9 @@ button,input{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:
 
 /* ESTELA DEL CURSOR */
 .cursor-trail {position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;overflow:hidden}
-.trail-char {position:absolute;font:500 12px var(--pixel);color:#8bd7a0;user-select:none;pointer-events:none;animation:fadeTrail .68s forwards ease-out;text-shadow:0 0 6px rgba(112,189,140,.55)}
+.trail-char {position:absolute;font:500 13px var(--pixel);color:#9de6ae;user-select:none;pointer-events:none;animation:fadeTrail .78s forwards ease-out;text-shadow:0 0 8px rgba(112,189,140,.68)}
 @keyframes fadeTrail {
-    0% { opacity: .72; transform: translate(-50%, -50%) scale(1); }
+    0% { opacity: .86; transform: translate(-50%, -50%) scale(1); }
     100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(.5); }
 }
 
@@ -1080,7 +1080,7 @@ if(!reduced&&window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
  let lastTrail=0;
  document.addEventListener('pointermove',e=>{
    if(e.pointerType&&e.pointerType!=='mouse')return;
-   if(e.timeStamp-lastTrail<47)return;
+   if(e.timeStamp-lastTrail<40)return;
    if(e.target instanceof Element&&e.target.closest('button,a,input,select,textarea,label,.answer,.goal-config,.control,.bar-row,[role=button]'))return;
    if(portraitEl){
      const bounds=portraitEl.getBoundingClientRect();
@@ -1095,7 +1095,7 @@ if(!reduced&&window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
    glyph.style.setProperty('--dx',((Math.random()-.5)*43)+'px');
    glyph.style.setProperty('--dy',(-20-Math.random()*28)+'px');
    trailContainer.append(glyph);
-   setTimeout(()=>glyph.remove(),680);
+   setTimeout(()=>glyph.remove(),780);
  },{passive:true});
 }
 
