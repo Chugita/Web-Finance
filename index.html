@@ -1850,7 +1850,7 @@ function animateBeeAcrossPage(now){
             const depthScale=motion.size*(1+flutter*.006*Math.sin(beeClock*4.1));
             // Invert the entire visible bee orientation relative to the
             // previous version while the same route runs in reverse.
-            beeFacing.rotation.set(-pitch,yaw+beeHeadFrontCorrection+Math.PI*2,-roll,'YXZ');
+            beeFacing.rotation.set(-pitch,yaw+beeHeadFrontCorrection+Math.PI*3,-roll,'YXZ');
             if(beeDepthLayer!==motion.layer){
                 beeDepthLayer=motion.layer;
                 beeCanvas.style.zIndex=beeDepthLayer==='front'?'6':'2';
