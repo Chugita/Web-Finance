@@ -666,6 +666,44 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
  .sim-growth strong{text-align:left}
 }
 @media(hover:none),(pointer:coarse){.cursor-trail{display:none}}
+/* Guided four-step financial diagnosis, desktop and mobile. */
+.diag-head{max-width:800px}
+.diag-head .section-lead{max-width:680px}
+.diag-progress-label{display:flex;justify-content:space-between;gap:16px;align-items:center;margin:24px 0 10px}
+.diag-progress-label #progressText{font-size:11px;white-space:nowrap;color:var(--green)}
+.diag-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.diag-step{height:5px;border-radius:8px;background:#344037;transition:background .2s}
+.diag-step.is-current,.diag-step.is-complete{background:var(--green)}
+.diag-sr-progress{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);opacity:0}
+.visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+#question{animation:diagAppear .22s ease-out}
+@keyframes diagAppear{from{opacity:.5;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+#question .answers{display:grid;gap:8px}
+#question .answer{border:1px solid rgba(172,196,179,.2);border-radius:8px;background:rgba(17,27,20,.3);min-height:70px;box-shadow:none;padding:16px;transition:background .18s,border-color .18s,box-shadow .18s}
+#question .answer:hover{background:rgba(25,47,31,.55);padding-left:16px}
+#question .answer[aria-pressed=true],#question .answer[aria-pressed=true]:hover{background:rgba(112,189,140,.13);border-color:var(--green);box-shadow:inset 3px 0 0 var(--green);padding-left:16px}
+#question .answer-check{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border:1px solid rgba(174,192,177,.4);border-radius:50%;color:var(--muted);font-size:13px}
+#question .answer[aria-pressed=true] .answer-check{background:var(--green);border-color:var(--green);color:#101910}
+.diag-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:25px}
+.diag-actions .btn{min-height:44px}
+.diag-actions #nextQuestion:disabled{opacity:.37}
+.diag-next-step{border-left:2px solid var(--green);background:rgba(112,189,140,.08);padding:16px 20px;margin-top:22px}
+.diag-next-step p{font:400 13px/1.65 var(--mono);margin:10px 0 0}
+@media(max-width:650px){
+ .diag-head h2{font-size:clamp(25px,7vw,36px)}
+ .diag-progress-label{margin-top:20px;align-items:center}
+ .diag-progress-label #progressText{font-size:10px}
+ #question .answers{gap:8px}
+ #question .answer{grid-template-columns:24px minmax(0,1fr) 22px;gap:9px;min-height:76px;padding:13px 11px}
+ #question .answer:hover,#question .answer[aria-pressed=true],#question .answer[aria-pressed=true]:hover{padding-left:11px}
+ #question .answer-title{font-size:13px}
+ #question .answer-sub{font-size:12px;line-height:1.5}
+ .diag-actions{flex-wrap:nowrap;margin-top:20px}
+ .diag-actions .btn{font-size:10px;padding:12px 11px}
+ .diag-actions #nextQuestion{flex:1}
+ .diag-next-step{padding:14px}
+}
+@media(prefers-reduced-motion:reduce){#question{animation:none}}
 </style>
 </head>
 <body>
@@ -731,16 +769,23 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
 
 <section class="section" id="diagnostico">
     <div class="wrap">
-        <div class="section-label"><span class="micro" id="tDiagMicro1">01 / AUTODIAGNÓSTICO</span><span class="micro muted" id="tDiagMicro2">4 PREGUNTAS · SIN REGISTRO</span></div>
+        <div class="section-label"><span class="micro" id="tDiagMicro1">01 / DIAGNÓSTICO FINANCIERO</span><span class="micro muted" id="tDiagMicro2">4 PREGUNTAS · SIN REGISTRO</span></div>
         <div class="diag-head">
-            <h2 id="tDiagTitle">Antes de pensar en el futuro, entendamos tu presente.</h2>
-            <p class="section-lead" id="tDiagLead">Cuatro preguntas para explorar tus prioridades, tu organización y el próximo paso que te gustaría dar.</p>
+            <h2 id="tDiagTitle">Descubrí tu punto de partida financiero.</h2>
+            <p class="section-lead" id="tDiagLead">Respondé 4 preguntas breves para identificar tus prioridades y descubrir qué podés hacer a continuación. Sin registro.</p>
         </div>
         <div id="questionPanel">
-            <div class="progress-labels"><span id="progressText" class="pixel">PREGUNTA 01 / 04</span><span id="progressPct" class="pixel">25%</span></div>
-            <div class="progress-line"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="diag-progress-label"><span class="micro" id="diagStage">TU PUNTO DE PARTIDA</span><span id="progressText" class="pixel">PREGUNTA 1 DE 4</span></div>
+            <div class="diag-steps" id="diagSteps" aria-label="Progreso del diagnóstico">
+                <span class="diag-step is-current"></span><span class="diag-step"></span><span class="diag-step"></span><span class="diag-step"></span>
+            </div>
+            <div class="progress-line diag-sr-progress" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+            <span class="visually-hidden" id="progressPct">25%</span>
             <div class="question" id="question"></div>
-            <div class="actions diag-actions"><button class="btn btn-outline" id="prevQuestion" type="button">← VOLVER</button><button class="btn" id="nextQuestion" type="button" disabled>CONTINUAR →</button><span id="autoAdvanceNote" class="diag-auto-note" aria-live="polite">Elegí una respuesta para avanzar automáticamente.</span></div>
+            <div class="actions diag-actions">
+                <button class="btn btn-outline" id="prevQuestion" type="button">← VOLVER</button>
+                <button class="btn" id="nextQuestion" type="button" disabled>SIGUIENTE PREGUNTA →</button>
+            </div>
         </div>
         <div id="resultPanel" hidden>
             <div class="micro" id="tResMicro">02 / TU ORIENTACIÓN INICIAL</div>
@@ -748,6 +793,10 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
             <p class="section-lead" id="resultDescription"></p>
             <dl class="result-grid" id="resultGrid"></dl>
             <p class="section-lead" id="resultAdvice"></p>
+            <div class="diag-next-step">
+                <span class="micro" id="diagNextLabel">TU PRÓXIMO PASO</span>
+                <p id="diagNextDesc">Veamos cuánto podrías ahorrar y qué necesitás para acercarte a tus objetivos.</p>
+            </div>
             <p class="small-note" id="tResNote">Esta es una orientación preliminar basada en tus respuestas, no un diagnóstico ni una recomendación financiera personalizada.</p>
             <div class="actions"><button class="btn btn-outline" id="restart" type="button">↻ VOLVER A EMPEZAR</button><a href="#capacidad" class="btn" id="tResBtn">EXPLORAR MI CAPACIDAD →</a></div>
         </div>
@@ -1234,10 +1283,10 @@ const dict = {
         tHeroDesc: "Transformá lo que construís hoy en el patrimonio y la tranquilidad que querés para mañana.",
         tHeroBtn: "DESCUBRÍ TU PUNTO DE PARTIDA ↗",
         tScrollCue: "↓ EXPLORAR",
-        tDiagMicro1: "01 / AUTODIAGNÓSTICO",
+        tDiagMicro1: "01 / DIAGNÓSTICO FINANCIERO",
         tDiagMicro2: "4 PREGUNTAS · SIN REGISTRO",
-        tDiagTitle: "Antes de pensar en el futuro, entendamos tu presente.",
-        tDiagLead: "Cuatro preguntas para explorar tus prioridades, tu organización y el próximo paso que te gustaría dar.",
+        tDiagTitle: "Descubrí tu punto de partida financiero.",
+        tDiagLead: "Respondé 4 preguntas breves para identificar tus prioridades y descubrir qué podés hacer a continuación. Sin registro.",
         tDiagFooter: "TUS RESPUESTAS PERMANECEN EN ESTA PÁGINA. NO SE ENVÍAN A UN SERVIDOR.",
         tResMicro: "02 / TU ORIENTACIÓN INICIAL",
         tResNote: "Esta es una orientación preliminar basada en tus respuestas, no un diagnóstico ni una recomendación financiera personalizada.",
@@ -1425,102 +1474,110 @@ function getProfiles(){ return currentLang === 'es' ? profilesES : profilesEN; }
 function getOrgTips(){ return currentLang === 'es' ? orgTipsES : orgTipsEN; }
 function getObsTips(){ return currentLang === 'es' ? obsTipsES : obsTipsEN; }
 
-let gaxQuestionAdvanceTimer=null;
+/* Four clear questions: select one answer, then advance explicitly. */
 function renderQuestion(){
     const q=getQuestions()[step];
     $('questionPanel').hidden=false;
     $('resultPanel').hidden=true;
-    $('progressText')?$('progressText').textContent=(currentLang==='es'?'PREGUNTA ':'QUESTION ')+String(step+1).padStart(2,'0')+' / 04':'';
+    $('progressText').textContent=currentLang==='es'
+        ?'PREGUNTA '+(step+1)+' DE 4':'QUESTION '+(step+1)+' OF 4';
+    $('diagStage').textContent=currentLang==='es'?'TU PUNTO DE PARTIDA':'YOUR STARTING POINT';
     $('progressPct').textContent=((step+1)*25)+'%';
     $('progressFill').style.width=((step+1)*25)+'%';
-    $('nextQuestion').textContent=step===3?(currentLang==='es'?'VER MI RESULTADO →':'SEE MY RESULT →'):(currentLang==='es'?'CONTINUAR →':'CONTINUE →');
+    $('diagSteps').querySelectorAll('.diag-step').forEach((node,i)=>{
+        node.classList.toggle('is-current',i===step);
+        node.classList.toggle('is-complete',i<step);
+    });
+    $('nextQuestion').textContent=step===3
+        ?(currentLang==='es'?'VER MI RESULTADO →':'SEE MY RESULT →')
+        :(currentLang==='es'?'SIGUIENTE PREGUNTA →':'NEXT QUESTION →');
     $('prevQuestion').textContent=currentLang==='es'?'← VOLVER':'← BACK';
     $('prevQuestion').disabled=step===0;
     $('nextQuestion').disabled=answers[step]===null;
-    $('nextQuestion').hidden=true;
-    $('autoAdvanceNote').textContent=currentLang==='es'
-      ?'Elegí una respuesta para avanzar automáticamente.'
-      :'Choose an answer to continue automatically.';
-    
+    $('nextQuestion').hidden=false;
     const root=$('question');
     root.replaceChildren();
-    
-    const eyebrow=document.createElement('div');
-    eyebrow.className='micro';
-    eyebrow.textContent='/ '+String(step+1).padStart(2,'0');
-    
     const title=document.createElement('h3');
     title.className='pixel';
     title.textContent=q.title;
-    
+    title.id='diagCurrentQuestion';
     const subtitle=document.createElement('p');
     subtitle.textContent=q.subtitle;
-    
     const list=document.createElement('div');
     list.className='answers';
-    
+    list.setAttribute('role','group');
+    list.setAttribute('aria-labelledby','diagCurrentQuestion');
     q.options.forEach((option,i)=>{
-        const b=document.createElement('button');
-        b.type='button';
-        b.className='answer';
-        b.setAttribute('aria-pressed',String(answers[step]===i));
-        const n=document.createElement('span');
-        n.className='answer-index pixel';
-        n.textContent=String(i+1).padStart(2,'0');
+        const button=document.createElement('button');
+        button.type='button';button.className='answer';
+        button.setAttribute('aria-pressed',String(answers[step]===i));
+        const index=document.createElement('span');
+        index.className='answer-index pixel';
+        index.textContent=String(i+1).padStart(2,'0');
         const copy=document.createElement('span');
-        const strong=document.createElement('span');
-        strong.className='answer-title';
-        strong.textContent=option[0];
-        const sub=document.createElement('span');
-        sub.className='answer-sub';
-        sub.textContent=option[1];
-        copy.append(strong,sub);
-        const arrow=document.createElement('span');
-        arrow.className='pixel';
-        arrow.textContent=answers[step]===i?'✓':'↗';
-        b.append(n,copy,arrow);
-        b.addEventListener('click',()=>{
-            clearTimeout(gaxQuestionAdvanceTimer);
+        const name=document.createElement('span');
+        name.className='answer-title';name.textContent=option[0];
+        const detail=document.createElement('span');
+        detail.className='answer-sub';detail.textContent=option[1];
+        copy.append(name,detail);
+        const indicator=document.createElement('span');
+        indicator.className='answer-check pixel';
+        indicator.setAttribute('aria-hidden','true');
+        indicator.textContent=answers[step]===i?'✓':'○';
+        button.append(index,copy,indicator);
+        button.addEventListener('click',()=>{
             answers[step]=i;
-            renderQuestion();
-            const selectedStep=step;
-            gaxQuestionAdvanceTimer=setTimeout(()=>{
-                if(step!==selectedStep||answers[step]===null)return;
-                if(step===getQuestions().length-1)renderResult();
-                else {step++;renderQuestion();}
-            },360);
+            // Keep focus on the chosen card while updating its visible state.
+            list.querySelectorAll('.answer').forEach((card,j)=>{
+                const selected=j===i;
+                card.setAttribute('aria-pressed',String(selected));
+                card.querySelector('.answer-check').textContent=selected?'✓':'○';
+            });
+            $('nextQuestion').disabled=false;
         });
-        list.append(b);
+        list.append(button);
     });
-    root.append(eyebrow,title,subtitle,list);
+    root.append(title,subtitle,list);
 }
-
 function renderResult(){
-    clearTimeout(gaxQuestionAdvanceTimer);
     if(answers.some(a=>a===null))return;
     $('questionPanel').hidden=true;
     $('resultPanel').hidden=false;
-    const p=getProfiles()[answers[0]];
-    $('resultTitle').textContent=p.title;
-    $('resultDescription').textContent=p.description+' '+getOrgTips()[answers[1]];
-    const fields=currentLang==='es'?['TU PRIORIDAD','TU ORGANIZACIÓN','TU HORIZONTE','TU OBSTÁCULO']:['YOUR PRIORITY','YOUR ORGANIZATION','YOUR HORIZON','YOUR OBSTACLE'];
+    const profile=getProfiles()[answers[0]];
+    $('resultTitle').textContent=profile.title;
+    $('resultDescription').textContent=profile.description+' '+getOrgTips()[answers[1]];
+    const fields=currentLang==='es'
+        ?['TU PRIORIDAD','TU ORGANIZACIÓN','TU HORIZONTE','TU OBSTÁCULO']
+        :['YOUR PRIORITY','YOUR ORGANIZATION','YOUR HORIZON','YOUR OBSTACLE'];
     const grid=$('resultGrid');
     grid.replaceChildren();
-    answers.forEach((a,i)=>{
-        const dt=document.createElement('dt');
-        dt.textContent=fields[i];
-        const dd=document.createElement('dd');
-        dd.className='pixel';
-        dd.textContent=getQuestions()[i].options[a][0];
-        grid.append(dt,dd);
+    answers.forEach((answer,i)=>{
+        const label=document.createElement('dt');
+        label.textContent=fields[i];
+        const value=document.createElement('dd');
+        value.className='pixel';value.textContent=getQuestions()[i].options[answer][0];
+        grid.append(label,value);
     });
     $('resultAdvice').textContent=(currentLang==='es'?'PRÓXIMO PASO: ':'NEXT STEP: ')+getObsTips()[answers[3]]+' '+(currentLang==='es'?'Considerá tu horizonte (':'Consider your horizon (')+getQuestions()[2].options[answers[2]][0].toLowerCase()+') '+(currentLang==='es'?'al definir el plan.':'when defining the plan.');
+    $('diagNextLabel').textContent=currentLang==='es'?'TU PRÓXIMO PASO':'YOUR NEXT STEP';
+    $('diagNextDesc').textContent=currentLang==='es'
+        ?'Ahora veamos cuánto podrías ahorrar cada mes y cómo acercarte a tus objetivos.'
+        :'Now let’s see how much you could save each month and what it would take to reach your goals.';
     gaxRefreshPersonalization();
 }
-
-$('prevQuestion').addEventListener('click',()=>{clearTimeout(gaxQuestionAdvanceTimer);if(step>0){step--;renderQuestion()}});
-$('nextQuestion').addEventListener('click',()=>{clearTimeout(gaxQuestionAdvanceTimer);if(answers[step]===null)return;if(step===3)renderResult();else{step++;renderQuestion()}});
-$('restart').addEventListener('click',()=>{clearTimeout(gaxQuestionAdvanceTimer);step=0;answers=[null,null,null,null];renderQuestion();gaxRefreshPersonalization();$('diagnostico').scrollIntoView({behavior:reduced?'auto':'smooth'})});
+$('prevQuestion').addEventListener('click',()=>{
+    if(step>0){step--;renderQuestion();}
+});
+$('nextQuestion').addEventListener('click',()=>{
+    if(answers[step]===null)return;
+    if(step===getQuestions().length-1)renderResult();
+    else {step++;renderQuestion();}
+});
+$('restart').addEventListener('click',()=>{
+    step=0;answers=[null,null,null,null];
+    renderQuestion();gaxRefreshPersonalization();
+    $('diagnostico').scrollIntoView({behavior:reduced?'auto':'smooth'});
+});
 renderQuestion();
 
 /* The diagnostic informs later sections without forcing repeated answers. */
@@ -1560,8 +1617,8 @@ function setGaxLanguage(next){
     $('langBtn').setAttribute('aria-label',next==='es'?'Switch to English':'Cambiar a español');
     $('langBtn').setAttribute('aria-pressed',String(next==='en'));
     const qVisible=!$('resultPanel').hidden;
-    if(qVisible)renderResult();
-    else renderQuestion();
+    if(qVisible)renderQuestion();
+    else renderResult();
     updateSim();
     updateTime();
     gaxRefreshPersonalization();
