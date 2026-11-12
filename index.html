@@ -704,6 +704,42 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
  .diag-next-step{padding:14px}
 }
 @media(prefers-reduced-motion:reduce){#question{animation:none}}
+
+/* Persistent mobile conversion CTA. Never overlay the desktop hero or bee. */
+.gax-floating-meeting{display:none}
+@media(max-width:900px){
+ .gax-floating-meeting{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  position:fixed;right:clamp(12px,3.5vw,20px);
+  bottom:calc(16px + env(safe-area-inset-bottom,0px));
+  z-index:42;min-height:46px;max-width:calc(100vw - 28px);
+  background:rgba(22,34,25,.72);color:#b8c9bc;
+  border:1px solid rgba(112,189,140,.43);
+  border-radius:8px;padding:0 15px;
+  font:500 10px var(--pixel);letter-spacing:.045em;
+  box-shadow:0 6px 22px rgba(0,0,0,.27);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  opacity:.72;transition:opacity .22s,background .22s,border-color .22s,box-shadow .22s,color .22s;
+ }
+ .gax-floating-meeting:hover,.gax-floating-meeting:focus-visible,.gax-floating-meeting.is-lit{
+  opacity:1;background:rgba(112,189,140,.93);border-color:var(--green);
+  color:#07130a;box-shadow:0 0 18px rgba(112,189,140,.3);
+ }
+ .gax-floating-light{height:6px;width:6px;background:#70bd8c;border-radius:50%;opacity:.4;transition:opacity .2s}
+ .gax-floating-meeting.is-lit .gax-floating-light{background:#0c3218;opacity:1}
+ body:has(#modal.open) .gax-floating-meeting{opacity:0;pointer-events:none}
+ .closing{padding-bottom:110px}
+}
+.gax-lead-consent{padding:12px 14px;margin:18px 0 13px;border:1px solid rgba(112,189,140,.23);border-radius:8px;background:rgba(112,189,140,.045)}
+.gax-consent-label{display:flex;align-items:flex-start;gap:10px;cursor:pointer;font:400 12px/1.6 var(--mono);color:var(--fg)}
+.gax-consent-label input{margin:3px 0 0;accent-color:var(--green);width:17px;height:17px;flex-shrink:0}
+.gax-contact-consent{margin:16px 0}
+#leadSummaryDetails{padding:8px 0 0 26px}
+#leadSummaryDetails summary{color:var(--green);font:400 11px var(--pixel);cursor:pointer}
+.gax-lead-preview{white-space:pre-wrap;max-height:220px;overflow:auto;padding:10px 0;font:400 11px/1.6 var(--mono);color:var(--muted)}
+.gax-honeypot{position:absolute!important;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+@media(max-width:650px){.modal-box{padding:30px 19px 23px}.gax-floating-meeting{min-height:44px;font-size:9px;padding:0 12px}}
+@media(prefers-reduced-motion:reduce){.gax-floating-meeting,.gax-floating-light{transition:none}}
 </style>
 </head>
 <body>
@@ -1056,18 +1092,27 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
     <div class="wrap footer"><strong>GAX.</strong><span id="tFooterText">PLANIFICACIÓN FINANCIERA / DISEÑÁ TU FUTURO</span><span class="pixel">© 2026 · Bee 3D: <a href="https://sketchfab.com/3d-models/bee-c80f9c2110c847db9375c548f14a0315" target="_blank" rel="noopener noreferrer">etro313 / Sketchfab</a> (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>) · Adaptado para GAX</span></div>
 </footer>
 
+<button type="button" class="gax-floating-meeting" id="mobileMeetingButton" data-open-modal aria-label="Solicitar reunión" aria-haspopup="dialog">
+    <span class="gax-floating-light" aria-hidden="true"></span><span id="floatingMeetingText">AGENDAR REUNIÓN</span><span aria-hidden="true">↗</span>
+</button>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
     <div class="modal-box">
         <button class="modal-close" type="button" id="closeModal" aria-label="Cerrar">×</button>
         <span class="micro" id="tModalMicro">GAX / CONTACTO</span>
         <h2 id="modalTitle">Solicitar una reunión</h2>
-        <p id="tModalDesc" style="color:var(--muted);margin-bottom:24px;font-family:var(--mono)">Una conversación inicial para entender tus objetivos. Este formulario es una demostración y todavía no envía solicitudes.</p>
+        <p id="tModalDesc" style="color:var(--muted);margin-bottom:24px;font-family:var(--mono)">Dejanos tus datos para solicitar una conversación. Si hiciste el diagnóstico o usaste los simuladores, podés compartir un resumen para preparar la reunión.</p>
         <form id="contactForm">
-            <label class="field"><span id="tField1">NOMBRE Y APELLIDO</span><input name="name" autocomplete="name" required></label>
-            <label class="field"><span id="tField2">CORREO ELECTRÓNICO</span><input type="email" name="email" autocomplete="email" required></label>
-            <label class="field"><span id="tField3">TELÉFONO / WHATSAPP</span><input type="tel" name="phone" autocomplete="tel" required></label>
-            <button class="btn" type="submit" id="tModalBtn" style="width:100%;margin-top:10px;">CONTINUAR ↗</button>
-            <p id="formFeedback" class="small-note" role="status" style="margin-top:15px;text-align:center;">El envío real requiere conectar un correo, calendario o servidor.</p>
+            <label class="field"><span id="tField1">NOMBRE Y APELLIDO</span><input name="name" autocomplete="name" maxlength="120" required></label>
+            <label class="field"><span id="tField2">CORREO ELECTRÓNICO</span><input type="email" name="email" autocomplete="email" maxlength="200" required></label>
+            <label class="field"><span id="tField3">TELÉFONO / WHATSAPP</span><input type="tel" name="phone" autocomplete="tel" maxlength="40" required></label>
+            <div class="gax-lead-consent">
+                <label class="gax-consent-label"><input type="checkbox" id="shareFinancialSummary" name="shareSummary"><span id="shareSummaryText">También quiero compartir mis respuestas y proyecciones financieras para preparar la reunión.</span></label>
+                <details id="leadSummaryDetails"><summary id="leadSummaryToggle">Ver qué información se incluiría</summary><div id="leadSummaryPreview" class="gax-lead-preview">—</div></details>
+            </div>
+            <label class="gax-consent-label gax-contact-consent"><input type="checkbox" id="contactConsent" required><span id="contactConsentText">Autorizo a que me contacten por los datos que proporcioné para responder a esta consulta.</span></label>
+            <label class="gax-honeypot" aria-hidden="true">Sitio web <input type="text" name="website" autocomplete="off" tabindex="-1"></label>
+            <button class="btn" type="submit" id="tModalBtn" style="width:100%;margin-top:10px;">SOLICITAR REUNIÓN ↗</button>
+            <p id="formFeedback" class="small-note" role="status" style="margin-top:15px;text-align:center;">Una solicitud no confirma fecha ni horario.</p>
         </form>
     </div>
 </div>
@@ -1347,11 +1392,11 @@ const dict = {
         tFooterText: "PLANIFICACIÓN FINANCIERA / DISEÑÁ TU FUTURO",
         tModalMicro: "GAX / CONTACTO",
         tModalTitle: "Solicitar una reunión",
-        tModalDesc: "Una conversación inicial para entender tus objetivos. Este formulario es una demostración y todavía no envía solicitudes.",
+        tModalDesc: "Dejanos tus datos para solicitar una conversación. Si hiciste el diagnóstico o usaste los simuladores, podés compartir un resumen para preparar la reunión.",
         tField1: "NOMBRE Y APELLIDO",
         tField2: "CORREO ELECTRÓNICO",
         tField3: "TELÉFONO / WHATSAPP",
-        tModalBtn: "CONTINUAR ↗"
+        tModalBtn: "SOLICITAR REUNIÓN ↗"
     },
     en: {
         pageTitle: "GAX — The Future is Designed",
@@ -1425,11 +1470,11 @@ const dict = {
         tFooterText: "FINANCIAL PLANNING / DESIGN YOUR FUTURE",
         tModalMicro: "GAX / CONTACT",
         tModalTitle: "Request a meeting",
-        tModalDesc: "An initial conversation to understand your goals. This form is a demo and does not send requests yet.",
+        tModalDesc: "Leave your contact details to request a conversation. If you completed the diagnostic or simulations, you may opt to share a summary to prepare the meeting.",
         tField1: "FULL NAME",
         tField2: "EMAIL ADDRESS",
         tField3: "PHONE / WHATSAPP",
-        tModalBtn: "CONTINUE ↗"
+        tModalBtn: "REQUEST MEETING ↗"
     }
 };
 
@@ -1646,7 +1691,15 @@ function setGaxLanguage(next){
     const methodCTA=document.querySelector('#methodModal button[data-open-modal]');
     if(methodCTA)methodCTA.textContent=captions.m2;
     const formFeedback=$('formFeedback');
-    if(formFeedback)formFeedback.textContent=next==='es'?'El envío real requiere conectar un correo, calendario o servidor.':'Submitting this form requires connecting email, calendar, or a server.';
+    if(formFeedback&&formFeedback.dataset.emailOpened!=='true')formFeedback.textContent=next==='es'?'La solicitud no confirma fecha ni horario.':'A request does not confirm a date or time.';
+    $('floatingMeetingText').textContent=next==='es'?'AGENDAR REUNIÓN':'REQUEST MEETING';
+    $('shareSummaryText').textContent=next==='es'
+      ?'También quiero compartir mis respuestas y proyecciones financieras para preparar la reunión.'
+      :'I also want to share my questionnaire answers and financial projections to prepare the meeting.';
+    $('leadSummaryToggle').textContent=next==='es'?'Ver qué información se incluiría':'Preview information to be shared';
+    $('contactConsentText').textContent=next==='es'
+      ?'Autorizo a que me contacten por los datos que proporcioné para responder a esta consulta.'
+      :'I agree to be contacted using the details I provided about this request.';
     if($('methodModal')?.classList.contains('open') && activeMethodKey) renderMethodDetails(activeMethodKey);
 }
 $('langBtn').addEventListener('click',()=>{
@@ -2043,16 +2096,157 @@ $('goalChoices').addEventListener('click',event=>{
 gaxSyncGoalLanguage();
 window.gaxGoalReady=true;
 
-/* MODAL DE CONTACTO */
+/* CONTACT REQUEST: visitor opts in to share a limited financial summary.
+   Never claim a calendar booking before an actual calendar confirmation.
+   API is same-origin POST /api/consultas; mail client fallback is explicit. */
 let modalFocus=null;
-function openModal(){modalFocus=document.activeElement;$('modal').classList.add('open');$('modal').setAttribute('aria-hidden','false');document.body.style.overflow='hidden';$('modal').querySelector('input').focus()}
-function closeModal(){$('modal').classList.remove('open');$('modal').setAttribute('aria-hidden','true');document.body.style.overflow='';modalFocus?.focus()}
-document.querySelectorAll('[data-open-modal]').forEach(b=>b.addEventListener('click',openModal));
+const gaxRecipient='jmpatt@grupoabax.com';
+function gaxFinancialSummary(){
+ const lines=[];
+ const q=(typeof getQuestions==='function')?getQuestions():[];
+ if(Array.isArray(answers)&&answers.every(a=>a!==null)){
+  lines.push(currentLang==='en'?'INITIAL QUESTIONNAIRE':'CUESTIONARIO INICIAL');
+  for(let i=0;i<Math.min(q.length,answers.length);i++){
+   const chosen=q[i]?.options?.[answers[i]]?.[0];
+   if(chosen)lines.push((i+1)+'. '+q[i].title+' — '+chosen);
+  }
+ }
+ const income=Number($('income')?.value);
+ const fixed=Number($('fixed')?.value),variable=Number($('variable')?.value);
+ if(Number.isFinite(income)&&Number.isFinite(fixed)&&Number.isFinite(variable)){
+  const unit=currentCurrency;
+  const remaining=Math.max(0,100-fixed-variable);
+  lines.push('',currentLang==='en'?'SAVINGS CAPACITY SIMULATION':'SIMULACIÓN DE CAPACIDAD DE AHORRO');
+  lines.push('Moneda: '+unit);
+  lines.push('Ingreso mensual indicado: '+formatMoney(income));
+  lines.push('Gastos fijos: '+fixed+'% / '+formatMoney(income*fixed/100));
+  lines.push('Gastos variables: '+variable+'% / '+formatMoney(income*variable/100));
+  lines.push('Ahorro posible estimado: '+remaining+'% / '+formatMoney(income*remaining/100));
+ }
+ const contribution=Number($('compareMonthly')?.value),yearsA=Number($('yearsA')?.value),yearsB=Number($('yearsB')?.value);
+ if(Number.isFinite(contribution)&&Number.isFinite(yearsA)&&Number.isFinite(yearsB)){
+  lines.push('',currentLang==='en'?'SAVINGS PROJECTION':'PROYECCIÓN DE AHORRO');
+  lines.push('Aporte mensual elegido: '+formatMoney(contribution));
+  lines.push('Horizontes: '+yearsA+' y '+yearsB+' años; 5,5% nominal anual hipotético');
+  lines.push('Proyección '+yearsA+' años: '+$('nowValue').textContent);
+  lines.push('Proyección '+yearsB+' años: '+$('laterValue').textContent);
+  lines.push('Costo de postergar 5 años ('+yearsA+' años): '+$('delayACost').textContent);
+  lines.push('Costo de postergar 5 años ('+yearsB+' años): '+$('delayBCost').textContent);
+ }
+ if(typeof gaxGoals!=='undefined'&&gaxGoals.size){
+  lines.push('',currentLang==='en'?'SELECTED GOALS':'OBJETIVOS SELECCIONADOS');
+  for(const [key,goal] of gaxGoals){
+   const title=goal.name||gaxGoalTemplates[key]?.[currentLang]||key;
+   lines.push(title+': objetivo USD '+Number(goal.amount||0).toLocaleString('es-AR')+
+     ', plazo '+goal.years+' años, capital inicial USD '+Number(goal.initial||0).toLocaleString('es-AR')+
+     ', aporte mensual estimado '+gaxGoalCurrency(gaxGoalContribution(goal)));
+  }
+ }
+ lines.push('',currentLang==='en'?'Illustrative calculations, not guaranteed results.':'Cálculos ilustrativos, sin rendimientos garantizados.');
+ return lines.join('\n').slice(0,12000);
+}
+function gaxSyncLeadSummary(){
+ const preview=$('leadSummaryPreview');
+ if(preview)preview.textContent=gaxFinancialSummary();
+}
+function openModal(){
+ modalFocus=document.activeElement;
+ gaxSyncLeadSummary();
+ $('modal').classList.add('open');
+ $('modal').setAttribute('aria-hidden','false');
+ document.body.style.overflow='hidden';
+ $('modal').querySelector('input').focus();
+}
+function closeModal(){
+ $('modal').classList.remove('open');
+ $('modal').setAttribute('aria-hidden','true');
+ document.body.style.overflow='';
+ modalFocus?.focus();
+ const button=$('mobileMeetingButton');
+ if(button)button.classList.remove('is-lit');
+}
+document.querySelectorAll('[data-open-modal]').forEach(button=>{
+ button.addEventListener('click',()=>{
+  if(button.id==='mobileMeetingButton'){
+   button.classList.add('is-lit');
+   // Activation feedback remains visible briefly before opening the modal.
+   setTimeout(openModal,140);
+  }else openModal();
+ });
+});
 $('closeModal').addEventListener('click',closeModal);
-$('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('modal').classList.contains('open'))closeModal()});
-$('contactForm').addEventListener('submit',e=>{e.preventDefault();$('formFeedback').textContent=currentLang==='es'?'Versión de demostración: aún no se envió ninguna solicitud.':'Demo version: no request sent yet.'});
-
+$('modal').addEventListener('click',event=>{if(event.target===$('modal'))closeModal()});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&$('modal').classList.contains('open'))closeModal()});
+$('leadSummaryDetails').addEventListener('toggle',()=>{
+ if($('leadSummaryDetails').open)gaxSyncLeadSummary();
+});
+function gaxMailto(payload){
+ const subject='GAX · Solicitud de reunión — '+payload.contact.name;
+ const text='NUEVA SOLICITUD DE REUNIÓN\n\n'+
+  'Nombre: '+payload.contact.name+'\nCorreo: '+payload.contact.email+
+  '\nWhatsApp: '+payload.contact.phone+'\n\n'+
+  (payload.summary?'RESUMEN FINANCIERO AUTORIZADO\n'+payload.summary:'La persona no autorizó compartir su resumen financiero.')+
+  '\n\nLa fecha y horario deben coordinarse por separado.';
+ return 'mailto:'+gaxRecipient+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(text);
+}
+$('contactForm').addEventListener('submit',async event=>{
+ event.preventDefault();
+ const form=event.currentTarget;
+ if(!form.reportValidity())return;
+ const data=new FormData(form);
+ if(String(data.get('website')||'').trim())return;
+ const contact={
+  name:String(data.get('name')||'').trim().slice(0,120),
+  email:String(data.get('email')||'').trim().slice(0,200),
+  phone:String(data.get('phone')||'').trim().slice(0,40)
+ };
+ const includeSummary=$('shareFinancialSummary').checked;
+ const payload={
+  contact,
+  shareSummary:includeSummary,
+  summary:includeSummary?gaxFinancialSummary():null,
+  contactConsent:$('contactConsent').checked,
+  submittedAt:new Date().toISOString()
+ };
+ const feedback=$('formFeedback'),submit=$('tModalBtn');
+ if(!payload.contactConsent||!contact.name||!contact.email||!contact.phone)return;
+ submit.disabled=true;
+ feedback.textContent=currentLang==='en'?'Sending request…':'Enviando consulta…';
+ try{
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),9000);
+  let response;
+  try{
+   response=await fetch('/api/consultas',{
+    method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+    body:JSON.stringify(payload),signal:controller.signal
+   });
+  }finally{clearTimeout(timer)}
+  const data=response.ok?await response.json().catch(()=>({})):{};
+  if(response.ok&&data.sent===true){
+   feedback.textContent=currentLang==='en'
+    ?'Request sent. We will contact you to arrange a time; no meeting is booked yet.'
+    :'Consulta enviada. Te contactaremos para coordinar día y horario; todavía no hay una reunión reservada.';
+   form.reset();return;
+  }
+  throw Error('Mail service not active');
+ }catch(error){
+  // Graceful, transparent fallback: user's mail app must explicitly send.
+  const mailto=gaxMailto(payload);
+  const link=document.createElement('a');
+  link.href=mailto;
+  link.textContent=currentLang==='en'
+   ?'Open your mail app to send the request'
+   :'Abrir mi correo para enviar la consulta';
+  link.className='gax-email-fallback';
+  feedback.replaceChildren(document.createTextNode(
+   currentLang==='en'
+    ?'Automatic sending is not configured yet. Nothing has been sent. '
+    :'El envío automático todavía no está conectado. No se envió ningún dato. '
+  ),link);
+  link.addEventListener('click',()=>{feedback.dataset.emailOpened='true'});
+ }finally{submit.disabled=false}
+});
 /* RETRATO INTERACTIVO — reveal real portrait beneath the Matrix image */
 const portrait = document.getElementById('matrixPortrait');
 if (portrait) {
