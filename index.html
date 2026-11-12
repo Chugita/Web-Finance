@@ -537,35 +537,49 @@ header{row-gap:5px}
  .gax-indices-embed iframe{max-height:29px!important}
  .gax-market-caption,.gax-market-credit{font-size:8px}
 }
-/* One unified compact quote panel. No iframe, duplicated marquee, or logos. */
+/* RECUADRO ANIMADO DE MERCADOS Y DÓLAR */
 header{row-gap:0}
-header .gax-quote-box{
-  min-width:0;max-width:100%;height:36px;display:flex;align-items:center;
-  border:1px solid rgba(112,189,140,.23);border-radius:7px;
-  background:rgba(9,17,12,.82);overflow-x:auto;overflow-y:hidden;
-  scrollbar-width:none;overscroll-behavior-x:contain;
+header .ticker-window.gax-quote-box{
+    overflow:hidden;flex:1;min-width:0;max-width:100%;
+    background:rgba(17,27,20,.55);
+    border:1px solid rgba(112,189,140,.25);border-radius:6px;
+    height:36px;padding:7px 0;position:relative;
+    -webkit-mask-image:linear-gradient(to right,transparent 0%,#000 4%,#000 96%,transparent 100%);
+    mask-image:linear-gradient(to right,transparent 0%,#000 4%,#000 96%,transparent 100%);
 }
-header .gax-quote-box::-webkit-scrollbar{display:none}
-header .gax-quote-box .ticker-track{
-  display:flex;align-items:center;gap:0;flex:0 0 auto;min-width:max-content;
-  width:max-content;max-width:none;padding:0 6px;
-  animation:none!important;transform:none!important;
+header .ticker-window.gax-quote-box .ticker-track{
+    display:flex;align-items:center;width:max-content;max-width:none;
+    min-width:0;gap:32px;padding:0;white-space:nowrap;
+    animation:gaxMarketMarquee var(--ticker-duration,40s) linear infinite!important;
+    will-change:transform;
 }
-header .gax-quote-box .ticker-item{
-  flex:0 0 auto;display:flex;align-items:center;gap:6px;
-  padding:0 12px;border-right:1px solid rgba(160,190,168,.16);
-  font:400 10px var(--pixel);height:22px;
+header .ticker-window.gax-quote-box .ticker-track:hover{animation-play-state:paused!important}
+@keyframes gaxMarketMarquee{
+    from{transform:translateX(0)}
+    to{transform:translateX(-50%)}
 }
-header .gax-quote-box .ticker-item:last-child{border-right:0}
-header .gax-quote-box .ticker-symbol{color:#99b0a2}
-header .gax-quote-box .ticker-price{font-size:11px;color:#f0f7f1;font-weight:600}
-header .gax-quote-box .ticker-up{color:#70bd8c}
-header .gax-quote-box .ticker-down{color:#e68080}
-header .gax-quote-box .ticker-unavailable{color:#849389}
+header .ticker-window.gax-quote-box .ticker-item{
+    display:inline-flex;flex:0 0 auto;align-items:center;gap:.45rem;
+    height:20px;padding-right:14px;
+    border-right:1px solid rgba(255,255,255,.08);
+    font:400 10px 'Geist Pixel',monospace;
+}
+header .ticker-window.gax-quote-box .ticker-symbol{color:#9eaaa0;letter-spacing:.04em}
+header .ticker-window.gax-quote-box .ticker-price{color:#fff;font-weight:700;font-size:11px}
+header .ticker-window.gax-quote-box .ticker-up{color:#70bd8c;font-size:10px}
+header .ticker-window.gax-quote-box .ticker-down{color:#e65252;font-size:10px}
+header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
 @media(max-width:900px){
-  header .gax-quote-box{grid-column:1/-1;grid-row:2;height:32px;padding-top:0;border-top:1px solid rgba(112,189,140,.23)}
-  header .gax-quote-box .ticker-item{font-size:9px;padding:0 9px}
-  header .gax-quote-box .ticker-price{font-size:10px}
+    header .ticker-window.gax-quote-box{
+        grid-column:1/-1;grid-row:2;height:31px;padding:5px 0
+    }
+    header .ticker-window.gax-quote-box .ticker-track{gap:24px}
+    header .ticker-window.gax-quote-box .ticker-item{font-size:9px;padding-right:9px}
+    header .ticker-window.gax-quote-box .ticker-price{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){
+    header .ticker-window.gax-quote-box{overflow-x:auto;mask-image:none;-webkit-mask-image:none}
+    header .ticker-window.gax-quote-box .ticker-track{animation:none!important}
 }
 </style>
 </head>
@@ -1394,98 +1408,115 @@ setGaxLanguage('es');
 /* CLOCK */
 function clock(){ $('liveTimeDisplay').textContent='BUE '+new Date().toLocaleTimeString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour12:false})+' HS' }clock();setInterval(clock,1000);
 
-/* One GAX quote bar. DolarAPI + MonedAPI for Argentine dollars.
-   SPY, QQQ and DIA are exchange-traded tracking funds (NOT the indices).
-   Market API is keyless and CORS enabled, with a 15 minute cache.
-   No values are invented when feeds are unavailable. */
+/* DATOS DE MERCADO — sólo valores comprobados, nunca cifras de ejemplo.
+   El ticker usa dos copias idénticas para un desplazamiento sin saltos. */
 let gaxMarketFetchInProgress=false;
-const gaxQuoteMoney=n=>'$'+n.toLocaleString('es-AR',{maximumFractionDigits:2});
-function gaxQuoteItem(name,value,change=null,help=''){
-    const el=document.createElement('div');
-    el.className='ticker-item';
-    if(help)el.title=help;
-    const label=document.createElement('span');
-    label.className='ticker-symbol';label.textContent=name;
-    const amount=document.createElement('span');
-    amount.className='ticker-price pixel'+(value==='—'?' ticker-unavailable':'');
-    amount.textContent=value;
-    el.append(label,amount);
-    if(Number.isFinite(change)){
-        const ch=document.createElement('span');
-        ch.className=(change<0?'ticker-down':'ticker-up')+' pixel';
-        ch.textContent=(change>0?'+':'')+change.toFixed(2)+'%';
-        el.append(ch);
-    }
-    return el;
-}
-async function fetchLiveMarketData(){
-    if(gaxMarketFetchInProgress)return;
-    const track=$('tickerTrack');if(!track)return;
-    gaxMarketFetchInProgress=true;
-    const request=async url=>{
-        const controller=new AbortController();
-        const timeout=setTimeout(()=>controller.abort(),8000);
-        try{
-            const response=await fetch(url,{signal:controller.signal,cache:'no-store'});
-            if(!response.ok)throw Error('HTTP '+response.status);
-            return response.json();
-        }finally{clearTimeout(timeout)}
-    };
+const gaxMarketLast=new Map();
+const gaxArs=n=>'$'+Number(n).toLocaleString('es-AR',{maximumFractionDigits:2});
+const gaxUsd=n=>'US$'+Number(n).toLocaleString('en-US',{maximumFractionDigits:2});
+async function gaxMarketRequest(url){
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),7500);
     try{
-        // Independent calls: a stock-feed outage must never hide dollar rates.
-        const [dollarPrimary,dollarBackup,markets]=await Promise.allSettled([
-            request('https://dolarapi.com/v1/dolares'),
-            request('https://monedapi.ar/api/v2/usd'),
-            request('https://feargreedchart.com/api/?action=market')
+        const response=await fetch(url,{signal:controller.signal,cache:'no-store'});
+        if(!response.ok)throw Error('Cotizaciones HTTP '+response.status);
+        return await response.json();
+    }finally{clearTimeout(timeout)}
+}
+function gaxMakeMarketItem(item){
+    const element=document.createElement('div');
+    element.className='ticker-item';
+    if(item.date)element.title='Última actualización: '+item.date;
+    const name=document.createElement('span');
+    name.className='ticker-symbol';name.textContent=item.symbol;
+    const price=document.createElement('span');
+    price.className='ticker-price'+(item.price==='—'?' ticker-unavailable':'');
+    price.textContent=item.price;
+    element.append(name,price);
+    if(Number.isFinite(item.change)){
+        const change=document.createElement('span');
+        change.className=(item.change<0?'ticker-down':'ticker-up');
+        change.textContent=(item.change>=0?'▲ +':'▼ ')+Math.abs(item.change).toFixed(2)+'%';
+        element.append(change);
+    }
+    return element;
+}
+async function loadMarketTicker(){
+    if(gaxMarketFetchInProgress)return;
+    const track=document.getElementById('tickerTrack');
+    if(!track)return;
+    gaxMarketFetchInProgress=true;
+    try{
+        const responses=await Promise.allSettled([
+            gaxMarketRequest('https://dolarapi.com/v1/dolares'),
+            gaxMarketRequest('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,pax-gold&vs_currencies=usd&include_24hr_change=true')
         ]);
-        const dollarRows=dollarPrimary.status==='fulfilled'&&Array.isArray(dollarPrimary.value)
-            ?dollarPrimary.value:[];
-        const backupRows=dollarBackup.status==='fulfilled'&&Array.isArray(dollarBackup.value)
-            ?dollarBackup.value:[];
-        const entries=[];
-        for(const [name,code,origin] of [
-            ['OFICIAL','oficial','OFICIAL'],['BLUE','blue','BLUE'],
-            ['MEP','bolsa','BOLSA'],['CCL','contadoconliqui','CCL']
-        ]){
-            const primary=dollarRows.find(q=>q.casa===code&&Number(q.venta)>0);
-            const secondary=backupRows.find(q=>q.origin===origin&&Number(q.sell)>0);
-            const value=primary?Number(primary.venta):secondary?Number(secondary.sell):null;
-            const date=primary?.fechaActualizacion||secondary?.lastScrapedAt||secondary?.updatedAt;
-            const help=name+' · dólar venta en ARS'+(date?' · '+new Date(date).toLocaleString('es-AR'):'');
-            entries.push(gaxQuoteItem(name,value!==null?gaxQuoteMoney(value):'—',null,help));
-            if(name==='OFICIAL'){
-                const note=$('fxRateDisplay');
-                if(value!==null){
-                    currentOfficialRate=value;
-                    if(note)note.textContent='Dólar oficial venta: '+gaxQuoteMoney(value)+' ARS';
-                    updateSim();
-                }else if(note)note.textContent='Dólar oficial no disponible; verificá la cotización.';
+        if(responses[0].status==='fulfilled'&&Array.isArray(responses[0].value)){
+            for(const quote of responses[0].value){
+                const value=Number(quote.venta);
+                if(Number.isFinite(value)&&value>0){
+                    gaxMarketLast.set('usd:'+quote.casa,{
+                        price:gaxArs(value),value,
+                        date:quote.fechaActualizacion||null
+                    });
+                }
             }
         }
-        const data=markets.status==='fulfilled'?markets.value:null;
-        const market=data?.market&&typeof data.market==='object'?data.market:data;
-        // These are the actual prices of the tracking ETFs, clearly labeled.
-        for(const [name,symbol] of [
-            ['S&P 500 · SPY','SPY'],
-            ['NASDAQ · QQQ','QQQ'],
-            ['DOW · DIA','DIA']
-        ]){
-            const q=market?.[symbol];
-            const price=Number(q?.price);
-            const pct=q?.pct===undefined||q?.pct===null?null:Number(q.pct);
-            const valid=Number.isFinite(price)&&price>0;
-            entries.push(gaxQuoteItem(name,valid?'US$'+price.toLocaleString('es-AR',{maximumFractionDigits:2}):'—',
-                valid&&Number.isFinite(pct)?pct:null,'ETF que sigue al índice · última cotización disponible'));
+        if(responses[1].status==='fulfilled'){
+            const crypto=responses[1].value;
+            for(const id of ['bitcoin','ethereum','pax-gold']){
+                const amount=Number(crypto?.[id]?.usd);
+                const change=Number(crypto?.[id]?.usd_24h_change);
+                if(Number.isFinite(amount)&&amount>0){
+                    gaxMarketLast.set('crypto:'+id,{
+                        price:gaxUsd(id==='pax-gold'?amount:Math.round(amount)),
+                        change:Number.isFinite(change)?change:null
+                    });
+                }
+            }
         }
-        // Preserve scroll position while updating, and never duplicate values.
-        const position=track.parentElement?.scrollLeft||0;
-        track.replaceChildren(...entries);
-        if(track.parentElement)track.parentElement.scrollLeft=position;
+        const items=[];
+        for(const [symbol,key] of [
+            ['USD OFICIAL','oficial'],['USD BLUE','blue'],
+            ['USD MEP','bolsa'],['USD CCL','contadoconliqui']
+        ]){
+            const quote=gaxMarketLast.get('usd:'+key);
+            items.push({symbol,price:quote?.price||'—',date:quote?.date||null});
+            if(key==='oficial'){
+                const note=document.getElementById('fxRateDisplay');
+                if(quote){
+                    currentOfficialRate=quote.value;
+                    if(note)note.textContent='Dólar oficial venta: '+quote.price+' ARS';
+                    updateSim();
+                }else if(note)note.textContent='Cotización oficial no disponible; verificá el valor vigente.';
+            }
+        }
+        // Un índice no es un ETF. No publicar cifras bursátiles
+        // estáticas ni atribuirles una fecha o tiempo real falsos.
+        for(const [symbol,id] of [
+            ['BTC','bitcoin'],['ETH','ethereum'],['ORO · PAXG','pax-gold']
+        ]){
+            const quote=gaxMarketLast.get('crypto:'+id);
+            items.push({symbol,price:quote?.price||'—',change:quote?.change??null});
+        }
+        // Para índices sin una API habilitada, mostrar ausencia de datos,
+        // no los valores ficticios incluidos en el código de referencia.
+        items.push({symbol:'S&P 500',price:'—'});
+        items.push({symbol:'NASDAQ 100',price:'—'});
+        const segment=document.createDocumentFragment();
+        for(const item of items)segment.appendChild(gaxMakeMarketItem(item));
+        const duplicated=segment.cloneNode(true);
+        track.replaceChildren(segment,duplicated);
+        // Match one full segment (50% of both copies) for an exact seam.
+        const distance=track.scrollWidth/2;
+        const duration=Math.max(30,distance/43);
+        track.style.setProperty('--ticker-duration',duration.toFixed(1)+'s');
+    }catch(error){
+        console.warn('GAX: error al actualizar cotizaciones',error);
     }finally{gaxMarketFetchInProgress=false;}
 }
-fetchLiveMarketData().catch(e=>console.warn('GAX: market ticker could not refresh',e));
-setInterval(()=>fetchLiveMarketData().catch(e=>console.warn('GAX: market ticker could not refresh',e)),300000);
-
+loadMarketTicker();
+setInterval(loadMarketTicker,60000);
 /* CAMBIO DE MONEDA */
 $('btnCurrUSD').addEventListener('click', () => {
     if(currentCurrency === 'USD') return;
