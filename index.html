@@ -1626,7 +1626,7 @@ function beeGrayTexture(source) {
             const light=.2126*a[i]+.7152*a[i+1]+.0722*a[i+2];
             // The original yellow/black texture becomes ivory/silver
             // while retaining hairs, abdomen stripes and wing veins.
-            const gray=105+light*.35;
+            const gray=Math.max(48,Math.min(235,91+(light-100)*.76)); // stronger hair, eye and segment detail
             a[i]=Math.min(255,gray+2);
             a[i+1]=Math.min(255,gray+4);
             a[i+2]=Math.min(255,gray+6);
@@ -1636,6 +1636,10 @@ function beeGrayTexture(source) {
         tex.flipY=source.flipY;
         tex.wrapS=source.wrapS;tex.wrapT=source.wrapT;
         tex.encoding=THREE.sRGBEncoding;
+        tex.anisotropy=Math.min(8,beeRenderer.capabilities.getMaxAnisotropy());
+        tex.minFilter=THREE.LinearMipmapLinearFilter;
+        tex.magFilter=THREE.LinearFilter;
+        tex.generateMipmaps=true;
         tex.needsUpdate=true;
         return tex;
     } catch(e) {
@@ -1651,13 +1655,21 @@ function initBeeAcrossPage() {
     }
     try {
         beeScene=new THREE.Scene();
+        // Soft key and fill lights provide volume in place of a flat unlit silhouette.
+        beeScene.add(new THREE.AmbientLight(0xffffff,.88));
+        const beeKeyLight=new THREE.DirectionalLight(0xf0f6f3,1.28);
+        beeKeyLight.position.set(-3,5,8);
+        beeScene.add(beeKeyLight);
+        const beeFillLight=new THREE.DirectionalLight(0xb8c9d0,.56);
+        beeFillLight.position.set(4,-1,-4);
+        beeScene.add(beeFillLight);
         const halfH=3.2;
         beeCamera=new THREE.OrthographicCamera(-halfH,halfH,halfH,-halfH,.1,80);
         beeCamera.position.set(0,0,16);
         beeCamera.lookAt(0,0,0);
         beeRenderer=new THREE.WebGLRenderer({canvas:beeCanvas,alpha:true,antialias:true,powerPreference:'low-power'});
         beeRenderer.setClearColor(0x000000,0);
-        beeRenderer.setPixelRatio(Math.min(devicePixelRatio||1,1.6));
+        beeRenderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
         beeRenderer.outputEncoding=THREE.sRGBEncoding;
 
         beeFlight=new THREE.Group();
@@ -1771,13 +1783,15 @@ function initBeeAcrossPage() {
                 obj.frustumCulled=false;
                 const original=Array.isArray(obj.material)?obj.material:[obj.material];
                 const materials=original.map(mat=>{
-                    const silver=new THREE.MeshBasicMaterial({
+                    const silver=new THREE.MeshPhongMaterial({
                         skinning: !!obj.isSkinnedMesh,
-                        color:0xd9dee2, // premium cool silver-gray, physically solid
+                        color:0xdce0e3, // neutral solid silver with depth from directional lighting
                         map:beeGrayTexture(mat&&mat.map),
                         transparent:false,
                         opacity:1,
                         side:THREE.DoubleSide,
+                        specular:0x293339,
+                        shininess:26,
                         depthWrite:true,
                         alphaTest:.08 // preserve silhouette cutouts in the source texture
                     });
@@ -1918,7 +1932,7 @@ function animateBeeAcrossPage(now){
         }
         beeScreenX=x;beeScreenY=y;
         beeFlight.position.copy(beePositionFromScreen(x,y));
-        beeFlight.scale.setScalar(depthScale*(innerWidth<650?.62:innerWidth<900?.80:1));
+        beeFlight.scale.setScalar(depthScale*(innerWidth<650?1.08:innerWidth<900?.92:1));
         beeCanvas.style.opacity=visible?'1':'0';
     }
     beeRenderer.render(beeScene,beeCamera);
