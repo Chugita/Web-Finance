@@ -505,6 +505,10 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
   background:#70bd8c;animation:gaxLoaderFlow 1.2s ease-in-out infinite alternate}
 @keyframes gaxLoaderFlow {from{transform:translateX(-100%)}to{transform:translateX(620%)}}
 @media(prefers-reduced-motion:reduce){.gax-loader-line::before{animation:none;width:100%}}
+/* Let the viewport-fixed bee live outside the Hero's scrolling clip.
+   Positioned hero text still rises above the bee at its 'behind' depth. */
+.hero{isolation:auto}
+#heroCanvas{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none}
 </style>
 </head>
 <body>
@@ -1648,6 +1652,10 @@ function beeGrayTexture(source) {
     }
 }
 function initBeeAcrossPage() {
+    // Keep the WebGL surface attached to the viewport, not the scrolling
+    // Hero element (whose overflow/stacking can move or clip fixed children).
+    // Preserve the text depth illusion with the Hero's local stacking removed.
+    document.body.appendChild(beeCanvas);
     if(typeof THREE==='undefined'||typeof THREE.GLTFLoader!=='function') {
         console.warn('GAX: Three.js could not load. The site remains usable.');
         window.GAXLoading?.done();
@@ -1806,7 +1814,9 @@ function initBeeAcrossPage() {
                 beeMixer=new THREE.AnimationMixer(beeRig);
                 beeMixer.clipAction(clip).setLoop(THREE.LoopRepeat,Infinity).play();
             }
-            beeClock=0; // Begin left-to-right AFTER GLTF finishes loading.
+            // Enter the existing path around the visual center of the screen
+            // instead of materializing near the extreme left edge.
+            beeClock=flightDuration*.68;
             beePrevFrame=null;
             beeLoaded=true;
             document.addEventListener('pointerdown',handleBeePointerDown,{passive:true});
@@ -1943,11 +1953,15 @@ function animateBeeAcrossPage(now){
         // Leave enough clearance for the actual 3D silhouette, not only its pivot.
         const exploreCue=document.getElementById('tScrollCue');
         if(exploreCue){
-            const exploreTop=exploreCue.getBoundingClientRect().top;
+            // Use layout coordinates rather than getBoundingClientRect().
+            // The latter subtracts scrollY and used to push the bee upwards
+            // whenever someone scrolled: that changed its flight path.
+            const exploreTop=heroSection.offsetHeight-
+                Math.max(0,parseFloat(getComputedStyle(exploreCue).bottom)||22)-
+                exploreCue.offsetHeight;
             const silhouetteClearance=window.innerWidth<=650?76:100;
             const lowestCenter=(exploreTop-silhouetteClearance)/Math.max(1,innerHeight);
             y=Math.min(y,Math.max(.12,lowestCenter));
-            if(exploreTop<silhouetteClearance)visible=false;
         }
         beeScreenX=x;beeScreenY=y;
         beeFlight.position.copy(beePositionFromScreen(x,y));
