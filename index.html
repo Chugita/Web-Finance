@@ -1565,6 +1565,8 @@ const beeSpinAxes=[
 ];
 let beeHeadFrontCorrection=0; // determined from actual head/abdomen bone positions
 let beeClock = 0, beePrevFrame = null, beeLoaded = false;
+// Desktop-only inertial smoothing; mobile keeps its approved motion verbatim.
+let beeDesktopSmooth=null;
 let beeViewportW = innerWidth, beeViewportH = innerHeight;
 let beeModelVisible = true;
 const flightDuration=29.0; // continuous living bee circuit
@@ -1877,6 +1879,7 @@ function initBeeAcrossPage() {
             // Enter the existing path around the visual center of the screen
             // instead of materializing near the extreme left edge.
             beeClock=flightDuration*(1-beeArcFractionForPathTime(.32)); // Same SE DISEÑA initial position
+            beeDesktopSmooth=null;
             beePrevFrame=null;
             beeLoaded=true;
             document.addEventListener('pointerdown',handleBeePointerDown,{passive:true});
@@ -2040,9 +2043,25 @@ function animateBeeAcrossPage(now){
             const continuousCameraYaw=headTowardCamera+Math.PI*4;
             const cameraYaw=pathYaw+
                 (continuousCameraYaw-pathYaw)*cameraLookWeight;
+            // Only on PC, damp brief angular acceleration while keeping
+            // yaw continuous across 2PI wraps. Do not alter mobile behavior.
+            const desktopBee=window.innerWidth>=900;
+            let renderedYaw=cameraYaw;
+            if(desktopBee && !reduced){
+                if(!beeDesktopSmooth)beeDesktopSmooth={x:null,y:null,yaw:cameraYaw};
+                const yawAlpha=1-Math.exp(-dt/.115);
+                const yawDifference=Math.atan2(
+                    Math.sin(cameraYaw-beeDesktopSmooth.yaw),
+                    Math.cos(cameraYaw-beeDesktopSmooth.yaw)
+                );
+                beeDesktopSmooth.yaw+=yawDifference*yawAlpha;
+                renderedYaw=beeDesktopSmooth.yaw;
+            } else {
+                beeDesktopSmooth=null;
+            }
             beeFacing.rotation.set(
                 -pitch,
-                cameraYaw,
+                renderedYaw,
                 -roll,
                 'YXZ'
             );
@@ -2068,6 +2087,21 @@ function animateBeeAcrossPage(now){
         const mobileFactor=innerWidth<650?1.08:innerWidth<900?.92:1;
         const topClearance=Math.min(.37,.12+.125*depthScale*mobileFactor);
         y=Math.max(y,topClearance);
+        // PC ONLY: filter tiny discontinuities from the title-height
+        // envelope and viewport clearance. The smoothing state follows
+        // the current frame and never resets when the path wraps.
+        if(window.innerWidth>=900 && !reduced && beeDesktopSmooth){
+            if(beeDesktopSmooth.x===null){
+                beeDesktopSmooth.x=x;
+                beeDesktopSmooth.y=y;
+            } else {
+                const xyAlpha=1-Math.exp(-dt/.105);
+                beeDesktopSmooth.x+=(x-beeDesktopSmooth.x)*xyAlpha;
+                beeDesktopSmooth.y+=(y-beeDesktopSmooth.y)*xyAlpha;
+            }
+            x=beeDesktopSmooth.x;
+            y=beeDesktopSmooth.y;
+        }
         beeScreenX=x;beeScreenY=y;
         beeFlight.position.copy(beePositionFromScreen(x,y));
         beeFlight.scale.setScalar(depthScale*mobileFactor);
