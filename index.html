@@ -1913,9 +1913,28 @@ function animateBeeAcrossPage(now){
             pitch=motion.pitch+flutter*(.014*Math.sin(beeClock*3.7)+motion.nectar*.032*Math.sin(beeClock*7.0));
             roll=motion.roll+flutter*.017*Math.sin(beeClock*3.0);
             const depthScale=motion.size*(1+flutter*.006*Math.sin(beeClock*4.1));
-            // Invert the entire visible bee orientation relative to the
-            // previous version while the same route runs in reverse.
-            beeFacing.rotation.set(-pitch,yaw+beeHeadFrontCorrection+Math.PI*3,-roll,'YXZ');
+            // Camera encounter: keep the existing flight path, but turn the
+            // actual HEAD toward the viewer at a readable three-quarter angle.
+            // Anatomical calibration uses the head and abdomen bones; the
+            // old global +3PI pose is only used outside the close-up.
+            const pathTime=1-t;
+            const smoothWindow=v=>{const w=clampBee(v,0,1);return w*w*(3-2*w);};
+            const approach=smoothWindow((pathTime-.07)/.13);
+            const departure=1-smoothWindow((pathTime-.27)/.14);
+            const cameraLookWeight=reduced?0:approach*departure;
+            const pathYaw=yaw+beeHeadFrontCorrection+Math.PI*3;
+            // +0.50 rad = ~29 degrees away from direct eye-to-camera view.
+            const headTowardCamera=-Math.PI/2+beeHeadFrontCorrection+.50;
+            const shortestYawDelta=Math.atan2(
+                Math.sin(headTowardCamera-pathYaw),
+                Math.cos(headTowardCamera-pathYaw)
+            );
+            beeFacing.rotation.set(
+                -pitch,
+                pathYaw+shortestYawDelta*cameraLookWeight,
+                -roll,
+                'YXZ'
+            );
             if(beeDepthLayer!==motion.layer){
                 beeDepthLayer=motion.layer;
                 beeCanvas.style.zIndex=beeDepthLayer==='front'?'6':'2';
