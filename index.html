@@ -537,6 +537,23 @@ header{row-gap:5px}
  .gax-indices-embed iframe{max-height:29px!important}
  .gax-market-caption,.gax-market-credit{font-size:8px}
 }
+/* Unified single-line FX and stock ticker: no second header row. */
+header{row-gap:0}
+header .ticker-window{
+    display:flex;align-items:center;gap:13px;min-width:0;overflow:hidden
+}
+header .ticker-track{flex:0 0 48%;max-width:48%;min-width:0;overflow:visible}
+header .gax-stock-strip{flex:1 1 52%;min-width:0;height:33px;overflow:hidden}
+header .gax-stock-strip .tradingview-widget-container__widget{height:33px}
+header .gax-stock-strip iframe{max-height:33px!important}
+header .ticker-item{gap:5px}
+@media(max-width:900px){
+ header .ticker-window{gap:8px;padding-top:4px}
+ header .ticker-track{flex-basis:52%;max-width:52%}
+ header .gax-stock-strip{height:28px;flex-basis:48%}
+ header .gax-stock-strip .tradingview-widget-container__widget{height:28px}
+ header .gax-stock-strip iframe{max-height:28px!important}
+}
 </style>
 </head>
 <body>
@@ -571,9 +588,27 @@ header{row-gap:5px}
     <a class="brand" href="#inicio" aria-label="GAX inicio"><img src="gax-logo.png" alt="GAX" onerror="this.outerHTML='GAX.'"></a>
     <div class="nav-info">
         <span class="clock"><span class="dot"></span><span id="liveTimeDisplay" class="pixel">BUE --:--:-- HS</span></span>
-        <div class="ticker-window">
-            <div class="ticker-track" id="tickerTrack" aria-label="Cotizaciones en tiempo real">
-                <div class="ticker-item"><span class="ticker-symbol">Cargando mercados...</span></div>
+        <div class="ticker-window" aria-label="Mercados: dólar y principales índices">
+            <div class="ticker-track" id="tickerTrack" aria-label="Cotizaciones del dólar en pesos">
+                <div class="ticker-item"><span class="ticker-symbol">Cargando dólar...</span></div>
+            </div>
+            <div class="gax-stock-strip tradingview-widget-container" aria-label="Principales bolsas">
+                <div class="tradingview-widget-container__widget"></div>
+                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+                {
+                  "symbols":[
+                    {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
+                    {"proName":"FOREXCOM:NSXUSD","title":"NASDAQ"},
+                    {"proName":"FOREXCOM:DJI","title":"DOW"},
+                    {"proName":"BCBA:IMV","title":"MERVAL"}
+                  ],
+                  "showSymbolLogo":false,
+                  "colorTheme":"dark",
+                  "isTransparent":true,
+                  "displayMode":"adaptive",
+                  "locale":"es"
+                }
+                </script>
             </div>
         </div>
     </div>
@@ -581,31 +616,7 @@ header{row-gap:5px}
         <button class="lang" id="langBtn" type="button">ES / EN</button>
         <button class="btn" type="button" data-open-modal id="navBtnMeeting">AGENDAR REUNIÓN ↗</button>
     </div>
-    <div class="gax-indices-line" aria-label="Cotizaciones de las principales bolsas mundiales">
-        <span class="gax-market-caption">BOLSAS</span>
-        <div class="gax-indices-embed tradingview-widget-container">
-            <div class="tradingview-widget-container__widget"></div>
-            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-            {
-              "symbols":[
-                {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
-                {"proName":"FOREXCOM:NSXUSD","title":"NASDAQ 100"},
-                {"proName":"FOREXCOM:DJI","title":"DOW JONES"},
-                {"proName":"BCBA:IMV","title":"S&P MERVAL"},
-                {"proName":"INDEX:DEU40","title":"DAX"},
-                {"proName":"INDEX:NKY","title":"NIKKEI 225"},
-                {"proName":"TVC:UKX","title":"FTSE 100"}
-              ],
-              "showSymbolLogo":false,
-              "colorTheme":"dark",
-              "isTransparent":true,
-              "displayMode":"adaptive",
-              "locale":"es"
-            }
-            </script>
-        </div>
-        <a class="gax-market-credit" href="https://www.tradingview.com/markets/indices/" target="_blank" rel="noopener noreferrer">TradingView</a>
-    </div>
+
 </header>
 
 <main>
@@ -1388,9 +1399,8 @@ setGaxLanguage('es');
 /* CLOCK */
 function clock(){ $('liveTimeDisplay').textContent='BUE '+new Date().toLocaleTimeString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour12:false})+' HS' }clock();setInterval(clock,1000);
 
-/* MARKET DATA — real Argentine FX and risk, TradingView for stock indices.
-   Dolarito's official API requires a paid subscription, so do NOT pass off
-   other providers' quotes as Dolarito prices. */
+/* Compact FX ticker. Verified DolarAPI fields: casa + venta.
+   Secondary MonedAPI source is used only if DolarAPI fails. */
 let gaxMarketFetchInProgress=false;
 async function fetchLiveMarketData(){
     if(gaxMarketFetchInProgress)return;
@@ -1399,88 +1409,64 @@ async function fetchLiveMarketData(){
     gaxMarketFetchInProgress=true;
     const request=async url=>{
         const controller=new AbortController();
-        const timeout=setTimeout(()=>controller.abort(),8000);
+        const timeout=setTimeout(()=>controller.abort(),7000);
         try{
             const response=await fetch(url,{signal:controller.signal,cache:'no-store'});
-            if(!response.ok)throw new Error('API '+response.status);
-            return await response.json();
-        } finally{clearTimeout(timeout)}
-    };
-    const money=value=>'$ '+Number(value).toLocaleString('es-AR',{minimumFractionDigits:0,maximumFractionDigits:2});
-    const items=[];
-    const push=(name,value,variation='',updatedAt=null,source='')=>{
-        const age=updatedAt?Date.now()-new Date(updatedAt).getTime():NaN;
-        const old=Number.isFinite(age)&&age>1000*60*60*48;
-        const date=updatedAt&&!Number.isNaN(Date.parse(updatedAt))
-            ?new Date(updatedAt).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
-            :'Fecha no informada';
-        const title=name+' · '+source+' · última cotización: '+date;
-        const valueText=Number.isFinite(Number(value))&&value!==null?String(value):'—';
-        const change=Number(variation);
-        const changeText=variation!==''&&Number.isFinite(change)?
-            '<span class="'+(change<0?'ticker-down':'ticker-up')+' pixel">'+
-            (change>0?'▲ +':change<0?'▼ ':'= ')+Math.abs(change).toLocaleString('es-AR',{maximumFractionDigits:2})+'%</span>':'';
-        items.push('<div class="ticker-item" title="'+title+'"><span class="ticker-symbol">'+name+
-            ':</span> <span class="ticker-price pixel">'+valueText+'</span> '+changeText+
-            (old?'<span class="ticker-stale">· cierre anterior</span>':'')+'</div>');
+            if(!response.ok)throw Error('HTTP '+response.status);
+            return response.json();
+        }finally{clearTimeout(timeout)}
     };
     try{
-        let quotes=null;
+        let quotes=[],source='DolarAPI';
         try{
-            const all=await request('https://monedapi.ar/api/v2/quotes');
-            if(!Array.isArray(all))throw new Error('Invalid market quotes');
-            quotes=all;
-        }catch(error){console.warn('GAX: MonedAPI unavailable, trying dollarapi for FX only',error)}
-        const lookup=(currency,origin)=>quotes?.find(q=>q.currency===currency&&q.origin===origin);
-        let official=lookup('USD','OFICIAL');
-        let alternativeFx=null;
-        if(!quotes){
-            try{
-                const fallback=await request('https://dolarapi.com/v1/dolares');
-                if(Array.isArray(fallback))alternativeFx=fallback;
-            }catch(error){console.warn('GAX: USD fallback unavailable',error)}
+            const data=await request('https://dolarapi.com/v1/dolares');
+            if(!Array.isArray(data))throw Error('Invalid dollar quotes');
+            quotes=data.map(q=>({
+                type:q.casa,sell:Number(q.venta),updated:q.fechaActualizacion
+            }));
+        }catch(error){
+            console.warn('GAX: DolarAPI unavailable; trying MonedAPI',error);
+            const backup=await request('https://monedapi.ar/api/v2/usd');
+            if(!Array.isArray(backup))throw Error('Invalid backup quotes');
+            quotes=backup.map(q=>({
+                type:({OFICIAL:'oficial',BLUE:'blue',BOLSA:'bolsa',CCL:'contadoconliqui'})[q.origin],
+                sell:Number(q.sell),updated:q.lastScrapedAt||q.updatedAt
+            }));
+            source='MonedAPI';
         }
-        const formatQuote=(name,origin,alternative)=>{
-            const q=lookup('USD',origin);
-            if(q&&Number.isFinite(Number(q.sell))&&Number(q.sell)>0){
-                push(name,money(q.sell),q.change?.percent??'',q.lastScrapedAt||q.updatedAt,'MonedAPI · venta');
-                return Number(q.sell);
+        const format=n=>'$'+n.toLocaleString('es-AR',{maximumFractionDigits:2});
+        const specs=[['OFICIAL','oficial'],['BLUE','blue'],['MEP','bolsa'],['CCL','contadoconliqui']];
+        const entries=specs.map(([name,type])=>{
+            const q=quotes.find(row=>row.type===type&&Number.isFinite(row.sell)&&row.sell>0);
+            const timestamp=q?.updated&&!Number.isNaN(Date.parse(q.updated))
+                ?new Date(q.updated).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+                :'fecha no informada';
+            const value=q?format(q.sell):'—';
+            if(name==='OFICIAL'){
+                const note=$('fxRateDisplay');
+                if(q){
+                    currentOfficialRate=q.sell;
+                    if(note)note.textContent='Dólar oficial (venta): '+format(q.sell)+' ARS · '+source;
+                    updateSim();
+                }else if(note)note.textContent='Dólar oficial no disponible; verificá la cotización.';
             }
-            const f=alternativeFx?.find(v=>v.casa===alternative);
-            if(f&&Number.isFinite(Number(f.venta))&&Number(f.venta)>0){
-                push(name,money(f.venta),'',f.fechaActualizacion,'DolarAPI · venta');
-                return Number(f.venta);
-            }
-            push(name,'—','','','Sin datos disponibles');
-            return null;
-        };
-        const officialValue=formatQuote('DÓLAR OFICIAL','OFICIAL','oficial');
-        formatQuote('DÓLAR BLUE','BLUE','blue');
-        const risk=lookup('ARG','RIESGO');
-        if(risk&&Number.isFinite(Number(risk.sell))&&Number(risk.sell)>0){
-            push('RIESGO PAÍS',Number(risk.sell).toLocaleString('es-AR',{maximumFractionDigits:0})+' pb',
-                 risk.change?.percent??'',risk.lastScrapedAt||risk.updatedAt,'MonedAPI · puntos básicos');
-        }else push('RIESGO PAÍS','—','','','MonedAPI sin respuesta');
-        formatQuote('DÓLAR MEP','BOLSA','bolsa');
-        formatQuote('DÓLAR CCL','CCL','contadoconliqui');
-        if(officialValue){
-            currentOfficialRate=officialValue;
-            const note=$('fxRateDisplay');
-            if(note)note.textContent='Dólar oficial venta: '+money(officialValue)+' ARS (MonedAPI/DolarAPI). Cotización referencial.';
-            updateSim();
-        }else{
-            const note=$('fxRateDisplay');
-            if(note)note.textContent='No se pudo actualizar el dólar oficial. Verificá la cotización vigente.';
-        }
-        const sourceLink='<div class="ticker-item"><a href="https://monedapi.ar/" target="_blank" rel="noopener noreferrer" class="ticker-symbol">FUENTE: MONEDAPI / DOLARAPI · DATOS INDICATIVOS</a></div>';
-        const sequence=items.join('')+sourceLink;
-        track.innerHTML=sequence+sequence; // seamless horizontal strip
+            return '<div class="ticker-item" title="'+source+' · venta · '+timestamp+'">'+
+              '<span class="ticker-symbol">'+name+'</span>'+
+              '<span class="ticker-price pixel">'+value+'</span></div>';
+        });
+        const html=entries.join('');
+        track.innerHTML=html+html;
+    }catch(error){
+        console.warn('GAX: currency sources unavailable',error);
+        // Never display invented or outdated numeric quotations.
+        track.innerHTML='<div class="ticker-item"><span class="ticker-symbol">DÓLAR:</span>'+
+            '<span class="ticker-price pixel">Sin datos</span></div>';
     }finally{
         gaxMarketFetchInProgress=false;
     }
 }
-fetchLiveMarketData().catch(e=>console.warn('GAX: market data refresh error',e));
-setInterval(()=>fetchLiveMarketData().catch(e=>console.warn('GAX: market data refresh error',e)),180000);
+fetchLiveMarketData().catch(e=>console.warn('GAX: market refresh',e));
+setInterval(()=>fetchLiveMarketData().catch(e=>console.warn('GAX: market refresh',e)),180000);
 
 /* CAMBIO DE MONEDA */
 $('btnCurrUSD').addEventListener('click', () => {
