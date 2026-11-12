@@ -1553,10 +1553,9 @@ let beeDepthLayer='behind';
 let beeScreenX=.055,beeScreenY=.34;
 const mixBee=(a,b,t)=>a+(b-a)*t;
 const clampBee=(x,low,high)=>Math.max(low,Math.min(high,x));
-/* Anatomy verified from rig: +X points from abdomen toward the head.
-   Three.js positive Y rotation sends +X to -Z (away from the viewer).
-   Therefore yaw=-PI/2 sends the EYES toward camera at +Z.
-   The prior +PI/2 erroneously showed the bee's abdomen/rear. */
+/* The model's actual render was photographed showing the wrong end of its
+   body, despite the bone test. The final 180-degree visible-mesh correction
+   below intentionally exposes the OPPOSITE face from that screenshot. */
 const beeFlightPath=[
  // Unwrapped angles ensure a continuous turn; no stop-and-go easing.
  // The first three waypoints keep advancing right while looking outwards.
@@ -1851,7 +1850,12 @@ function animateBeeAcrossPage(now){
             const depthScale=motion.size*(1+flutter*.006*Math.sin(beeClock*4.1));
             // The yaw compensation is established using REAL bone positions:
             // the visible camera-facing pose cannot accidentally be abdomen-first.
-            beeFacing.rotation.set(pitch,yaw+beeHeadFrontCorrection,roll,'YXZ');
+            // Front-facing correction of the ACTUAL visible mesh:
+            // the previous bone-driven pose still showed its rear to the visitor.
+            // Keep that pose's anatomical calibration, then turn the entire
+            // visible bee exactly half a turn on its vertical axis so the
+            // opposite end of the insect faces the camera on close approach.
+            beeFacing.rotation.set(pitch,yaw+beeHeadFrontCorrection+Math.PI,roll,'YXZ');
             if(beeDepthLayer!==motion.layer){
                 beeDepthLayer=motion.layer;
                 beeCanvas.style.zIndex=beeDepthLayer==='front'?'6':'2';
