@@ -1592,9 +1592,9 @@ const beeFlightPath=[
  {t:.69,  x:.72,y:.44,yaw:-.58,pitch:.22, roll:.04, size:.67,layer:'behind'},
  {t:.735, x:.76,y:.40,yaw:-.24,pitch:.14, roll:.07, size:.70,layer:'behind'},
  // Wide bank, uninterrupted return, loop in matching 3/4 pose.
- {t:.82,  x:.89,y:.19,yaw:-1.8,pitch:-.10,roll:-.17,size:.76,layer:'behind'},
- {t:.895, x:.46,y:.13,yaw:-3.0,pitch:.04, roll:.12, size:.73,layer:'behind'},
- {t:.96,  x:.07,y:.18,yaw:-4.55,pitch:.08, roll:-.08,size:.66,layer:'behind'},
+ {t:.82,  x:.89,y:.34,yaw:-2.2,pitch:-.10,roll:-.17,size:.76,layer:'behind'},
+ {t:.895, x:.46,y:.27,yaw:-4.3,pitch:.04, roll:.12, size:.73,layer:'behind'},
+ {t:.96,  x:.07,y:.30,yaw:-6.15,pitch:.08, roll:-.08,size:.66,layer:'behind'},
  {t:1,    x:.06,y:.33,yaw:-1.12-Math.PI*2,pitch:0,roll:-.03,size:.67,layer:'front'}
 ];
 function beeHermite(a,b,m0,m1,u,span){
@@ -1969,18 +1969,18 @@ function animateBeeAcrossPage(now){
             const titleY=titleBounds
               ?clampBee((titleBounds.top+titleBounds.height*.50-heroBounds.top)/
                  Math.max(1,heroBounds.height),.43,.73):.64;
-            // Closed periodic envelope: exactly zero at BOTH t=0 and t=1.
-            // It still reaches full height at the initial SE DISEÑA pose
-            // (routePhase=.32), so the approved starting location is kept.
+            // The title-height adjustment is PERIODIC: identical at
+            // routePhase=0 and routePhase=1 with a flat slope at the seam.
+            // Keep the return flight below the top edge rather than jumping
+            // vertically to an unadjusted starting pose on every lap.
             const smooth01=v=>{
               const a=clampBee(v,0,1);
               return a*a*(3-2*a);
             };
-            const titleEnter=smooth01(routePhase/.19);
-            const titleLeave=1-smooth01((routePhase-.37)/.19);
-            const openingFade=titleEnter*titleLeave;
-            const baselineY=sampleBeeFlight(.32).y;
-            const titleOffset=(titleY-baselineY)*openingFade;
+            const leaveTitle=1-smooth01((routePhase-.40)/.17);
+            const returnToTitle=smooth01((routePhase-.73)/.12);
+            const titleWeight=Math.max(leaveTitle,returnToTitle);
+            const titleOffset=(titleY-sampleBeeFlight(.32).y)*titleWeight;
             y=motion.y+titleOffset+flutter*(.006*Math.sin(beeClock*4.2)+.002*Math.cos(beeClock*9.3));
             yaw=motion.yaw+flutter*.012*Math.sin(beeClock*2.9);
             pitch=motion.pitch+flutter*(.014*Math.sin(beeClock*3.7)+motion.nectar*.032*Math.sin(beeClock*7.0));
