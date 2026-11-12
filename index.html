@@ -599,6 +599,32 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
 .delay-cost strong{font:600 clamp(17px,2.2vw,26px) var(--pixel);color:var(--green);text-align:right}
 .delay-caption{font:300 10px/1.55 var(--mono);margin:12px 0 0;color:var(--muted)}
 @media(max-width:650px){.delay-grid{grid-template-columns:1fr;gap:12px}.delay-heading{align-items:flex-start;flex-direction:column;gap:10px}.delay-card{padding:18px 16px}}
+/* Multiple financial goals — integrated inverse savings calculator. */
+.goal-inverse{margin-top:48px;padding:30px 0 12px;border-top:1px solid rgba(112,189,140,.3)}
+.goal-intro h3{font:400 clamp(23px,3vw,37px)/1.2 var(--pixel);margin:12px 0 10px;letter-spacing:-.045em}
+.goal-intro p{max-width:760px;font-size:13px;line-height:1.7;color:var(--muted)}
+.goal-choices{display:flex;flex-wrap:wrap;gap:10px;margin:24px 0}
+.goal-chip{font:400 11px var(--pixel);color:var(--fg);background:rgba(20,29,23,.7);border:1px solid rgba(170,188,176,.27);border-radius:7px;padding:13px 17px;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
+.goal-chip:hover{border-color:var(--green)}
+.goal-chip[aria-pressed=true]{border-color:var(--green);background:rgba(112,189,140,.15);color:#b0e4bf}
+.goal-chip[aria-pressed=true]::before{content:'✓ ';color:var(--green)}
+.goal-configs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.goal-config{padding:20px;background:rgba(15,24,18,.72);border:1px solid rgba(112,189,140,.2);border-radius:9px;min-width:0}
+.goal-config h4{font:500 14px var(--pixel);margin:0 0 17px;color:#b6d9bc}
+.goal-config label{display:block;color:var(--muted);font:400 10px var(--pixel);margin:0 0 7px}
+.goal-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.goal-config input{width:100%;min-width:0;background:rgba(4,9,6,.6);border:1px solid rgba(162,187,168,.28);color:#fff;border-radius:5px;padding:12px;font:400 13px var(--pixel)}
+.goal-config input:focus{outline:1px solid var(--green);outline-offset:1px}
+.goal-custom-name{margin-bottom:14px}
+.goal-result{border-top:1px solid rgba(255,255,255,.09);padding-top:17px;margin-top:17px;display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.goal-result span{font:400 10px var(--pixel);color:var(--muted)}
+.goal-result strong{font:500 clamp(16px,2vw,22px) var(--pixel);color:var(--green);text-align:right}
+.goal-total{margin-top:18px;padding:20px 22px;background:rgba(112,189,140,.1);border:1px solid rgba(112,189,140,.32);border-radius:9px}
+.goal-total>div{display:flex;justify-content:space-between;align-items:center;gap:14px}
+.goal-total strong{font:600 clamp(21px,3vw,32px) var(--pixel);color:var(--green);text-align:right}
+.goal-total p{font-size:11px;color:var(--muted);margin:10px 0 0}
+.goal-inverse>.small-note{margin-top:20px}
+@media(max-width:650px){.goal-configs{grid-template-columns:1fr}.goal-chip{font-size:10px;padding:11px 12px}.goal-config{padding:16px}.goal-total>div{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
@@ -773,6 +799,27 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
             </div>
         </div>
         <div class="difference pixel" id="difference">DIFERENCIA ENTRE PLAZOS: —</div>
+        <div class="goal-inverse" id="objetivos" aria-labelledby="goalInverseTitle">
+            <div class="goal-intro">
+                <span class="micro" id="goalEyebrow">TUS OBJETIVOS · UNA PROYECCIÓN POSIBLE</span>
+                <h3 id="goalInverseTitle">¿Qué querés lograr con tus ahorros?</h3>
+                <p id="goalInverseLead">Elegí uno o varios objetivos. Definí el capital que querés alcanzar y cuándo: GAX calcula el aporte mensual estimado que necesitarías para cada uno.</p>
+            </div>
+            <div class="goal-choices" id="goalChoices" aria-label="Elegí tus objetivos" role="group">
+                <button type="button" class="goal-chip" data-goal="house" aria-pressed="false">Vivienda</button>
+                <button type="button" class="goal-chip" data-goal="retirement" aria-pressed="false">Retiro</button>
+                <button type="button" class="goal-chip" data-goal="education" aria-pressed="false">Educación</button>
+                <button type="button" class="goal-chip" data-goal="reserve" aria-pressed="false">Fondo de reserva</button>
+                <button type="button" class="goal-chip" data-goal="other" aria-pressed="false">Otro objetivo</button>
+            </div>
+            <div class="goal-configs" id="goalConfigs" aria-live="polite"></div>
+            <div class="goal-total" id="goalTotal" hidden>
+                <div><span class="micro" id="goalTotalLabel">APORTE MENSUAL TOTAL ESTIMADO</span><strong class="pixel" id="goalTotalAmount">—</strong></div>
+                <p id="goalTotalHint">Sumatoria de los aportes para alcanzar los objetivos seleccionados en sus respectivos plazos.</p>
+            </div>
+            <p class="small-note" id="goalDisclaimer">CÁLCULO ILUSTRATIVO EN USD, CON TASA NOMINAL ANUAL HIPOTÉTICA DEL 5,5% Y CAPITALIZACIÓN MENSUAL. SIN IMPUESTOS, COMISIONES, INFLACIÓN NI VARIACIONES DE MERCADO. NO GARANTIZA RESULTADOS. NO SE ENVÍA INFORMACIÓN AUTOMÁTICAMENTE.</p>
+        </div>
+
         <div class="delay-section" aria-labelledby="delayTitle">
             <div class="delay-heading">
                 <div>
@@ -1434,6 +1481,7 @@ function setGaxLanguage(next){
     else renderQuestion();
     updateSim();
     updateTime();
+    if(typeof gaxSyncGoalLanguage==='function' && typeof gaxGoals!=='undefined')gaxSyncGoalLanguage();
     // Independent UI strings not in the original dictionary.
     const independent={
         es:{
@@ -1721,6 +1769,111 @@ function updateTime(){
     }
 }
 ['compareMonthly', 'yearsA', 'yearsB'].forEach(id=>$(id).addEventListener('input',updateTime));
+
+/* Reverse savings goals: local-only, multi-select; no lead data transmitted. */
+const gaxGoalTemplates={
+ house:{es:'Vivienda',en:'Home',amount:100000,years:15},
+ retirement:{es:'Retiro',en:'Retirement',amount:250000,years:25},
+ education:{es:'Educación',en:'Education',amount:40000,years:12},
+ reserve:{es:'Fondo de reserva',en:'Emergency fund',amount:15000,years:5},
+ other:{es:'Otro objetivo',en:'Other goal',amount:50000,years:10}
+};
+const gaxGoals=new Map();
+const gaxGoalStrings={
+ es:{heading:'¿Qué querés lograr con tus ahorros?',eyebrow:'TUS OBJETIVOS · UNA PROYECCIÓN POSIBLE',lead:'Elegí uno o varios objetivos. Definí el capital que querés alcanzar y cuándo: GAX calcula el aporte mensual estimado que necesitarías para cada uno.',amount:'Capital objetivo (USD)',years:'Plazo (años)',initial:'Capital que ya tenés (USD)',monthly:'APORTE MENSUAL NECESARIO',total:'APORTE MENSUAL TOTAL ESTIMADO',hint:'Sumatoria de los aportes para alcanzar los objetivos seleccionados en sus respectivos plazos.',custom:'Nombre de tu objetivo',disclaimer:'CÁLCULO ILUSTRATIVO EN USD, CON TASA NOMINAL ANUAL HIPOTÉTICA DEL 5,5% Y CAPITALIZACIÓN MENSUAL. SIN IMPUESTOS, COMISIONES, INFLACIÓN NI VARIACIONES DE MERCADO. NO GARANTIZA RESULTADOS. NO SE ENVÍA INFORMACIÓN AUTOMÁTICAMENTE.'},
+ en:{heading:'What do you want your savings to achieve?',eyebrow:'YOUR GOALS · A POSSIBLE PROJECTION',lead:'Select one or more goals. Set your target amount and when you want to reach it: GAX estimates how much you would need to contribute each month.',amount:'Target capital (USD)',years:'Time horizon (years)',initial:'Starting capital (USD)',monthly:'REQUIRED MONTHLY CONTRIBUTION',total:'TOTAL ESTIMATED MONTHLY CONTRIBUTION',hint:'Combined monthly contributions needed to pursue your selected goals on their respective timelines.',custom:'Name your goal',disclaimer:'ILLUSTRATIVE PROJECTION IN USD, ASSUMING A HYPOTHETICAL CONSTANT 5.5% NOMINAL ANNUAL RETURN WITH MONTHLY COMPOUNDING. EXCLUDES INFLATION, TAXES, FEES AND MARKET VOLATILITY. RETURNS ARE NOT GUARANTEED. NO INFORMATION IS AUTOMATICALLY SENT.'}
+};
+function gaxGoalCurrency(n){return 'USD '+Math.round(n).toLocaleString('en-US')}
+function gaxGoalContribution(entry){
+ const months=Math.max(1,Math.min(600,Number(entry.years)*12));
+ const goal=Math.max(0,Number(entry.amount)||0);
+ const initial=Math.max(0,Number(entry.initial)||0);
+ const rate=GAX_ANNUAL_NOMINAL_RETURN/12;
+ const futureInitial=initial*Math.pow(1+rate,months);
+ const annuity=(Math.pow(1+rate,months)-1)/rate;
+ return Math.max(0,(goal-futureInitial)/annuity);
+}
+function gaxMakeGoalField(key,label,value,step,min,max){
+ const wrap=document.createElement('div');
+ const lbl=document.createElement('label');
+ const input=document.createElement('input');
+ const id='goal-'+key+'-'+Math.random().toString(36).slice(2,8);
+ lbl.htmlFor=id;lbl.textContent=label;
+ input.id=id;input.type='number';input.inputMode='decimal';input.min=String(min);
+ input.max=String(max);input.step=String(step);input.value=String(value);
+ wrap.append(lbl,input);
+ return {wrap,input};
+}
+function gaxRenderGoalInputs(){
+ const parent=$('goalConfigs');const lang=currentLang==='en'?'en':'es';const t=gaxGoalStrings[lang];
+ parent.replaceChildren();
+ for(const [key,entry] of gaxGoals){
+  const card=document.createElement('article');card.className='goal-config';
+  const heading=document.createElement('h4');heading.textContent=entry.name||(gaxGoalTemplates[key][lang]);
+  card.append(heading);
+  if(key==='other'){
+   const custom=gaxMakeGoalField(key,t.custom,entry.name||'',1,0,999);
+   custom.input.type='text';custom.input.maxLength=60;custom.input.placeholder=lang==='es'?'Ej.: un viaje':'E.g. a trip';
+   custom.input.addEventListener('input',()=>{entry.name=custom.input.value.slice(0,60);heading.textContent=entry.name||gaxGoalTemplates[key][lang]});
+   const region=document.createElement('div');region.className='goal-custom-name';
+   region.append(custom.wrap);card.append(region);
+  }
+  const grid=document.createElement('div');grid.className='goal-fields';
+  const target=gaxMakeGoalField(key,t.amount,entry.amount,1000,0,100000000);
+  const years=gaxMakeGoalField(key,t.years,entry.years,1,1,50);
+  const initial=gaxMakeGoalField(key,t.initial,entry.initial,100,0,100000000);
+  grid.append(target.wrap,years.wrap,initial.wrap);
+  const output=document.createElement('div');output.className='goal-result';
+  const title=document.createElement('span');title.textContent=t.monthly;
+  const total=document.createElement('strong');total.className='pixel';
+  total.textContent=gaxGoalCurrency(gaxGoalContribution(entry));
+  output.append(title,total);card.append(grid,output);parent.append(card);
+  function update(field,node,lo,hi){
+   const value=Number(node.value);
+   if(Number.isFinite(value))entry[field]=Math.max(lo,Math.min(hi,value));
+   gaxUpdateGoalTotals();
+  }
+  target.input.addEventListener('input',()=>update('amount',target.input,0,100000000));
+  years.input.addEventListener('input',()=>update('years',years.input,1,50));
+  initial.input.addEventListener('input',()=>update('initial',initial.input,0,100000000));
+  card.dataset.goal=key;
+ }
+ gaxUpdateGoalTotals();
+}
+function gaxUpdateGoalTotals(){
+ let combined=0;
+ for(const [key,entry] of gaxGoals){
+  const contribution=gaxGoalContribution(entry);
+  combined+=contribution;
+  const card=document.querySelector('.goal-config[data-goal="'+key+'"]');
+  const output=card?.querySelector('.goal-result strong');
+  if(output)output.textContent=gaxGoalCurrency(contribution);
+ }
+ $('goalTotal').hidden=!gaxGoals.size;
+ $('goalTotalAmount').textContent=gaxGoalCurrency(combined);
+}
+function gaxSyncGoalLanguage(){
+ const lang=currentLang==='en'?'en':'es';const t=gaxGoalStrings[lang];
+ const idMap={goalInverseTitle:t.heading,goalEyebrow:t.eyebrow,goalInverseLead:t.lead,goalTotalLabel:t.total,goalTotalHint:t.hint,goalDisclaimer:t.disclaimer};
+ for(const [id,value] of Object.entries(idMap))$(id).textContent=value;
+ for(const chip of document.querySelectorAll('.goal-chip')){
+  chip.textContent=gaxGoalTemplates[chip.dataset.goal][lang];
+ }
+ gaxRenderGoalInputs();
+}
+$('goalChoices').addEventListener('click',event=>{
+ const chip=event.target.closest('.goal-chip');
+ if(!chip)return;
+ const key=chip.dataset.goal;
+ if(gaxGoals.has(key))gaxGoals.delete(key);
+ else{
+  const template=gaxGoalTemplates[key];
+  gaxGoals.set(key,{amount:template.amount,years:template.years,initial:0,name:''});
+ }
+ chip.setAttribute('aria-pressed',String(gaxGoals.has(key)));
+ gaxRenderGoalInputs();
+});
+gaxSyncGoalLanguage();
 
 /* MODAL DE CONTACTO */
 let modalFocus=null;
