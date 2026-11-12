@@ -1587,10 +1587,10 @@ const beeFlightPath=[
  {t:.41,  x:.65,y:.22,yaw:-.28,pitch:.03, roll:.10, size:.86,layer:'behind'},
  // Gliding approach to the flower.
  {t:.52,  x:.83,y:.32,yaw:-.32,pitch:.07, roll:.10, size:.77,layer:'behind'},
- {t:.615, x:.77,y:.41,yaw:-.70,pitch:.14, roll:-.10,size:.69,layer:'behind'},
- // An organic continuous nectar sweep rather than full-stop hovering.
- {t:.69,  x:.72,y:.44,yaw:-.58,pitch:.22, roll:.04, size:.67,layer:'behind'},
- {t:.735, x:.76,y:.40,yaw:-.24,pitch:.14, roll:.07, size:.70,layer:'behind'},
+ {t:.615, x:.79,y:.40,yaw:-.70,pitch:.14, roll:-.10,size:.69,layer:'behind'},
+ // Travel a short arc beside the flower, not a retraced stop-and-go line.
+ {t:.69,  x:.73,y:.47,yaw:-.58,pitch:.22, roll:.04, size:.67,layer:'behind'},
+ {t:.735, x:.73,y:.40,yaw:-.24,pitch:.14, roll:.07, size:.70,layer:'behind'},
  // Wide bank, uninterrupted return, loop in matching 3/4 pose.
  {t:.82,  x:.89,y:.34,yaw:-2.2,pitch:-.10,roll:-.17,size:.76,layer:'behind'},
  {t:.895, x:.46,y:.27,yaw:-4.3,pitch:.04, roll:.12, size:.73,layer:'behind'},
@@ -1631,6 +1631,40 @@ function sampleBeeFlight(t){
   layer:u<.5?a.layer:b.layer,
   nectar:t>.59&&t<.75?Math.sin(Math.PI*(t-.59)/.16)**2:0
  };
+}
+// Give the CLOSED, continuous path a nearly constant screen-space velocity.
+// Previously Hermite waypoint timing made certain sections ~50x slower than
+// others, appearing to stop and restart at the flower and on the return.
+const beeArcSamples=1800;
+const beeArcTable=[{pathTime:0,distance:0}];
+let beeArcTotal=0;
+let beeArcPrevious=sampleBeeFlight(0);
+for(let i=1;i<=beeArcSamples;i++){
+    const pathTime=i/beeArcSamples;
+    const point=sampleBeeFlight(pathTime);
+    beeArcTotal+=Math.hypot(point.x-beeArcPrevious.x,point.y-beeArcPrevious.y);
+    beeArcTable.push({pathTime,distance:beeArcTotal});
+    beeArcPrevious=point;
+}
+function beeArcFractionForPathTime(pathTime){
+    const x=clampBee(pathTime,0,1)*beeArcSamples;
+    const i=Math.min(beeArcSamples-1,Math.floor(x));
+    const fraction=x-i;
+    const a=beeArcTable[i].distance,b=beeArcTable[i+1].distance;
+    return (a+(b-a)*fraction)/Math.max(.000001,beeArcTotal);
+}
+function beeSampleByDistance(fraction){
+    const target=clampBee(fraction,0,1)*beeArcTotal;
+    let low=0,high=beeArcTable.length-1;
+    while(high-low>1){
+        const mid=(low+high)>>1;
+        if(beeArcTable[mid].distance<target)low=mid;
+        else high=mid;
+    }
+    const a=beeArcTable[low],b=beeArcTable[high];
+    const u=(target-a.distance)/Math.max(1e-10,b.distance-a.distance);
+    const pathTime=a.pathTime+(b.pathTime-a.pathTime)*u;
+    return {...sampleBeeFlight(pathTime),pathTime};
 }
 function beePositionFromScreen(fx,fy) {
     // Coordinates in percentages of the visible screen.
@@ -1842,7 +1876,7 @@ function initBeeAcrossPage() {
             }
             // Enter the existing path around the visual center of the screen
             // instead of materializing near the extreme left edge.
-            beeClock=flightDuration*.68; // first frame pathTime=.32, near SE DISEÑA title
+            beeClock=flightDuration*(1-beeArcFractionForPathTime(.32)); // Same SE DISEÑA initial position
             beePrevFrame=null;
             beeLoaded=true;
             document.addEventListener('pointerdown',handleBeePointerDown,{passive:true});
@@ -1953,7 +1987,7 @@ function animateBeeAcrossPage(now){
             const t=(beeClock%flightDuration)/flightDuration;
             const motion=reduced
               ?{x:.73,y:.39,yaw:0,pitch:.04,roll:0,size:.71,layer:'behind',nectar:0}
-              :sampleBeeFlight(1-t); // Play the entire existing movement in reverse.
+              :beeSampleByDistance(1-t); // Same continuous route, constant-distance movement.
             // Never ease to zero at each waypoint. Continuous spline velocity
             // plus small aperiodic-looking wing/body corrections.
             const flutter=reduced?0:1;
@@ -1962,7 +1996,7 @@ function animateBeeAcrossPage(now){
             // In particular, the very first frame starts at SE DISEÑA,
             // rather than near the top of the screen. The offset fades
             // smoothly as the bee travels toward the flower.
-            const routePhase=1-t;
+            const routePhase=reduced?0:motion.pathTime;
             const titleLine=document.querySelector('#tHeroTitle span:last-child');
             const heroBounds=heroSection.getBoundingClientRect();
             const titleBounds=titleLine?titleLine.getBoundingClientRect():null;
@@ -1990,7 +2024,7 @@ function animateBeeAcrossPage(now){
             // actual HEAD toward the viewer at a readable three-quarter angle.
             // Anatomical calibration uses the head and abdomen bones; the
             // old global +3PI pose is only used outside the close-up.
-            const pathTime=1-t;
+            const pathTime=routePhase;
             const smoothWindow=v=>{const w=clampBee(v,0,1);return w*w*(3-2*w);};
             const approach=smoothWindow((pathTime-.07)/.13);
             const departure=1-smoothWindow((pathTime-.27)/.14);
