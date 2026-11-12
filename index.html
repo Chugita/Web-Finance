@@ -1711,6 +1711,7 @@ async function loadMarketTicker(){
           const note=document.getElementById('fxRateDisplay');
           if(note)note.textContent='Dólar oficial (venta): '+gaxArs(rate)+' ARS · última cotización disponible';
           updateSim();
+          updateTime();
         }
       }
     }
@@ -1754,6 +1755,7 @@ $('btnCurrUSD').addEventListener('click', () => {
     incomeInput.step = 100;
     incomeInput.value = 3000;
     updateSim();
+    updateTime();
 });
 
 $('btnCurrARS').addEventListener('click', () => {
@@ -1767,6 +1769,7 @@ $('btnCurrARS').addEventListener('click', () => {
     incomeInput.step = 50000;
     incomeInput.value = 4500000;
     updateSim();
+    updateTime();
 });
 
 /* SIMULADOR */
