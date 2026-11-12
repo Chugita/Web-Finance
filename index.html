@@ -581,6 +581,24 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
   header .ticker-window.gax-quote-box .ticker-track{animation:none!important}
   header .ticker-window.gax-quote-box .ticker-segment:nth-child(2){display:none}
 }
+/* Illustrative cost of delaying a monthly investing plan by five years. */
+.delay-section{margin-top:44px;padding-top:28px;border-top:1px solid rgba(112,189,140,.25)}
+.delay-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
+.delay-heading h3{font:400 clamp(19px,2.3vw,30px)/1.25 var(--pixel);letter-spacing:-.035em;margin:10px 0 0}
+.delay-tag{font-size:9px;letter-spacing:.06em;color:var(--green);border:1px solid rgba(112,189,140,.3);border-radius:5px;padding:7px 10px;white-space:nowrap}
+.delay-intro{max-width:740px;margin:16px 0 22px;color:var(--muted);font-size:12px;line-height:1.7}
+.delay-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.delay-card{min-width:0;background:rgba(17,27,20,.6);border:1px solid rgba(112,189,140,.2);padding:22px 20px;border-radius:8px}
+.delay-card h4{font:500 12px var(--pixel);color:var(--green);margin:0 0 21px}
+.delay-line,.delay-cost{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.delay-line{padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.delay-line span,.delay-cost span{font:400 10px var(--pixel);color:var(--muted)}
+.delay-line strong{font:500 clamp(13px,1.7vw,20px) var(--pixel);color:var(--fg);text-align:right}
+.delay-cost{padding-top:18px}
+.delay-cost span{color:var(--green)}
+.delay-cost strong{font:600 clamp(17px,2.2vw,26px) var(--pixel);color:var(--green);text-align:right}
+.delay-caption{font:300 10px/1.55 var(--mono);margin:12px 0 0;color:var(--muted)}
+@media(max-width:650px){.delay-grid{grid-template-columns:1fr;gap:12px}.delay-heading{align-items:flex-start;flex-direction:column;gap:10px}.delay-card{padding:18px 16px}}
 </style>
 </head>
 <body>
@@ -715,7 +733,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
                 <div class="metric"><span id="tMet20">ACUMULADO A 20 AÑOS</span><strong id="twentyOut" class="pixel">—</strong></div>
             </div>
         </div>
-        <p class="small-note" id="tCapNote">50/30/20 ES UNA REFERENCIA, NO UNA REGLA. PROYECCIÓN CON APORTES AL FINAL DE CADA MES, TASA NOMINAL ANUAL HIPOTÉTICA DEL 7% Y CAPITALIZACIÓN MENSUAL. SIN INFLACIÓN, IMPUESTOS, COMISIONES NI VOLATILIDAD. NO GARANTIZA RESULTADOS.</p>
+        <p class="small-note" id="tCapNote">50/30/20 ES UNA REFERENCIA, NO UNA REGLA. PROYECCIÓN CON APORTES AL FINAL DE CADA MES, TASA NOMINAL ANUAL HIPOTÉTICA DEL 5,5% Y CAPITALIZACIÓN MENSUAL. SIN INFLACIÓN, IMPUESTOS, COMISIONES NI VOLATILIDAD. NO GARANTIZA RESULTADOS.</p>
     </div>
 </section>
 
@@ -755,7 +773,33 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
             </div>
         </div>
         <div class="difference pixel" id="difference">DIFERENCIA ENTRE PLAZOS: —</div>
-        <p class="small-note" id="tTimeNote">ESCENARIO ILUSTRATIVO CON 7% NOMINAL ANUAL CONSTANTE, CAPITALIZACIÓN MENSUAL Y APORTES AL FINAL DE CADA MES. NO CONTEMPLA INFLACIÓN, IMPUESTOS, COMISIONES NI VARIACIONES DE MERCADO.</p>
+        <div class="delay-section" aria-labelledby="delayTitle">
+            <div class="delay-heading">
+                <div>
+                    <div class="micro" id="tDelayMicro">EL COSTO DE ESPERAR</div>
+                    <h3 id="delayTitle">¿Qué pasa si empezás a invertir dentro de 5 años?</h3>
+                </div>
+                <span class="delay-tag pixel" id="tDelayTag">MISMA FECHA OBJETIVO</span>
+            </div>
+            <p class="delay-intro" id="tDelayIntro">Compará el capital a cada plazo elegido: comenzando hoy o postergando los aportes 5 años. La fecha final es la misma para ambos escenarios.</p>
+            <div class="delay-grid">
+                <article class="delay-card" aria-labelledby="delayATitle">
+                    <h4 id="delayATitle">OBJETIVO A · <span id="delayAYears">10 AÑOS</span></h4>
+                    <div class="delay-line"><span id="tDelayTodayA">EMPEZANDO HOY</span><strong id="delayANow" class="pixel">—</strong></div>
+                    <div class="delay-line"><span id="tDelayLaterA">EMPEZANDO EN 5 AÑOS</span><strong id="delayALater" class="pixel">—</strong></div>
+                    <div class="delay-cost"><span id="tDelayCostA">COSTO DE POSTERGAR</span><strong id="delayACost" class="pixel">—</strong></div>
+                    <p class="delay-caption" id="delayACaption">—</p>
+                </article>
+                <article class="delay-card" aria-labelledby="delayBTitle">
+                    <h4 id="delayBTitle">OBJETIVO B · <span id="delayBYears">20 AÑOS</span></h4>
+                    <div class="delay-line"><span id="tDelayTodayB">EMPEZANDO HOY</span><strong id="delayBNow" class="pixel">—</strong></div>
+                    <div class="delay-line"><span id="tDelayLaterB">EMPEZANDO EN 5 AÑOS</span><strong id="delayBLater" class="pixel">—</strong></div>
+                    <div class="delay-cost"><span id="tDelayCostB">COSTO DE POSTERGAR</span><strong id="delayBCost" class="pixel">—</strong></div>
+                    <p class="delay-caption" id="delayBCaption">—</p>
+                </article>
+            </div>
+        </div>
+        <p class="small-note" id="tTimeNote">ESCENARIO ILUSTRATIVO CON 5,5% NOMINAL ANUAL CONSTANTE, CAPITALIZACIÓN MENSUAL Y APORTES AL FINAL DE CADA MES. NO CONTEMPLA INFLACIÓN, IMPUESTOS, COMISIONES NI VARIACIONES DE MERCADO.</p>
     </div>
 </section>
 
@@ -914,7 +958,11 @@ const formatMoney=(n)=>{
 };
 
 const smooth=x=>{const t=Math.max(0,Math.min(1,x));return t*t*(3-2*t)};
-const future=(monthly,months)=>{const r=.07/12;return monthly*(Math.pow(1+r,months)-1)/r};
+const GAX_ANNUAL_NOMINAL_RETURN=.055; // Hypothetical constant nominal rate, not guaranteed
+const future=(monthly,months)=>{
+ const r=GAX_ANNUAL_NOMINAL_RETURN/12;
+ return monthly*(Math.pow(1+r,months)-1)/r;
+};
 
 const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
 const observer = new IntersectionObserver((entries, obs) => {
@@ -1112,14 +1160,20 @@ const dict = {
         tMetSave: "AHORRO MENSUAL ESTIMADO",
         tMet10: "ACUMULADO A 10 AÑOS",
         tMet20: "ACUMULADO A 20 AÑOS",
-        tCapNote: "50/30/20 ES UNA REFERENCIA, NO UNA REGLA. PROYECCIÓN CON APORTES AL FINAL DE CADA MES, TASA NOMINAL ANUAL HIPOTÉTICA DEL 7% Y CAPITALIZACIÓN MENSUAL. SIN INFLACIÓN, IMPUESTOS, COMISIONES NI VOLATILIDAD. NO GARANTIZA RESULTADOS.",
+        tCapNote: "50/30/20 ES UNA REFERENCIA, NO UNA REGLA. PROYECCIÓN CON APORTES AL FINAL DE CADA MES, TASA NOMINAL ANUAL HIPOTÉTICA DEL 5,5% Y CAPITALIZACIÓN MENSUAL. SIN INFLACIÓN, IMPUESTOS, COMISIONES NI VOLATILIDAD. NO GARANTIZA RESULTADOS.",
         tTimeMicro1: "04 / EL VALOR DEL TIEMPO Y LOS PLAZOS",
         tTimeMicro2: "COMPARADOR DE HORIZONTES",
         tTimeTitle: "El poder del tiempo: compará plazos y objetivos.",
         tTimeLead: "Ajustá tu aporte mensual y elegí dos plazos diferentes para comparar cómo crece tu capital según el horizonte temporal que elijas.",
         tLabelAporte: "Aporte mensual",
         tDiff: "DIFERENCIA ENTRE PLAZOS: ",
-        tTimeNote: "ESCENARIO ILUSTRATIVO CON 7% NOMINAL ANUAL CONSTANTE, CAPITALIZACIÓN MENSUAL Y APORTES AL FINAL DE CADA MES. NO CONTEMPLA INFLACIÓN, IMPUESTOS, COMISIONES NI VARIACIONES DE MERCADO.",
+        tDelayMicro: "EL COSTO DE ESPERAR", delayTitle: "¿Qué pasa si empezás a invertir dentro de 5 años?",
+        tDelayTag: "MISMA FECHA OBJETIVO",
+        tDelayIntro: "Compará el capital a cada plazo elegido: comenzando hoy o postergando los aportes 5 años. La fecha final es la misma para ambos escenarios.",
+        tDelayTodayA: "EMPEZANDO HOY", tDelayTodayB: "EMPEZANDO HOY",
+        tDelayLaterA: "EMPEZANDO EN 5 AÑOS", tDelayLaterB: "EMPEZANDO EN 5 AÑOS",
+        tDelayCostA: "COSTO DE POSTERGAR", tDelayCostB: "COSTO DE POSTERGAR",
+        tTimeNote: "ESCENARIO ILUSTRATIVO CON 5,5% NOMINAL ANUAL CONSTANTE, CAPITALIZACIÓN MENSUAL Y APORTES AL FINAL DE CADA MES. NO CONTEMPLA INFLACIÓN, IMPUESTOS, COMISIONES NI VARIACIONES DE MERCADO.",
         tMethodMicro1: "05 / PLANIFICACIÓN INTEGRAL",
         tMethodMicro2: "MÉTODO GAX",
         tMethodTitle: "Un plan. Tres dimensiones.",
@@ -1184,14 +1238,20 @@ const dict = {
         tMetSave: "ESTIMATED MONTHLY SAVINGS",
         tMet10: "ACCUMULATED AT 10 YEARS",
         tMet20: "ACCUMULATED AT 20 YEARS",
-        tCapNote: "50/30/20 IS A REFERENCE, NOT A RULE. PROJECTION WITH END-OF-MONTH CONTRIBUTIONS, HYPOTHETICAL 7% ANNUAL NOMINAL RATE, AND MONTHLY COMPOUNDING. EXCLUDES INFLATION, TAXES, COMMISSIONS, AND VOLATILITY. DOES NOT GUARANTEE RESULTS.",
+        tCapNote: "50/30/20 IS A REFERENCE, NOT A RULE. PROJECTION WITH END-OF-MONTH CONTRIBUTIONS, HYPOTHETICAL 5.5% ANNUAL NOMINAL RATE, AND MONTHLY COMPOUNDING. EXCLUDES INFLATION, TAXES, COMMISSIONS, AND VOLATILITY. DOES NOT GUARANTEE RESULTS.",
         tTimeMicro1: "04 / THE VALUE OF TIME AND HORIZONS",
         tTimeMicro2: "HORIZON COMPARISON",
         tTimeTitle: "The power of time: compare terms and goals.",
         tTimeLead: "Adjust your monthly contribution and choose two different terms to compare how your capital grows.",
         tLabelAporte: "Monthly contribution",
         tDiff: "DIFFERENCE BETWEEN TERMS: ",
-        tTimeNote: "ILLUSTRATIVE SCENARIO WITH 7% CONSTANT ANNUAL NOMINAL RATE, MONTHLY COMPOUNDING, AND END-OF-MONTH CONTRIBUTIONS. DOES NOT INCLUDE INFLATION, TAXES, COMMISSIONS, OR MARKET FLUCTUATIONS.",
+        tDelayMicro: "THE COST OF WAITING", delayTitle: "What if you start investing in 5 years?",
+        tDelayTag: "SAME TARGET DATE",
+        tDelayIntro: "Compare capital at each selected horizon when starting today or delaying contributions for 5 years. Both scenarios end on the same date.",
+        tDelayTodayA: "START TODAY", tDelayTodayB: "START TODAY",
+        tDelayLaterA: "START IN 5 YEARS", tDelayLaterB: "START IN 5 YEARS",
+        tDelayCostA: "COST OF DELAYING", tDelayCostB: "COST OF DELAYING",
+        tTimeNote: "ILLUSTRATIVE SCENARIO WITH 5.5% CONSTANT ANNUAL NOMINAL RATE, MONTHLY COMPOUNDING, AND END-OF-MONTH CONTRIBUTIONS. DOES NOT INCLUDE INFLATION, TAXES, COMMISSIONS, OR MARKET FLUCTUATIONS.",
         tMethodMicro1: "05 / COMPREHENSIVE PLANNING",
         tMethodMicro2: "GAX METHOD",
         tMethodTitle: "One plan. Three dimensions.",
@@ -1642,6 +1702,23 @@ function updateTime(){
     
     const diff = Math.abs(valA - valB);
     $('difference').textContent = dict[currentLang].tDiff + formatMoney(diff * mult);
+
+    // Fixed target dates (10 and 20 years from today by default).
+    // Delaying 5 years means 60 fewer monthly contributions, not
+    // extending the future target by another five years.
+    const isEN=currentLang==='en';
+    const unit=y=>isEN?(y===1?'year':'years'):(y===1?'año':'años');
+    for(const [suffix,years,today] of [['A',yearsA,valA],['B',yearsB,valB]]){
+        const lateYears=Math.max(0,years-5);
+        const later=future(amountUSD,lateYears*12);
+        $('delay'+suffix+'Years').textContent=years+' '+unit(years);
+        $('delay'+suffix+'Now').textContent=formatMoney(today*mult);
+        $('delay'+suffix+'Later').textContent=formatMoney(later*mult);
+        $('delay'+suffix+'Cost').textContent=formatMoney((today-later)*mult);
+        $('delay'+suffix+'Caption').textContent=isEN
+          ?(lateYears?'Contribute for '+lateYears+' '+unit(lateYears)+' instead of '+years+' '+unit(years)+'.':'No contributions before the target date.')
+          :(lateYears?'Aportás durante '+lateYears+' '+unit(lateYears)+' en vez de '+years+' '+unit(years)+'.':'Sin aportes antes de la fecha objetivo.');
+    }
 }
 ['compareMonthly', 'yearsA', 'yearsB'].forEach(id=>$(id).addEventListener('input',updateTime));
 
