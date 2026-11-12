@@ -505,13 +505,13 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
   background:#70bd8c;animation:gaxLoaderFlow 1.2s ease-in-out infinite alternate}
 @keyframes gaxLoaderFlow {from{transform:translateX(-100%)}to{transform:translateX(620%)}}
 @media(prefers-reduced-motion:reduce){.gax-loader-line::before{animation:none;width:100%}}
-/* Let the viewport-fixed bee live outside the Hero's scrolling clip.
-   Positioned hero text still rises above the bee at its 'behind' depth. */
-.hero{isolation:auto}
+/* Bee travels in HERO coordinates, not viewport coordinates.
+   It scrolls with the Hero as one scene, never drifts across the page. */
+.hero{isolation:isolate}
 #heroCanvas{
-    position:fixed!important;
-    top:0!important;left:0!important;right:auto!important;bottom:auto!important;
-    width:100vw!important;height:100vh!important;
+    position:absolute!important;
+    top:0!important;left:0!important;right:0!important;bottom:0!important;
+    width:100%!important;height:100%!important;
     transform:none!important;
     pointer-events:none;
 }
@@ -1658,10 +1658,9 @@ function beeGrayTexture(source) {
     }
 }
 function initBeeAcrossPage() {
-    // Keep the WebGL surface attached to the viewport, not the scrolling
-    // Hero element (whose overflow/stacking can move or clip fixed children).
-    // Preserve the text depth illusion with the Hero's local stacking removed.
-    document.body.appendChild(beeCanvas);
+    // The 3D canvas belongs to the Hero. Fixed-position on document.body
+    // was why the bee seemed to slide down the page when scrolling.
+    if(beeCanvas.parentElement!==heroSection)heroSection.prepend(beeCanvas);
     if(typeof THREE==='undefined'||typeof THREE.GLTFLoader!=='function') {
         console.warn('GAX: Three.js could not load. The site remains usable.');
         window.GAXLoading?.done();
@@ -1822,7 +1821,7 @@ function initBeeAcrossPage() {
             }
             // Enter the existing path around the visual center of the screen
             // instead of materializing near the extreme left edge.
-            beeClock=flightDuration*.64; // first frame: pathTime .36, near EL FUTURO rather than upper edge
+            beeClock=flightDuration*.68; // first frame pathTime=.32, near SE DISEÑA title
             beePrevFrame=null;
             beeLoaded=true;
             document.addEventListener('pointerdown',handleBeePointerDown,{passive:true});
@@ -1844,7 +1843,9 @@ function initBeeAcrossPage() {
 }
 function resizeBeeViewport(){
     if(!beeRenderer)return;
-    beeViewportW=window.innerWidth;beeViewportH=window.innerHeight;
+    // Geometry and renderer both share the Hero's own coordinate system.
+    beeViewportW=Math.max(1,heroSection.clientWidth);
+    beeViewportH=Math.max(1,heroSection.clientHeight);
     const halfH=3.2, aspect=beeViewportW/Math.max(1,beeViewportH);
     beeCamera.left=-halfH*aspect;
     beeCamera.right=halfH*aspect;
@@ -1874,8 +1875,8 @@ function handleBeePointerDown(event){
     let left=Infinity,right=-Infinity,top=Infinity,bottom=-Infinity;
     for(const point of corners){
         const ndc=new THREE.Vector3(...point).project(beeCamera);
-        const px=(ndc.x+1)*.5*innerWidth;
-        const py=(1-ndc.y)*.5*innerHeight;
+        const px=bounds.left+(ndc.x+1)*.5*bounds.width;
+        const py=bounds.top+(1-ndc.y)*.5*bounds.height;
         left=Math.min(left,px);right=Math.max(right,px);
         top=Math.min(top,py);bottom=Math.max(bottom,py);
     }
@@ -1925,12 +1926,21 @@ function animateBeeAcrossPage(now){
             // plus small aperiodic-looking wing/body corrections.
             const flutter=reduced?0:1;
             x=motion.x+flutter*(.003*Math.sin(beeClock*3.1)+.002*Math.sin(beeClock*7.7));
-            // Raise the FLIGHT'S on-screen Y coordinate (lower on the screen)
-            // around the opening/title part of the route, not the WebGL canvas.
-            // Leave the nectar segment's coordinates at the flower unchanged.
+            // Match the opening flight to the actual third title line.
+            // In particular, the very first frame starts at SE DISEÑA,
+            // rather than near the top of the screen. The offset fades
+            // smoothly as the bee travels toward the flower.
             const routePhase=1-t;
-            const settle=clampBee((routePhase-.38)/.16,0,1);
-            const titleOffset=.11*(1-settle*settle*(3-2*settle));
+            const titleLine=document.querySelector('#tHeroTitle span:last-child');
+            const heroBounds=heroSection.getBoundingClientRect();
+            const titleBounds=titleLine?titleLine.getBoundingClientRect():null;
+            const titleY=titleBounds
+              ?clampBee((titleBounds.top+titleBounds.height*.50-heroBounds.top)/
+                 Math.max(1,heroBounds.height),.43,.73):.64;
+            const openingWeight=1-clampBee((routePhase-.32)/.20,0,1);
+            const openingFade=openingWeight*openingWeight*(3-2*openingWeight);
+            const baselineY=sampleBeeFlight(.32).y;
+            const titleOffset=(titleY-baselineY)*openingFade;
             y=motion.y+titleOffset+flutter*(.006*Math.sin(beeClock*4.2)+.002*Math.cos(beeClock*9.3));
             yaw=motion.yaw+flutter*.012*Math.sin(beeClock*2.9);
             pitch=motion.pitch+flutter*(.014*Math.sin(beeClock*3.7)+motion.nectar*.032*Math.sin(beeClock*7.0));
@@ -1976,8 +1986,7 @@ function animateBeeAcrossPage(now){
             const lowestCenter=(exploreTop-silhouetteClearance)/Math.max(1,innerHeight);
             y=Math.min(y,Math.max(.12,lowestCenter));
         }
-        // Keep the wings inside the top of the viewport at every size;
-        // the previous low Y waypoints clipped the bee's silhouette.
+        // Keep wings within the Hero's top edge (never rebase on scroll).
         const mobileFactor=innerWidth<650?1.08:innerWidth<900?.92:1;
         const topClearance=Math.min(.37,.12+.125*depthScale*mobileFactor);
         y=Math.max(y,topClearance);
