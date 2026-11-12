@@ -75,10 +75,10 @@ button,input{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:
 
 /* ESTELA DEL CURSOR */
 .cursor-trail {position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;overflow:hidden}
-.trail-char {position:absolute;font:400 13px var(--pixel);color:var(--green);user-select:none;pointer-events:none;animation:fadeTrail 0.9s forwards ease-out;text-shadow:0 0 8px rgba(112, 189, 140, 0.6)}
+.trail-char {position:absolute;font:400 10px var(--pixel);color:var(--green);user-select:none;pointer-events:none;animation:fadeTrail .48s forwards ease-out;text-shadow:0 0 4px rgba(112,189,140,.23)}
 @keyframes fadeTrail {
-    0% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.6); }
+    0% { opacity: .42; transform: translate(-50%, -50%) scale(.9); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(.4); }
 }
 
 /* HEADER */
@@ -625,6 +625,47 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
 .goal-total p{font-size:11px;color:var(--muted);margin:10px 0 0}
 .goal-inverse>.small-note{margin-top:20px}
 @media(max-width:650px){.goal-configs{grid-template-columns:1fr}.goal-chip{font-size:10px;padding:11px 12px}.goal-config{padding:16px}.goal-total>div{align-items:flex-start;flex-direction:column}}
+/* UI/UX refinement: clear selected state, concise growth explanation, mobile first. */
+.answer{border-radius:8px;border:1px solid transparent;border-bottom-color:var(--line);padding:19px 14px;transition:background .18s,border-color .18s,box-shadow .18s}
+.answer:hover{background:rgba(25,47,31,.55)}
+.answer[aria-pressed=true],.answer[aria-pressed=true]:hover{
+ background:rgba(112,189,140,.15);border-color:rgba(112,189,140,.9);
+ box-shadow:inset 3px 0 0 var(--green),0 0 0 1px rgba(112,189,140,.2);
+ padding-left:20px;
+}
+.answer[aria-pressed=true] .answer-title{color:#b9e6c4}
+.answer[aria-pressed=true] .answer-index{font-weight:700}
+.diag-actions{display:flex;flex-wrap:wrap;align-items:center;gap:15px}
+.diag-auto-note{font:400 11px/1.6 var(--mono);color:var(--muted)}
+.personal-intro{border-left:2px solid var(--green);background:rgba(112,189,140,.07);padding:12px 15px;color:#b4d9bf;font:400 12px/1.65 var(--mono);margin:16px 0 22px}
+.compare-breakdown{margin-top:28px;border:1px solid rgba(112,189,140,.25);background:rgba(16,27,19,.5);border-radius:8px;padding:20px}
+.compare-breakdown-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}
+.compare-breakdown-head strong{font:400 15px var(--pixel)}
+.compare-breakdown-head span,.growth-explanation{font:400 11px/1.65 var(--mono);color:var(--muted)}
+.growth-stack{display:flex;overflow:hidden;width:100%;height:12px;background:#15231a;border-radius:4px;margin:17px 0 13px}
+.growth-principal{height:100%;background:#8a9991;transition:width .3s}
+.growth-return{height:100%;background:var(--green);transition:width .3s}
+.growth-values{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.growth-values>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font:400 11px var(--mono)}
+.growth-values strong{font:500 13px var(--pixel);margin-left:auto}
+.growth-dot{display:inline-block;width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.growth-dot.principal{background:#8a9991}.growth-dot.returns{background:var(--green)}
+.growth-explanation{margin:14px 0 0}
+.sim-growth{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:13px 0 0;border-top:1px solid rgba(112,189,140,.18);font:400 10px var(--pixel);color:var(--muted)}
+.sim-growth strong{font-size:clamp(14px,1.8vw,20px);color:var(--green);text-align:right}
+@media(max-width:650px){
+ .answer{padding:17px 11px;min-height:70px}
+ .answer[aria-pressed=true]{padding-left:14px}
+ .diag-actions{align-items:flex-start;gap:10px}
+ .diag-auto-note{width:100%;font-size:10px}
+ .compare-breakdown{padding:15px}
+ .compare-breakdown-head strong{font-size:13px}
+ .growth-values{grid-template-columns:1fr;gap:10px}
+ .growth-values strong{font-size:12px}
+ .sim-growth{flex-direction:column;align-items:flex-start;gap:7px}
+ .sim-growth strong{text-align:left}
+}
+@media(hover:none),(pointer:coarse){.cursor-trail{display:none}}
 </style>
 </head>
 <body>
@@ -699,7 +740,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
             <div class="progress-labels"><span id="progressText" class="pixel">PREGUNTA 01 / 04</span><span id="progressPct" class="pixel">25%</span></div>
             <div class="progress-line"><div class="progress-fill" id="progressFill"></div></div>
             <div class="question" id="question"></div>
-            <div class="actions"><button class="btn btn-outline" id="prevQuestion" type="button">← VOLVER</button><button class="btn" id="nextQuestion" type="button" disabled>CONTINUAR →</button></div>
+            <div class="actions diag-actions"><button class="btn btn-outline" id="prevQuestion" type="button">← VOLVER</button><button class="btn" id="nextQuestion" type="button" disabled>CONTINUAR →</button><span id="autoAdvanceNote" class="diag-auto-note" aria-live="polite">Elegí una respuesta para avanzar automáticamente.</span></div>
         </div>
         <div id="resultPanel" hidden>
             <div class="micro" id="tResMicro">02 / TU ORIENTACIÓN INICIAL</div>
@@ -757,6 +798,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
                 <div class="metric"><span id="tMetSave">AHORRO MENSUAL ESTIMADO</span><strong id="savingsOut" class="accent pixel">USD 600</strong></div>
                 <div class="metric"><span id="tMet10">ACUMULADO A 10 AÑOS</span><strong id="tenOut" class="pixel">—</strong></div>
                 <div class="metric"><span id="tMet20">ACUMULADO A 20 AÑOS</span><strong id="twentyOut" class="pixel">—</strong></div>
+                <div class="sim-growth"><span id="simGrowthLabel">DE ESE TOTAL, CRECIMIENTO ESTIMADO A 20 AÑOS</span><strong id="simGrowthValue" class="pixel">—</strong></div>
             </div>
         </div>
         <p class="small-note" id="tCapNote">50/30/20 ES UNA REFERENCIA, NO UNA REGLA. PROYECCIÓN CON APORTES AL FINAL DE CADA MES, TASA NOMINAL ANUAL HIPOTÉTICA DEL 5,5% Y CAPITALIZACIÓN MENSUAL. SIN INFLACIÓN, IMPUESTOS, COMISIONES NI VOLATILIDAD. NO GARANTIZA RESULTADOS.</p>
@@ -767,7 +809,8 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
     <div class="wrap">
         <div class="section-label"><span class="micro" id="tTimeMicro1">04 / EL VALOR DEL TIEMPO Y LOS PLAZOS</span><span class="micro muted" id="tTimeMicro2">COMPARADOR DE HORIZONTES</span></div>
         <h2 class="big" id="tTimeTitle">El poder del tiempo: compará plazos y objetivos.</h2>
-        <p class="section-lead" id="tTimeLead">Ajustá tu aporte mensual y elegí dos plazos diferentes para comparar cómo crece tu capital según el horizonte temporal que elijas.</p>
+        <p class="section-lead" id="tTimeLead">Elegí cuánto podés aportar por mes y compará cuánto podrías tener en distintos plazos.</p>
+        <p class="personal-intro" id="timePersonalIntro" hidden></p>
         
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:820px; margin-bottom:25px;">
             <div class="control" style="margin-bottom:0;">
@@ -798,6 +841,12 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
                 <strong id="laterValue" class="pixel">—</strong>
             </div>
         </div>
+        <div class="compare-breakdown" id="compareBreakdown">
+            <div class="compare-breakdown-head"><strong id="growthHeading">¿De dónde sale el capital proyectado?</strong><span id="growthHint">Tus aportes + rendimiento estimado</span></div>
+            <div class="growth-stack" id="growthStack" aria-label="Aportes frente a crecimiento"><div class="growth-principal" id="growthPrincipal"></div><div class="growth-return" id="growthReturn"></div></div>
+            <div class="growth-values"><div><span class="growth-dot principal"></span><span id="growthPrincipalLabel">Tu dinero aportado</span><strong id="growthPrincipalValue">—</strong></div><div><span class="growth-dot returns"></span><span id="growthReturnLabel">Crecimiento estimado</span><strong id="growthReturnValue">—</strong></div></div>
+            <p id="growthExplanation" class="growth-explanation">Elegí los plazos y el aporte mensual para ver cuánto proviene de tus ahorros y cuánto del rendimiento hipotético.</p>
+        </div>
         <div class="difference pixel" id="difference">DIFERENCIA ENTRE PLAZOS: —</div>
         <div class="delay-section" aria-labelledby="delayTitle">
             <div class="delay-heading">
@@ -827,6 +876,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
         </div>
         <div class="goal-inverse" id="objetivos" aria-labelledby="goalInverseTitle">
             <div class="goal-intro">
+                <p class="personal-intro" id="goalPersonalIntro" hidden></p>
                 <span class="micro" id="goalEyebrow">TUS OBJETIVOS · UNA PROYECCIÓN POSIBLE</span>
                 <h3 id="goalInverseTitle">¿Qué querés lograr con tus ahorros?</h3>
                 <p id="goalInverseLead">Elegí uno o varios objetivos. Definí el capital que querés alcanzar y cuándo: GAX calcula el aporte mensual estimado que necesitarías para cada uno.</p>
@@ -1022,32 +1072,31 @@ const observer = new IntersectionObserver((entries, obs) => {
 }, observerOptions);
 document.querySelectorAll('.section').forEach(section => { observer.observe(section); });
 
-if(!reduced) {
-    const trailContainer = $('cursorTrail');
-    const chars = ['$', '0', '1', '7', '9', '2', '5', '%', '3', '8', 'USD'];
-    const portraitEl = $('matrixPortrait');
-    
-    document.addEventListener('pointermove', (e) => {
-        if (portraitEl) {
-            const rect = portraitEl.getBoundingClientRect();
-            if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) return;
-        }
-        for (let i = 0; i < 3; i++) {
-            const span = document.createElement('span');
-            span.className = 'trail-char';
-            span.textContent = chars[Math.floor(Math.random() * chars.length)];
-            const offsetX = (Math.random() - 0.5) * 45;
-            const offsetY = (Math.random() - 0.5) * 45;
-            const dx = (Math.random() - 0.5) * 65 + 'px';
-            const dy = (-25 - Math.random() * 45) + 'px';
-            span.style.left = (e.clientX + offsetX) + 'px';
-            span.style.top = (e.clientY + offsetY) + 'px';
-            span.style.setProperty('--dx', dx);
-            span.style.setProperty('--dy', dy);
-            trailContainer.appendChild(span);
-            setTimeout(() => { span.remove(); }, 900);
-        }
-    });
+/* Restrained pointer trail: desktop only, never over interactive controls. */
+if(!reduced&&window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
+ const trailContainer=$('cursorTrail');
+ const chars=['$','0','1','%','+'];
+ const portraitEl=$('matrixPortrait');
+ let lastTrail=0;
+ document.addEventListener('pointermove',e=>{
+   if(e.pointerType&&e.pointerType!=='mouse')return;
+   if(e.timeStamp-lastTrail<65)return;
+   if(e.target instanceof Element&&e.target.closest('button,a,input,select,textarea,label,.answer,.goal-config,.control,.bar-row,[role=button]'))return;
+   if(portraitEl){
+     const bounds=portraitEl.getBoundingClientRect();
+     if(e.clientX>=bounds.left&&e.clientX<=bounds.right&&e.clientY>=bounds.top&&e.clientY<=bounds.bottom)return;
+   }
+   lastTrail=e.timeStamp;
+   const glyph=document.createElement('span');
+   glyph.className='trail-char';
+   glyph.textContent=chars[Math.floor(Math.random()*chars.length)];
+   glyph.style.left=(e.clientX+(Math.random()-.5)*18)+'px';
+   glyph.style.top=(e.clientY+(Math.random()-.5)*18)+'px';
+   glyph.style.setProperty('--dx',((Math.random()-.5)*30)+'px');
+   glyph.style.setProperty('--dy',(-12-Math.random()*22)+'px');
+   trailContainer.append(glyph);
+   setTimeout(()=>glyph.remove(),480);
+ },{passive:true});
 }
 
 const methodDetailsData = {
@@ -1211,7 +1260,7 @@ const dict = {
         tTimeMicro1: "04 / EL VALOR DEL TIEMPO Y LOS PLAZOS",
         tTimeMicro2: "COMPARADOR DE HORIZONTES",
         tTimeTitle: "El poder del tiempo: compará plazos y objetivos.",
-        tTimeLead: "Ajustá tu aporte mensual y elegí dos plazos diferentes para comparar cómo crece tu capital según el horizonte temporal que elijas.",
+        tTimeLead: "Elegí cuánto podés aportar por mes y compará cuánto podrías tener en distintos plazos.",
         tLabelAporte: "Aporte mensual",
         tDiff: "DIFERENCIA ENTRE PLAZOS: ",
         tDelayMicro: "EL COSTO DE ESPERAR", delayTitle: "¿Qué pasa si empezás a invertir dentro de 5 años?",
@@ -1289,7 +1338,7 @@ const dict = {
         tTimeMicro1: "04 / THE VALUE OF TIME AND HORIZONS",
         tTimeMicro2: "HORIZON COMPARISON",
         tTimeTitle: "The power of time: compare terms and goals.",
-        tTimeLead: "Adjust your monthly contribution and choose two different terms to compare how your capital grows.",
+        tTimeLead: "Choose how much you can contribute monthly and compare how much you could have over time.",
         tLabelAporte: "Monthly contribution",
         tDiff: "DIFFERENCE BETWEEN TERMS: ",
         tDelayMicro: "THE COST OF WAITING", delayTitle: "What if you start investing in 5 years?",
@@ -1376,6 +1425,7 @@ function getProfiles(){ return currentLang === 'es' ? profilesES : profilesEN; }
 function getOrgTips(){ return currentLang === 'es' ? orgTipsES : orgTipsEN; }
 function getObsTips(){ return currentLang === 'es' ? obsTipsES : obsTipsEN; }
 
+let gaxQuestionAdvanceTimer=null;
 function renderQuestion(){
     const q=getQuestions()[step];
     $('questionPanel').hidden=false;
@@ -1387,6 +1437,10 @@ function renderQuestion(){
     $('prevQuestion').textContent=currentLang==='es'?'← VOLVER':'← BACK';
     $('prevQuestion').disabled=step===0;
     $('nextQuestion').disabled=answers[step]===null;
+    $('nextQuestion').hidden=true;
+    $('autoAdvanceNote').textContent=currentLang==='es'
+      ?'Elegí una respuesta para avanzar automáticamente.'
+      :'Choose an answer to continue automatically.';
     
     const root=$('question');
     root.replaceChildren();
@@ -1425,13 +1479,24 @@ function renderQuestion(){
         arrow.className='pixel';
         arrow.textContent=answers[step]===i?'✓':'↗';
         b.append(n,copy,arrow);
-        b.addEventListener('click',()=>{answers[step]=i;renderQuestion()});
+        b.addEventListener('click',()=>{
+            clearTimeout(gaxQuestionAdvanceTimer);
+            answers[step]=i;
+            renderQuestion();
+            const selectedStep=step;
+            gaxQuestionAdvanceTimer=setTimeout(()=>{
+                if(step!==selectedStep||answers[step]===null)return;
+                if(step===getQuestions().length-1)renderResult();
+                else {step++;renderQuestion();}
+            },360);
+        });
         list.append(b);
     });
     root.append(eyebrow,title,subtitle,list);
 }
 
 function renderResult(){
+    clearTimeout(gaxQuestionAdvanceTimer);
     if(answers.some(a=>a===null))return;
     $('questionPanel').hidden=true;
     $('resultPanel').hidden=false;
@@ -1450,13 +1515,31 @@ function renderResult(){
         grid.append(dt,dd);
     });
     $('resultAdvice').textContent=(currentLang==='es'?'PRÓXIMO PASO: ':'NEXT STEP: ')+getObsTips()[answers[3]]+' '+(currentLang==='es'?'Considerá tu horizonte (':'Consider your horizon (')+getQuestions()[2].options[answers[2]][0].toLowerCase()+') '+(currentLang==='es'?'al definir el plan.':'when defining the plan.');
+    gaxRefreshPersonalization();
 }
 
-$('prevQuestion').addEventListener('click',()=>{if(step>0){step--;renderQuestion()}});
-$('nextQuestion').addEventListener('click',()=>{if(answers[step]===null)return;if(step===3)renderResult();else{step++;renderQuestion()}});
-$('restart').addEventListener('click',()=>{step=0;answers=[null,null,null,null];renderQuestion();$('diagnostico').scrollIntoView({behavior:reduced?'auto':'smooth'})});
+$('prevQuestion').addEventListener('click',()=>{clearTimeout(gaxQuestionAdvanceTimer);if(step>0){step--;renderQuestion()}});
+$('nextQuestion').addEventListener('click',()=>{clearTimeout(gaxQuestionAdvanceTimer);if(answers[step]===null)return;if(step===3)renderResult();else{step++;renderQuestion()}});
+$('restart').addEventListener('click',()=>{clearTimeout(gaxQuestionAdvanceTimer);step=0;answers=[null,null,null,null];renderQuestion();gaxRefreshPersonalization();$('diagnostico').scrollIntoView({behavior:reduced?'auto':'smooth'})});
 renderQuestion();
 
+/* The diagnostic informs later sections without forcing repeated answers. */
+function gaxRefreshPersonalization(){
+  const completed=Array.isArray(answers)&&answers[0]!==null;
+  const time=$('timePersonalIntro'),goal=$('goalPersonalIntro');
+  if(!time||!goal)return;
+  time.hidden=!completed;goal.hidden=!completed;
+  if(!completed)return;
+  const en=currentLang==='en',priority=answers[0];
+  const names=en?['gain more control','build wealth','protect what you have','find your starting point']:
+                  ['tener más control','construir patrimonio','proteger lo que tenés','encontrar un punto de partida'];
+  time.textContent=en?
+    'You chose to '+names[priority]+'. Let’s turn that priority into numbers you can understand.':
+    'Elegiste '+names[priority]+'. Ahora veamos qué significaría eso en números concretos.';
+  goal.textContent=en?
+    'Your initial priority: '+getQuestions()[0].options[priority][0]+'. Choose one or more goals and put a number and a timeline to them.':
+    'Tu prioridad inicial: '+getQuestions()[0].options[priority][0]+'. Elegí uno o varios objetivos y pongámosles un monto y un plazo.';
+}
 /* FULL ES / EN LANGUAGE SWITCH — preserve the active diagnostic and sliders. */
 function setGaxLanguage(next){
     if(next!=='es'&&next!=='en')return;
@@ -1481,6 +1564,7 @@ function setGaxLanguage(next){
     else renderQuestion();
     updateSim();
     updateTime();
+    gaxRefreshPersonalization();
     if(window.gaxGoalReady)gaxSyncGoalLanguage();
     // Independent UI strings not in the original dictionary.
     const independent={
@@ -1719,6 +1803,11 @@ function updateSim(){
 
     $('tenOut').textContent = formatMoney(currentCurrency === 'ARS' ? tenUSD * currentOfficialRate : tenUSD);
     $('twentyOut').textContent = formatMoney(currentCurrency === 'ARS' ? twentyUSD * currentOfficialRate : twentyUSD);
+    const simGrowth=Math.max(0,twentyUSD-saveUSD*240);
+    $('simGrowthValue').textContent=formatMoney(currentCurrency==='ARS'?simGrowth*currentOfficialRate:simGrowth);
+    $('simGrowthLabel').textContent=currentLang==='en'
+      ?'OF THAT TOTAL, ESTIMATED GROWTH OVER 20 YEARS'
+      :'DE ESE TOTAL, CRECIMIENTO ESTIMADO A 20 AÑOS';
 }
 ['income','fixed','variable'].forEach(id=>$(id).addEventListener('input',updateSim));
 
@@ -1744,6 +1833,24 @@ function updateTime(){
     $('nowValue').textContent = formatMoney(valA * mult);
     $('laterValue').textContent = formatMoney(valB * mult);
 
+    // Explain the longer of the two selected horizons with principal vs growth.
+    const highlightedYears=Math.max(yearsA,yearsB);
+    const highlightedTotal=highlightedYears===yearsA?valA:valB;
+    const contributed=amountUSD*highlightedYears*12;
+    const growth=Math.max(0,highlightedTotal-contributed);
+    const fraction=highlightedTotal>0?contributed/highlightedTotal:0;
+    $('growthPrincipal').style.width=(fraction*100).toFixed(2)+'%';
+    $('growthReturn').style.width=((1-fraction)*100).toFixed(2)+'%';
+    $('growthPrincipalValue').textContent=formatMoney(contributed*mult);
+    $('growthReturnValue').textContent=formatMoney(growth*mult);
+    const isEnglish=currentLang==='en';
+    $('growthHeading').textContent=isEnglish?'Where does the projected amount come from?':'¿De dónde sale el capital proyectado?';
+    $('growthHint').textContent=isEnglish?'Your contributions + estimated growth':'Tus aportes + rendimiento estimado';
+    $('growthPrincipalLabel').textContent=isEnglish?'Your contributions':'Tu dinero aportado';
+    $('growthReturnLabel').textContent=isEnglish?'Estimated growth':'Crecimiento estimado';
+    $('growthExplanation').textContent=isEnglish
+      ?'Over '+highlightedYears+' years, you contribute '+formatMoney(contributed*mult)+'. The remaining '+formatMoney(growth*mult)+' is hypothetical compound growth, not a guaranteed return.'
+      :'En '+highlightedYears+' años, aportás '+formatMoney(contributed*mult)+'. Los '+formatMoney(growth*mult)+' restantes serían rendimiento hipotético, no garantizado.';
     const maxVal = Math.max(valA, valB, 1);
     $('nowBar').style.width = (valA / maxVal * 100) + '%';
     $('laterBar').style.width = (valB / maxVal * 100) + '%';
