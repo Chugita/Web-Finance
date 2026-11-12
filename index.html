@@ -1543,7 +1543,9 @@ if (portrait) {
    transparent WebGL canvas without pointer interactions. */
 const heroSection = $('inicio');
 const beeCanvas = $('heroCanvas');
-let beeScene, beeCamera, beeRenderer, beeFlight, beeFacing, beeRig, beeMixer;
+let beeScene, beeCamera, beeRenderer, beeFlight, beeFacing, beeRig, beeSpin, beeMixer;
+let beeSpinActive=false, beeSpinElapsed=0;
+const beeSpinDuration=1.3; // a deliberate, full on-click 360-degree turn
 let beeHeadFrontCorrection=0; // determined from actual head/abdomen bone positions
 let beeClock = 0, beePrevFrame = null, beeLoaded = false;
 let beeViewportW = innerWidth, beeViewportH = innerHeight;
@@ -1728,7 +1730,10 @@ function initBeeAcrossPage() {
                 beeRig.rotation.set(0,0,Math.PI/2);
             }
             beeRig.updateMatrixWorld(true);
-            beeFacing.add(beeRig);
+            // Separate interactive spin from the autonomous flight orientation.
+            beeSpin=new THREE.Group();
+            beeFacing.add(beeSpin);
+            beeSpin.add(beeRig);
             // Check the actual anatomical orientation at runtime, not guessed
             // signs of Euler yaw. The camera sits on +Z: the true frontal
             // pose has HEAD.z > ABDOMEN.z in camera/world coordinates.
@@ -1771,7 +1776,7 @@ function initBeeAcrossPage() {
                         color:0xffffff,
                         map:beeGrayTexture(mat&&mat.map),
                         transparent:true,
-                        opacity:.62,
+                        opacity:.91, // keep the radiographic feel but reveal face and wing details
                         side:THREE.DoubleSide,
                         depthWrite:false,
                         alphaTest:0
@@ -1790,6 +1795,7 @@ function initBeeAcrossPage() {
             beeClock=0; // Begin left-to-right AFTER GLTF finishes loading.
             beePrevFrame=null;
             beeLoaded=true;
+            document.addEventListener('pointerdown',handleBeePointerDown,{passive:true});
             window.GAXLoading?.done();
             } catch (err) { console.error('GAX: error while preparing the bee 3D model',err); window.GAXLoading?.done(); }
         },undefined,error=>{console.error('GAX: failed to load bee scene.gltf',error);window.GAXLoading?.done();});
@@ -1817,6 +1823,39 @@ function resizeBeeViewport(){
     beeCamera.updateProjectionMatrix();
     beeRenderer.setSize(beeViewportW,beeViewportH,false);
 }
+function handleBeePointerDown(event){
+    if(!beeLoaded||!beeRig||!beeSpin||beeSpinActive||reduced||event.button!==0)return;
+    // The canvas is pointer-events:none so existing CTA buttons keep working.
+    if(event.target.closest('a,button,input,select,textarea,[role="button"]'))return;
+    const bounds=heroSection.getBoundingClientRect();
+    if(event.clientX<bounds.left||event.clientX>bounds.right||
+       event.clientY<bounds.top||event.clientY>bounds.bottom)return;
+    if(beeCanvas.style.opacity==='0')return;
+    // Test the actual projected bee bounds, not an arbitrary invisible region.
+    beeScene.updateMatrixWorld(true);
+    const box=new THREE.Box3().setFromObject(beeRig);
+    if(box.isEmpty())return;
+    const corners=[
+        [box.min.x,box.min.y,box.min.z],[box.min.x,box.min.y,box.max.z],
+        [box.min.x,box.max.y,box.min.z],[box.min.x,box.max.y,box.max.z],
+        [box.max.x,box.min.y,box.min.z],[box.max.x,box.min.y,box.max.z],
+        [box.max.x,box.max.y,box.min.z],[box.max.x,box.max.y,box.max.z]
+    ];
+    let left=Infinity,right=-Infinity,top=Infinity,bottom=-Infinity;
+    for(const point of corners){
+        const ndc=new THREE.Vector3(...point).project(beeCamera);
+        const px=(ndc.x+1)*.5*innerWidth;
+        const py=(1-ndc.y)*.5*innerHeight;
+        left=Math.min(left,px);right=Math.max(right,px);
+        top=Math.min(top,py);bottom=Math.max(bottom,py);
+    }
+    const pad=12;
+    if(event.clientX>=left-pad&&event.clientX<=right+pad&&
+       event.clientY>=top-pad&&event.clientY<=bottom+pad){
+        beeSpinActive=true;
+        beeSpinElapsed=0;
+    }
+}
 function animateBeeAcrossPage(now){
     if(!beeRenderer)return;
     requestAnimationFrame(animateBeeAcrossPage);
@@ -1828,6 +1867,18 @@ function animateBeeAcrossPage(now){
         if(beeMixer)beeMixer.update(dt);
     }
     if(beeLoaded){
+        if(beeSpinActive&&beeSpin){
+            beeSpinElapsed+=dt;
+            const fraction=Math.min(1,beeSpinElapsed/beeSpinDuration);
+            // Smooth start/end for the click response, independent of flight.
+            const eased=fraction*fraction*(3-2*fraction);
+            beeSpin.rotation.y=Math.PI*2*eased;
+            if(fraction>=1){
+                beeSpin.rotation.y=0;
+                beeSpinElapsed=0;
+                beeSpinActive=false;
+            }
+        }
         const heroHeight=Math.max(1,heroSection.offsetHeight);
         const scrollY=window.scrollY||0;
         const inHero=scrollY<heroHeight-50;
