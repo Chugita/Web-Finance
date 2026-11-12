@@ -2032,13 +2032,17 @@ function animateBeeAcrossPage(now){
             const pathYaw=yaw+beeHeadFrontCorrection+Math.PI*3;
             // +0.50 rad = ~29 degrees away from direct eye-to-camera view.
             const headTowardCamera=-Math.PI/2+beeHeadFrontCorrection+.50;
-            const shortestYawDelta=Math.atan2(
-                Math.sin(headTowardCamera-pathYaw),
-                Math.cos(headTowardCamera-pathYaw)
-            );
+            // Do not wrap the yaw difference with atan2: its +/-PI branch
+            // caused a one-frame ~180-degree flip as the bee passed the
+            // approach point, even though position/speed were continuous.
+            // Use the same anatomical camera-facing orientation, expressed
+            // on the continuous positive yaw branch throughout the pass.
+            const continuousCameraYaw=headTowardCamera+Math.PI*4;
+            const cameraYaw=pathYaw+
+                (continuousCameraYaw-pathYaw)*cameraLookWeight;
             beeFacing.rotation.set(
                 -pitch,
-                pathYaw+shortestYawDelta*cameraLookWeight,
+                cameraYaw,
                 -roll,
                 'YXZ'
             );
