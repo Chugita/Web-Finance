@@ -1557,26 +1557,26 @@ const clampBee=(x,low,high)=>Math.max(low,Math.min(high,x));
    body, despite the bone test. The final 180-degree visible-mesh correction
    below intentionally exposes the OPPOSITE face from that screenshot. */
 const beeFlightPath=[
- // Unwrapped angles ensure a continuous turn; no stop-and-go easing.
- // The first three waypoints keep advancing right while looking outwards.
- {t:0,    x:.06,y:.33,yaw:-Math.PI/2,pitch:0,    roll:0,   size:.67,layer:'front'},
- {t:.115, x:.24,y:.26,yaw:-Math.PI/2,pitch:-.02,roll:-.05,size:.84,layer:'front'},
- {t:.225, x:.46,y:.32,yaw:-Math.PI/2,pitch:0,   roll:.02, size:1.48,layer:'front'},
- // Move away from the glass as she banks toward the lettering.
- {t:.32,  x:.55,y:.25,yaw:-.45,     pitch:-.05,roll:-.10,size:1.01,layer:'front'},
- {t:.41,  x:.65,y:.22,yaw:-.10,     pitch:.04, roll:.11,size:.81,layer:'behind'},
- // Carry momentum into the flower, rather than snapping or reversing.
- {t:.52,  x:.83,y:.32,yaw:-.32,     pitch:.07, roll:.10,size:.77,layer:'behind'},
- {t:.615, x:.77,y:.41,yaw:-.70,     pitch:.14, roll:-.10,size:.69,layer:'behind'},
- // Short nectar inspection: still drifting, with a little probing motion.
- {t:.69,  x:.72,y:.44,yaw:-.58,     pitch:.22, roll:.04,size:.67,layer:'behind'},
- {t:.735, x:.76,y:.40,yaw:-.24,    pitch:.14, roll:.07,size:.70,layer:'behind'},
- // Leave the flower with a broad banking U-turn; fly to the left,
- // showing back briefly only AFTER the visitor has seen the eyes.
- {t:.82,  x:.89,y:.19,yaw:-1.8,     pitch:-.10,roll:-.17,size:.76,layer:'behind'},
- {t:.895, x:.46,y:.13,yaw:-3.0,     pitch:.04, roll:.12,size:.73,layer:'behind'},
- {t:.96,  x:.07,y:.18,yaw:-4.55,    pitch:.08, roll:-.08,size:.66,layer:'behind'},
- {t:1,    x:.06,y:.33,yaw:-Math.PI*1.5,pitch:0,roll:0,size:.67,layer:'front'}
+ // Full smooth loop. Camera encounter is three-quarter, NOT head-on.
+ // The current reverse playback remains intentional and unchanged.
+ {t:0,    x:.06,y:.33,yaw:-1.12,pitch:.00, roll:-.03,size:.67,layer:'front'},
+ {t:.115, x:.24,y:.26,yaw:-1.03,pitch:-.02,roll:-.07,size:.92,layer:'front'},
+ // At the closest point the head, both eyes and body should read in 3/4.
+ {t:.225, x:.46,y:.32,yaw:-.95,pitch:.01, roll:.06, size:1.74,layer:'front'},
+ // Continuous bank away from visitor toward the lettering.
+ {t:.32,  x:.55,y:.25,yaw:-.63,pitch:-.04,roll:-.12,size:1.08,layer:'front'},
+ {t:.41,  x:.65,y:.22,yaw:-.28,pitch:.03, roll:.10, size:.86,layer:'behind'},
+ // Gliding approach to the flower.
+ {t:.52,  x:.83,y:.32,yaw:-.32,pitch:.07, roll:.10, size:.77,layer:'behind'},
+ {t:.615, x:.77,y:.41,yaw:-.70,pitch:.14, roll:-.10,size:.69,layer:'behind'},
+ // An organic continuous nectar sweep rather than full-stop hovering.
+ {t:.69,  x:.72,y:.44,yaw:-.58,pitch:.22, roll:.04, size:.67,layer:'behind'},
+ {t:.735, x:.76,y:.40,yaw:-.24,pitch:.14, roll:.07, size:.70,layer:'behind'},
+ // Wide bank, uninterrupted return, loop in matching 3/4 pose.
+ {t:.82,  x:.89,y:.19,yaw:-1.8,pitch:-.10,roll:-.17,size:.76,layer:'behind'},
+ {t:.895, x:.46,y:.13,yaw:-3.0,pitch:.04, roll:.12, size:.73,layer:'behind'},
+ {t:.96,  x:.07,y:.18,yaw:-4.55,pitch:.08, roll:-.08,size:.66,layer:'behind'},
+ {t:1,    x:.06,y:.33,yaw:-1.12-Math.PI*2,pitch:0,roll:-.03,size:.67,layer:'front'}
 ];
 function beeHermite(a,b,m0,m1,u,span){
  const u2=u*u,u3=u2*u;
