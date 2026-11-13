@@ -2238,6 +2238,7 @@ $('contactForm').addEventListener('submit',async event=>{
  const includeSummary=$('shareFinancialSummary').checked;
  const payload={
   contact,
+  website:String(data.get('website')||'').trim(),
   shareSummary:includeSummary,
   summary:includeSummary?gaxFinancialSummary():null,
   contactConsent:$('contactConsent').checked,
