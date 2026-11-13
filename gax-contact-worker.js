@@ -4,12 +4,13 @@
  * Configuration required (server-side secrets, NEVER in index.html):
  *   RESEND_API_KEY        — Resend transactional mail API key
  *   GAX_MAIL_FROM        — verified sender, e.g. "GAX <contacto@your-verified-domain>"
- *   GAX_MAIL_TO          — destination address for incoming consultations
+ *   GAX_MAIL_TO          — optional override; default jmpatt@grupoabax.com
  *
  * Deployment is intentionally not performed by adding this file to GitHub.
  * Wire this module into the existing Cloudflare Worker route/configuration.
  * The mail request does NOT book a calendar meeting.
  */
+const DEFAULT_GAX_MAIL_TO='jmpatt@grupoabax.com';
 const MAX_BYTES=16000;
 const json=(obj,status=200)=>new Response(JSON.stringify(obj),{
  status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}
@@ -27,7 +28,7 @@ async function sendMail(env,message){
  return response.json();
 }
 async function postContact(request,env){
- if(!env.RESEND_API_KEY||!env.GAX_MAIL_FROM||!env.GAX_MAIL_TO){
+ if(!env.RESEND_API_KEY||!env.GAX_MAIL_FROM){
   return json({sent:false,error:'Email service not configured'},503);
  }
  const origin=request.headers.get('Origin');
@@ -73,7 +74,7 @@ async function postContact(request,env){
  try{
   await sendMail(env,{
    from:env.GAX_MAIL_FROM,
-   to:[env.GAX_MAIL_TO],
+   to:[DEFAULT_GAX_MAIL_TO],
    reply_to:email,
    subject:'GAX · Nueva solicitud de reunión — '+name.replace(/[\r\n]/g,' '),
    text,html
@@ -88,7 +89,7 @@ async function postContact(request,env){
    await sendMail(env,{
     from:env.GAX_MAIL_FROM,
     to:[email],
-    reply_to:env.GAX_MAIL_TO,
+    reply_to:DEFAULT_GAX_MAIL_TO,
     subject:'GAX · Recibimos tu consulta',
     text:receipt
    });
