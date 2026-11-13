@@ -1142,6 +1142,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
 <footer>
     <div class="wrap footer"><strong>GAX.</strong><span id="tFooterText">PLANIFICACIÓN FINANCIERA / DISEÑÁ TU FUTURO</span><span class="pixel">© 2026 · Bee 3D: <a href="https://sketchfab.com/3d-models/bee-c80f9c2110c847db9375c548f14a0315" target="_blank" rel="noopener noreferrer">etro313 / Sketchfab</a> (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>) · Adaptado para GAX</span></div>
 </footer>
+<nav aria-label="Información legal" style="display:flex;justify-content:center;gap:22px;flex-wrap:wrap;padding:20px 20px 26px;border-top:1px solid #29362d;font:400 12px/1.8 'Geist Mono',monospace"><a href="/privacidad.html" style="color:#c7d8cb;text-decoration:underline;text-underline-offset:3px">Privacidad (borrador)</a><a href="/terminos.html" style="color:#c7d8cb;text-decoration:underline;text-underline-offset:3px">Términos (borrador)</a></nav>
 
 <button type="button" class="gax-floating-meeting" id="mobileMeetingButton" data-open-modal aria-label="Solicitar reunión con GAX" title="Solicitar reunión" aria-haspopup="dialog">
     <span class="gax-floating-icon-crop" aria-hidden="true"><img class="gax-floating-logo" src="gax-logo.png" alt=""></span>
@@ -1152,7 +1153,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
         <span class="micro" id="tModalMicro">GAX / CONTACTO</span>
         <h2 id="modalTitle">Solicitar una reunión</h2>
         <p id="tModalDesc" style="color:var(--muted);margin-bottom:24px;font-family:var(--mono)">Dejanos tus datos para solicitar una conversación. Si hiciste el diagnóstico o usaste los simuladores, podés compartir un resumen para preparar la reunión.</p>
-        <form id="contactForm">
+        <form id="contactForm" autocomplete="on">
             <label class="field"><span id="tField1">NOMBRE Y APELLIDO</span><input name="name" autocomplete="name" maxlength="120" required></label>
             <label class="field"><span id="tField2">CORREO ELECTRÓNICO</span><input type="email" name="email" autocomplete="email" maxlength="200" required></label>
             <label class="field"><span id="tField3">TELÉFONO / WHATSAPP</span><input type="tel" name="phone" autocomplete="tel" maxlength="40" required></label>
@@ -1160,7 +1161,8 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
                 <label class="gax-consent-label"><input type="checkbox" id="shareFinancialSummary" name="shareSummary"><span id="shareSummaryText">También quiero compartir mis respuestas y proyecciones financieras para preparar la reunión.</span></label>
                 <details id="leadSummaryDetails"><summary id="leadSummaryToggle">Ver qué información se incluiría</summary><div id="leadSummaryPreview" class="gax-lead-preview">—</div></details>
             </div>
-            <label class="gax-consent-label gax-contact-consent"><input type="checkbox" id="contactConsent" required><span id="contactConsentText">Autorizo a que me contacten por los datos que proporcioné para responder a esta consulta.</span></label>
+            <p style="font:400 11px/1.8 'Geist Mono',monospace;color:#c7d8cb">Antes de enviar, consultá nuestra <a href="/privacidad.html" target="_blank" rel="noopener" style="text-decoration:underline;color:#9de6ae">Política de Privacidad (borrador)</a>. Tus respuestas financieras solo se comparten si marcás la opción correspondiente.</p>
+<label class="gax-consent-label gax-contact-consent"><input type="checkbox" id="contactConsent" required><span id="contactConsentText">Autorizo a que me contacten por los datos que proporcioné para responder a esta consulta.</span></label>
             <label class="gax-honeypot" aria-hidden="true">Sitio web <input type="text" name="website" autocomplete="off" tabindex="-1"></label>
             <button class="btn" type="submit" id="tModalBtn" style="width:100%;margin-top:10px;">SOLICITAR REUNIÓN ↗</button>
             <p id="formFeedback" class="small-note" role="status" style="margin-top:15px;text-align:center;">Una solicitud no confirma fecha ni horario.</p>
