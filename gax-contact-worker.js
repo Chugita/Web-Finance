@@ -12,6 +12,7 @@
  */
 const DEFAULT_GAX_MAIL_TO='jmpatt@grupoabax.com';
 const MAX_BYTES=16000;
+const MAX_SUMMARY=12000;
 const json=(obj,status=200)=>new Response(JSON.stringify(obj),{
  status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}
 });
@@ -48,12 +49,15 @@ async function postContact(request,env){
   if(raw.length>MAX_BYTES)return json({sent:false,error:'Request too large'},413);
   body=JSON.parse(raw);
  }catch{return json({sent:false,error:'Invalid JSON'},400);}
+ // Reject automated submissions that explicitly fill the hidden website field.
+ if(typeof body?.website==='string'&&body.website.trim())return json({sent:true,booked:false});
  const contact=body?.contact||{};
  const name=clean(contact.name,120),email=clean(contact.email,200),phone=clean(contact.phone,40);
  if(!name||!safeEmail(email)||!phone||body?.contactConsent!==true)
   return json({sent:false,error:'Incomplete contact data or consent'},400);
  const includeSummary=body?.shareSummary===true;
- const summary=includeSummary?clean(body.summary,12000):'';
+ const summary=includeSummary?clean(body.summary,MAX_SUMMARY):'';
+ const recipient=safeEmail(env.GAX_MAIL_TO||'')?env.GAX_MAIL_TO:DEFAULT_GAX_MAIL_TO;
  const now=new Date().toISOString();
  const rows=[
   'Nueva solicitud desde GAX',
@@ -74,7 +78,7 @@ async function postContact(request,env){
  try{
   await sendMail(env,{
    from:env.GAX_MAIL_FROM,
-   to:[DEFAULT_GAX_MAIL_TO],
+   to:[recipient],
    reply_to:email,
    subject:'GAX · Nueva solicitud de reunión — '+name.replace(/[\r\n]/g,' '),
    text,html
@@ -89,7 +93,7 @@ async function postContact(request,env){
    await sendMail(env,{
     from:env.GAX_MAIL_FROM,
     to:[email],
-    reply_to:DEFAULT_GAX_MAIL_TO,
+    reply_to:recipient,
     subject:'GAX · Recibimos tu consulta',
     text:receipt
    });
