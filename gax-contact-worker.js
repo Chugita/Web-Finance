@@ -53,8 +53,21 @@ async function postContact(request,env){
  if(typeof body?.website==='string'&&body.website.trim())return json({sent:true,booked:false});
  const contact=body?.contact||{};
  const name=clean(contact.name,120),email=clean(contact.email,200),phone=clean(contact.phone,40);
- if(!name||!safeEmail(email)||!phone||body?.contactConsent!==true)
+ if(!name||name.length<2||!safeEmail(email)||!phone||phone.replace(/\\D/g,'').length<7||body?.contactConsent!==true)
   return json({sent:false,error:'Incomplete contact data or consent'},400);
+ // Per-IP limiter applied before the two transactional mail requests.
+ // RATE LIMITER must be configured in wrangler.jsonc. Reject if unavailable
+ // to avoid silently opening an unrestricted email relay.
+ if(!env.CONTACT_RATE_LIMITER)return json({sent:false,error:'Contact protection unavailable'},503);
+ const address=request.headers.get('CF-Connecting-IP');
+ if(!address)return json({sent:false,error:'Client address unavailable'},503);
+ try{
+  const quota=await env.CONTACT_RATE_LIMITER.limit({key:address});
+  if(!quota.success)return json({sent:false,error:'Too many requests. Try again later.'},429);
+ }catch(error){
+  console.error('Contact rate-limit failure',error);
+  return json({sent:false,error:'Contact service temporarily unavailable'},503);
+ }
  const includeSummary=body?.shareSummary===true;
  const summary=includeSummary?clean(body.summary,MAX_SUMMARY):'';
  const recipient=safeEmail(env.GAX_MAIL_TO||'')?env.GAX_MAIL_TO:DEFAULT_GAX_MAIL_TO;
