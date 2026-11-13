@@ -705,32 +705,66 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
 }
 @media(prefers-reduced-motion:reduce){#question{animation:none}}
 
-/* Discreet mobile GAX symbol: 46px circular meeting launcher. */
+/* GAX mobile meeting droplet — compact glass with inset green isologo. */
 .gax-floating-meeting{display:none}
 @media(max-width:900px){
  .gax-floating-meeting{
-  display:flex;align-items:center;justify-content:center;
+  display:flex;align-items:center;justify-content:center;isolation:isolate;
   position:fixed;right:clamp(12px,3vw,18px);
   bottom:calc(14px + env(safe-area-inset-bottom,0px));
   z-index:42;width:46px;height:46px;min-width:46px;min-height:46px;
-  padding:5px;border:1px solid rgba(112,189,140,.45);
-  border-radius:50%;background:rgba(16,25,19,.76);
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  box-shadow:0 5px 16px rgba(0,0,0,.28);
-  opacity:.76;cursor:pointer;
-  transition:opacity .18s,background .18s,border-color .18s,box-shadow .18s,transform .18s;
+  padding:10px;overflow:hidden;
+  border:1px solid rgba(184,248,206,.48);border-radius:50%;
+  background:
+    radial-gradient(circle at 27% 20%,rgba(228,255,236,.4) 0%,rgba(163,239,190,.13) 24%,transparent 49%),
+    radial-gradient(circle at 78% 86%,rgba(50,139,82,.38) 0%,transparent 53%),
+    linear-gradient(150deg,rgba(119,207,150,.27),rgba(20,60,37,.45) 72%);
+  backdrop-filter:blur(16px) saturate(155%);
+  -webkit-backdrop-filter:blur(16px) saturate(155%);
+  box-shadow:
+    inset 0 2px 2px rgba(235,255,242,.34),
+    inset 1px -3px 6px rgba(17,81,41,.28),
+    0 5px 18px rgba(0,0,0,.3),
+    0 0 10px rgba(112,189,140,.12);
+  opacity:.88;cursor:pointer;
+  transition:opacity .2s,background .2s,border-color .2s,box-shadow .2s,transform .2s;
  }
- .gax-floating-icon-crop{display:block;position:relative;overflow:hidden;width:34px;height:34px;flex:0 0 34px}
- .gax-floating-logo{position:absolute;top:0;left:0;display:block;width:auto;max-width:none!important;height:34px;max-height:none!important;object-fit:unset;filter:grayscale(1) brightness(1.25);transition:filter .18s}
+ .gax-floating-meeting::before{
+  content:'';position:absolute;inset:3px 5px auto 7px;height:12px;
+  border-radius:50%;pointer-events:none;z-index:0;
+  background:linear-gradient(180deg,rgba(244,255,248,.28),rgba(244,255,248,0));
+  filter:blur(2px);
+ }
+ .gax-floating-icon-crop{
+  display:block;position:relative;overflow:hidden;
+  width:23px;height:23px;flex:0 0 23px;z-index:1;
+ }
+ .gax-floating-logo{
+  position:absolute;top:0;left:0;display:block;
+  width:auto;max-width:none!important;
+  height:23px;max-height:none!important;object-fit:unset;
+  filter:brightness(0) saturate(100%) invert(86%) sepia(25%)
+         saturate(647%) hue-rotate(74deg) brightness(108%) contrast(90%);
+  opacity:.96;transition:filter .2s,opacity .2s;
+ }
  .gax-floating-meeting:hover,.gax-floating-meeting:focus-visible,.gax-floating-meeting.is-lit{
-  opacity:1;background:rgba(38,75,48,.98);border-color:#70bd8c;
-  box-shadow:0 0 16px rgba(112,189,140,.38);
+  opacity:1;border-color:rgba(212,255,224,.86);
+  background:
+    radial-gradient(circle at 27% 18%,rgba(247,255,250,.5) 0%,rgba(170,247,193,.22) 24%,transparent 54%),
+    linear-gradient(155deg,rgba(116,222,154,.48),rgba(17,94,45,.66));
+  box-shadow:
+    inset 0 2px 3px rgba(245,255,248,.5),
+    inset 0 -4px 8px rgba(11,71,34,.25),
+    0 5px 18px rgba(0,0,0,.25),
+    0 0 17px rgba(112,189,140,.4);
  }
- .gax-floating-meeting:hover .gax-floating-logo,.gax-floating-meeting:focus-visible .gax-floating-logo,.gax-floating-meeting.is-lit .gax-floating-logo{filter:none}
+ .gax-floating-meeting:hover .gax-floating-logo,.gax-floating-meeting:focus-visible .gax-floating-logo,.gax-floating-meeting.is-lit .gax-floating-logo{opacity:1}
  body:has(#modal.open) .gax-floating-meeting{opacity:0;pointer-events:none}
  .closing{padding-bottom:92px}
 }
-@media(prefers-reduced-motion:reduce){.gax-floating-meeting,.gax-floating-logo{transition:none}}
+@media(prefers-reduced-motion:reduce){
+ .gax-floating-meeting,.gax-floating-logo{transition:none}
+}
 .gax-lead-consent{padding:12px 14px;margin:18px 0 13px;border:1px solid rgba(112,189,140,.23);border-radius:8px;background:rgba(112,189,140,.045)}
 .gax-consent-label{display:flex;align-items:flex-start;gap:10px;cursor:pointer;font:400 12px/1.6 var(--mono);color:var(--fg)}
 .gax-consent-label input{margin:3px 0 0;accent-color:var(--green);width:17px;height:17px;flex-shrink:0}
