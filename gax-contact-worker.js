@@ -53,7 +53,7 @@ async function postContact(request,env){
  if(typeof body?.website==='string'&&body.website.trim())return json({sent:true,booked:false});
  const contact=body?.contact||{};
  const name=clean(contact.name,120),email=clean(contact.email,200),phone=clean(contact.phone,40);
- if(!name||name.length<2||!safeEmail(email)||!phone||phone.replace(/\\D/g,'').length<7||body?.contactConsent!==true)
+ if(!name||name.length<2||!safeEmail(email)||!phone||phone.replace(/\D/g,'').length<7||body?.contactConsent!==true)
   return json({sent:false,error:'Incomplete contact data or consent'},400);
  // Per-IP limiter applied before the two transactional mail requests.
  // RATE LIMITER must be configured in wrangler.jsonc. Reject if unavailable
