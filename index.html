@@ -1154,9 +1154,9 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
         <h2 id="modalTitle">Solicitar una reunión</h2>
         <p id="tModalDesc" style="color:var(--muted);margin-bottom:24px;font-family:var(--mono)">Dejanos tus datos para solicitar una conversación. Si hiciste el diagnóstico o usaste los simuladores, podés compartir un resumen para preparar la reunión.</p>
         <form id="contactForm" autocomplete="on">
-            <label class="field"><span id="tField1">NOMBRE Y APELLIDO</span><input name="name" autocomplete="name" maxlength="120" required></label>
+            <label class="field"><span id="tField1">NOMBRE Y APELLIDO</span><input name="name" autocomplete="name" minlength="2" maxlength="120" required></label>
             <label class="field"><span id="tField2">CORREO ELECTRÓNICO</span><input type="email" name="email" autocomplete="email" maxlength="200" required></label>
-            <label class="field"><span id="tField3">TELÉFONO / WHATSAPP</span><input type="tel" name="phone" autocomplete="tel" maxlength="40" required></label>
+            <label class="field"><span id="tField3">TELÉFONO / WHATSAPP</span><input type="tel" name="phone" autocomplete="tel" minlength="7" maxlength="40" required></label>
             <div class="gax-lead-consent">
                 <label class="gax-consent-label"><input type="checkbox" id="shareFinancialSummary" name="shareSummary"><span id="shareSummaryText">También quiero compartir mis respuestas y proyecciones financieras para preparar la reunión.</span></label>
                 <details id="leadSummaryDetails"><summary id="leadSummaryToggle">Ver qué información se incluiría</summary><div id="leadSummaryPreview" class="gax-lead-preview">—</div></details>
@@ -2274,7 +2274,11 @@ $('contactForm').addEventListener('submit',async event=>{
     body:JSON.stringify(payload),signal:controller.signal
    });
   }finally{clearTimeout(timer)}
-  const data=response.ok?await response.json().catch(()=>({})):{};
+  const data=await response.json().catch(()=>({}));
+  if(response.status===429){
+   feedback.textContent=currentLang==='en'?'Too many requests. Please try again later.':'Se realizaron demasiadas solicitudes. Volvé a intentar más tarde.';
+   return;
+  }
   if(response.ok&&data.sent===true){
    feedback.textContent=currentLang==='en'
     ?'Request sent. We will contact you to arrange a time; no meeting is booked yet.'
@@ -2293,8 +2297,8 @@ $('contactForm').addEventListener('submit',async event=>{
   link.className='gax-email-fallback';
   feedback.replaceChildren(document.createTextNode(
    currentLang==='en'
-    ?'Automatic sending is not configured yet. Nothing has been sent. '
-    :'El envío automático todavía no está conectado. No se envió ningún dato. '
+    ?'We could not confirm automatic delivery. You can open your mail app to send the request manually. '
+    :'No pudimos confirmar el envío automático. Podés abrir tu correo para enviar la consulta manualmente. '
   ),link);
   link.addEventListener('click',()=>{feedback.dataset.emailOpened='true'});
  }finally{submit.disabled=false}
