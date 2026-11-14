@@ -4,8 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#080a09">
-<meta name="description" content="GAX. Explorá tu punto de partida financiero, visualizá escenarios y conocé cómo planificar tu futuro.">
-<title id="pageTitle">GAX — El futuro se diseña</title>
+<meta name="description" content="Explorá tu situación financiera, calculá tu capacidad de ahorro y proyectá tus objetivos con GAX. Una experiencia interactiva para planificar tu futuro.">
+<link rel="canonical" href="https://gaxsuite.com/">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_AR">
+<meta property="og:site_name" content="GAX">
+<meta property="og:title" content="GAX | Explorá y planificá tu futuro financiero">
+<meta property="og:description" content="Descubrí tu punto de partida, simulá escenarios y transformá tus objetivos en un plan.">
+<meta property="og:url" content="https://gaxsuite.com/">
+<meta property="og:image" content="https://gaxsuite.com/gax-flor.png">
+<meta property="og:image:alt" content="GAX — Experiencia interactiva de planificación financiera">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GAX | Explorá y planificá tu futuro financiero">
+<meta name="twitter:description" content="Explorá tu punto de partida financiero y proyectá tus próximos pasos.">
+<meta name="twitter:image" content="https://gaxsuite.com/gax-flor.png">
+<title id="pageTitle">GAX | Explorá y planificá tu futuro financiero</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&family=Geist+Pixel&display=swap" rel="stylesheet">
@@ -1128,6 +1142,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
 <footer>
     <div class="wrap footer"><strong>GAX.</strong><span id="tFooterText">PLANIFICACIÓN FINANCIERA / DISEÑÁ TU FUTURO</span><span class="pixel">© 2026 · Bee 3D: <a href="https://sketchfab.com/3d-models/bee-c80f9c2110c847db9375c548f14a0315" target="_blank" rel="noopener noreferrer">etro313 / Sketchfab</a> (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>) · Adaptado para GAX</span></div>
 </footer>
+<nav aria-label="Información legal" style="display:flex;justify-content:center;gap:22px;flex-wrap:wrap;padding:20px 20px 26px;border-top:1px solid #29362d;font:400 12px/1.8 'Geist Mono',monospace"><a href="/privacidad.html" style="color:#c7d8cb;text-decoration:underline;text-underline-offset:3px">Privacidad (borrador)</a><a href="/terminos.html" style="color:#c7d8cb;text-decoration:underline;text-underline-offset:3px">Términos (borrador)</a></nav>
 
 <button type="button" class="gax-floating-meeting" id="mobileMeetingButton" data-open-modal aria-label="Solicitar reunión con GAX" title="Solicitar reunión" aria-haspopup="dialog">
     <span class="gax-floating-icon-crop" aria-hidden="true"><img class="gax-floating-logo" src="gax-logo.png" alt=""></span>
@@ -1138,15 +1153,16 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
         <span class="micro" id="tModalMicro">GAX / CONTACTO</span>
         <h2 id="modalTitle">Solicitar una reunión</h2>
         <p id="tModalDesc" style="color:var(--muted);margin-bottom:24px;font-family:var(--mono)">Dejanos tus datos para solicitar una conversación. Si hiciste el diagnóstico o usaste los simuladores, podés compartir un resumen para preparar la reunión.</p>
-        <form id="contactForm">
-            <label class="field"><span id="tField1">NOMBRE Y APELLIDO</span><input name="name" autocomplete="name" maxlength="120" required></label>
+        <form id="contactForm" autocomplete="on">
+            <label class="field"><span id="tField1">NOMBRE Y APELLIDO</span><input name="name" autocomplete="name" minlength="2" maxlength="120" required></label>
             <label class="field"><span id="tField2">CORREO ELECTRÓNICO</span><input type="email" name="email" autocomplete="email" maxlength="200" required></label>
-            <label class="field"><span id="tField3">TELÉFONO / WHATSAPP</span><input type="tel" name="phone" autocomplete="tel" maxlength="40" required></label>
+            <label class="field"><span id="tField3">TELÉFONO / WHATSAPP</span><input type="tel" name="phone" autocomplete="tel" minlength="7" maxlength="40" required></label>
             <div class="gax-lead-consent">
                 <label class="gax-consent-label"><input type="checkbox" id="shareFinancialSummary" name="shareSummary"><span id="shareSummaryText">También quiero compartir mis respuestas y proyecciones financieras para preparar la reunión.</span></label>
                 <details id="leadSummaryDetails"><summary id="leadSummaryToggle">Ver qué información se incluiría</summary><div id="leadSummaryPreview" class="gax-lead-preview">—</div></details>
             </div>
-            <label class="gax-consent-label gax-contact-consent"><input type="checkbox" id="contactConsent" required><span id="contactConsentText">Autorizo a que me contacten por los datos que proporcioné para responder a esta consulta.</span></label>
+            <p style="font:400 11px/1.8 'Geist Mono',monospace;color:#c7d8cb">Antes de enviar, consultá nuestra <a href="/privacidad.html" target="_blank" rel="noopener" style="text-decoration:underline;color:#9de6ae">Política de Privacidad (borrador)</a>. Tus respuestas financieras solo se comparten si marcás la opción correspondiente.</p>
+<label class="gax-consent-label gax-contact-consent"><input type="checkbox" id="contactConsent" required><span id="contactConsentText">Autorizo a que me contacten por los datos que proporcioné para responder a esta consulta.</span></label>
             <label class="gax-honeypot" aria-hidden="true">Sitio web <input type="text" name="website" autocomplete="off" tabindex="-1"></label>
             <button class="btn" type="submit" id="tModalBtn" style="width:100%;margin-top:10px;">SOLICITAR REUNIÓN ↗</button>
             <p id="formFeedback" class="small-note" role="status" style="margin-top:15px;text-align:center;">Una solicitud no confirma fecha ni horario.</p>
@@ -2238,6 +2254,7 @@ $('contactForm').addEventListener('submit',async event=>{
  const includeSummary=$('shareFinancialSummary').checked;
  const payload={
   contact,
+  website:String(data.get('website')||'').trim(),
   shareSummary:includeSummary,
   summary:includeSummary?gaxFinancialSummary():null,
   contactConsent:$('contactConsent').checked,
@@ -2257,7 +2274,11 @@ $('contactForm').addEventListener('submit',async event=>{
     body:JSON.stringify(payload),signal:controller.signal
    });
   }finally{clearTimeout(timer)}
-  const data=response.ok?await response.json().catch(()=>({})):{};
+  const data=await response.json().catch(()=>({}));
+  if(response.status===429){
+   feedback.textContent=currentLang==='en'?'Too many requests. Please try again later.':'Se realizaron demasiadas solicitudes. Volvé a intentar más tarde.';
+   return;
+  }
   if(response.ok&&data.sent===true){
    feedback.textContent=currentLang==='en'
     ?'Request sent. We will contact you to arrange a time; no meeting is booked yet.'
@@ -2276,8 +2297,8 @@ $('contactForm').addEventListener('submit',async event=>{
   link.className='gax-email-fallback';
   feedback.replaceChildren(document.createTextNode(
    currentLang==='en'
-    ?'Automatic sending is not configured yet. Nothing has been sent. '
-    :'El envío automático todavía no está conectado. No se envió ningún dato. '
+    ?'We could not confirm automatic delivery. You can open your mail app to send the request manually. '
+    :'No pudimos confirmar el envío automático. Podés abrir tu correo para enviar la consulta manualmente. '
   ),link);
   link.addEventListener('click',()=>{feedback.dataset.emailOpened='true'});
  }finally{submit.disabled=false}
