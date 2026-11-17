@@ -264,7 +264,9 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
 .abax-desc{color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:14px;font-family:var(--mono)}
 
 /* BOTONES ESTILIZADOS PARA WEB E INSTAGRAM DE ABAX */
-.abax-links{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.abax-links{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-bottom:20px}
+.abax-contact-link{width:100%;text-decoration:none}
+.abax-contact-link:hover .contact-val,.abax-contact-link:focus-visible .contact-val{color:var(--green)}
 .abax-pill{
     background: rgba(112, 189, 140, 0.08);
     border: 1px solid rgba(112, 189, 140, 0.25);
@@ -1116,8 +1118,14 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
                     <p class="abax-desc" id="tAbaxDesc">Consultora de planificación financiera, patrimonial y corporativa de alcance federal. Actuamos como nexo independiente con las instituciones bursátiles y aseguradoras más sólidas.</p>
                     
                     <div class="abax-links">
-                        <a class="abax-pill" href="https://grupoabax.com/" target="_blank" rel="noopener">🌐 Sitio Web ↗</a>
-                        <a class="abax-pill" href="https://www.instagram.com/abaxgrupo/" target="_blank" rel="noopener">📸 Instagram @abaxgrupo ↗</a>
+                        <a class="contact-card abax-contact-link" href="https://grupoabax.com/" target="_blank" rel="noopener noreferrer" aria-label="Abrir sitio web de Grupo ABAX">
+                            <span class="contact-label" id="tAbaxWebsite">Sitio Web</span>
+                            <span class="contact-val" id="tAbaxWebsiteValue">Visitar sitio web ↗</span>
+                        </a>
+                        <a class="contact-card abax-contact-link" href="https://www.instagram.com/abaxgrupo/" target="_blank" rel="noopener noreferrer" aria-label="Abrir Instagram de Grupo ABAX">
+                            <span class="contact-label" id="tAbaxInstagram">Instagram</span>
+                            <span class="contact-val" id="tAbaxInstagramValue">@abaxgrupo ↗</span>
+                        </a>
                     </div>
 
                     <div class="abax-grid">
@@ -1443,6 +1451,10 @@ const dict = {
         tLabelDirect: "Contacto directo",
         tLabelEmail: "Email corporativo",
         tLabelLinkedin: "Perfil de LinkedIn",
+        tAbaxWebsite: "Sitio Web",
+        tAbaxWebsiteValue: "Visitar sitio web ↗",
+        tAbaxInstagram: "Instagram",
+        tAbaxInstagramValue: "@abaxgrupo ↗",
         tAbaxTitle: "🏛️ Respaldo Institucional Grupo ABAX",
         tAbaxDesc: "Consultora de planificación financiera, patrimonial y corporativa de alcance federal. Actuamos como nexo independiente con las instituciones bursátiles y aseguradoras más sólidas.",
         tAbaxCli: "Clientes", tAbaxCliSub: "Cuentas activas",
@@ -1522,6 +1534,10 @@ const dict = {
         tLabelDirect: "Direct contact",
         tLabelEmail: "Corporate email",
         tLabelLinkedin: "LinkedIn profile",
+        tAbaxWebsite: "Website",
+        tAbaxWebsiteValue: "Visit website ↗",
+        tAbaxInstagram: "Instagram",
+        tAbaxInstagramValue: "@abaxgrupo ↗",
         tAbaxTitle: "🏛️ Institutional Backing Grupo ABAX",
         tAbaxDesc: "Federal financial, wealth, and corporate planning consultancy. We act as an independent nexus with the most solid brokerage and insurance institutions.",
         tAbaxCli: "Clients", tAbaxCliSub: "Active accounts",
