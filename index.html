@@ -707,9 +707,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
 }
 @media(prefers-reduced-motion:reduce){#question{animation:none}}
 
-/* GAX mobile meeting droplet — compact glass with inset green isologo. */
-.gax-floating-meeting{display:none}
-@media(max-width:900px){
+/* GAX floating meeting shortcut — identical on desktop and mobile. */
  .gax-floating-meeting{
   display:flex;align-items:center;justify-content:center;isolation:isolate;
   position:fixed;right:clamp(12px,3vw,18px);
@@ -762,8 +760,8 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
  }
  .gax-floating-meeting:hover .gax-floating-logo,.gax-floating-meeting:focus-visible .gax-floating-logo,.gax-floating-meeting.is-lit .gax-floating-logo{opacity:1}
  body:has(#modal.open) .gax-floating-meeting{opacity:0;pointer-events:none}
- .closing{padding-bottom:92px}
-}
+@media(min-width:901px){.gax-floating-meeting{right:24px;bottom:24px}}
+@media(max-width:900px){.closing{padding-bottom:92px}}
 @media(prefers-reduced-motion:reduce){
  .gax-floating-meeting,.gax-floating-logo{transition:none}
 }
