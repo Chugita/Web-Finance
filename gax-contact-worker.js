@@ -28,6 +28,63 @@ async function sendMail(env,message){
  if(!response.ok)throw new Error('Mail provider rejected request: '+response.status);
  return response.json();
 }
+
+/**
+ * Anonymous aggregate conversion measurement.
+ * No cookies, visitor identifiers, phone numbers, emails, diagnostic answers,
+ * revenue figures or other financial data are sent to Analytics Engine.
+ * Each accepted event adds a single counter to an event type and optional label.
+ */
+const GAX_ALLOWED_EVENTS=new Set([
+ 'diagnostic_started','question_completed','diagnostic_completed',
+ 'capacity_used','time_used','goals_used',
+ 'meeting_opened','form_started','form_sent'
+]);
+const GAX_ALLOWED_LABELS=new Set([
+ '1','2','3','4','nav','floating','closing','method','other',''
+]);
+function recordGaxEvent(env,name,label=''){
+ if(!GAX_ALLOWED_EVENTS.has(name)||!env.GAX_EVENTS?.writeDataPoint)return false;
+ const safeLabel=GAX_ALLOWED_LABELS.has(label)?label:'other';
+ try{
+  env.GAX_EVENTS.writeDataPoint({
+   blobs:[name,safeLabel],
+   doubles:[1],
+   indexes:[name]
+  });
+  return true;
+ }catch(error){
+  console.warn('Anonymous analytics write failed');
+  return false;
+ }
+}
+async function postGaxEvent(request,env){
+ const origin=request.headers.get('Origin');
+ if(!origin)return json({ok:false},403);
+ try{
+  if(new URL(origin).origin!==new URL(request.url).origin)return json({ok:false},403);
+ }catch{return json({ok:false},403);}
+ if(!(request.headers.get('Content-Type')||'').toLowerCase().includes('application/json'))
+  return json({ok:false},415);
+ if(!env.GAX_EVENTS||!env.EVENT_RATE_LIMITER)return json({ok:false},503);
+ const address=request.headers.get('CF-Connecting-IP');
+ if(!address)return json({ok:false},403);
+ let payload;
+ try{
+  const raw=await request.text();
+  if(raw.length>256)return json({ok:false},413);
+  payload=JSON.parse(raw);
+ }catch{return json({ok:false},400);}
+ if(!GAX_ALLOWED_EVENTS.has(payload?.event)||payload.event==='form_sent')
+  return json({ok:false},400); // Only server confirms delivered contact emails.
+ try{
+  const quota=await env.EVENT_RATE_LIMITER.limit({key:address});
+  if(!quota.success)return json({ok:false},429);
+ }catch{return json({ok:false},503);}
+ recordGaxEvent(env,payload.event,typeof payload.label==='string'?payload.label:'');
+ return json({ok:true});
+}
+
 async function postContact(request,env){
  if(!env.RESEND_API_KEY||!env.GAX_MAIL_FROM){
   return json({sent:false,error:'Email service not configured'},503);
@@ -96,6 +153,7 @@ async function postContact(request,env){
    subject:'GAX · Nueva solicitud de reunión — '+name.replace(/[\r\n]/g,' '),
    text,html
   });
+  recordGaxEvent(env,'form_sent'); // Advisor email successfully accepted by Resend.
   // The visitor receives an acknowledgement, with their consented summary,
   // but NEVER an invented date/time or calendar booking.
   const receipt='Hola '+name+',\n\nRecibimos tu solicitud de conversación en GAX. '+
@@ -122,6 +180,10 @@ async function postContact(request,env){
 export default {
  async fetch(request,env){
   const url=new URL(request.url);
+  if(url.pathname==='/api/gax-event'){
+   if(request.method!=='POST')return json({ok:false},405);
+   return postGaxEvent(request,env);
+  }
   if(url.pathname==='/api/consultas'){
    if(request.method!=='POST')return json({sent:false,error:'Method not allowed'},405);
    return postContact(request,env);
