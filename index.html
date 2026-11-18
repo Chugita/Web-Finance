@@ -775,18 +775,31 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
 .gax-honeypot{position:absolute!important;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
 @media(max-width:650px){.modal-box{padding:30px 19px 23px}}
 @media(prefers-reduced-motion:reduce){.gax-floating-meeting,.gax-floating-light{transition:none}}
+/* Compact explanation beneath the left-hand controls, not beneath both columns. */
+.sim-disclaimer{margin:34px 0 0;padding:18px 18px 0;border-top:1px solid rgba(112,189,140,.2);font:400 10px/1.9 var(--mono);color:#abbeb0;max-width:100%}
 .sim-comparison-intro{font:400 11px/1.7 var(--mono);color:#c9d6cc;margin:20px 0 18px}
-.sim-comparison-head,.sim-comparison-row{display:grid;grid-template-columns:90px minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:center}
-.sim-comparison-head{border-bottom:1px solid var(--line);padding:0 0 12px;font:400 10px/1.5 var(--pixel);color:#b5c4b8}
-.sim-comparison-head span:first-child{grid-column:2;color:#84d9a1}
-.sim-comparison-head span:last-child{grid-column:3}
+.sim-comparison-head,.sim-comparison-row{display:grid;grid-template-columns:90px minmax(0,1fr) minmax(0,1fr);column-gap:12px;align-items:center}
+.sim-comparison-head{padding:4px 0 15px;border-bottom:1px solid var(--line)}
+.sim-column-heading{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-width:0;gap:5px;font-family:var(--pixel)}
+.sim-column-heading strong{display:block;font:500 11px/1.4 var(--pixel);letter-spacing:.035em}
+.sim-column-heading small{display:block;font:400 9px/1.5 var(--pixel);color:#aabeb0}
+.sim-column-invested strong{color:#8bd9a8}
+.sim-column-saved strong{color:#d2dcd3}
 .sim-comparison-row{padding:17px 0;border-bottom:1px solid var(--line)}
 .sim-comparison-period{font:400 11px/1.5 var(--pixel);color:#c7d0c8}
-.sim-comparison-row strong{font:500 clamp(13px,1.55vw,22px)/1.2 var(--pixel);text-align:right;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.sim-comparison-row strong{display:block;min-width:0;font:500 clamp(13px,1.45vw,21px)/1.3 var(--pixel);text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
 .sim-comparison-row .sim-invested{color:#8bd9a8}
 .sim-comparison-row .sim-saved{color:#d2dcd3}
 .sim-comparison-footnote{margin-top:17px;font:400 10px/1.6 var(--mono);color:#b0bfb3}
-@media(max-width:650px){.sim-output{padding:22px 16px}.sim-comparison-head,.sim-comparison-row{grid-template-columns:58px minmax(0,1fr) minmax(0,1fr);gap:8px}.sim-comparison-head{font-size:8px}.sim-comparison-row strong{font-size:clamp(12px,3.2vw,17px)}.sim-comparison-period{font-size:9px}}
+@media(max-width:650px){
+ .sim-output{padding:22px 16px}
+ .sim-disclaimer{margin-top:23px;padding-top:15px}
+ .sim-comparison-head,.sim-comparison-row{grid-template-columns:56px minmax(0,1fr) minmax(0,1fr);column-gap:6px}
+ .sim-column-heading strong{font-size:9px}
+ .sim-column-heading small{font-size:8px}
+ .sim-comparison-row strong{font-size:clamp(11px,3.1vw,17px)}
+ .sim-comparison-period{font-size:9px}
+}
 </style>
 </head>
 <body>
@@ -925,11 +938,16 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
                     <span id="variableLegend" class="pixel">VARIABLES 30%</span>
                     <span id="savingLegend" class="accent pixel">AHORRO 20%</span>
                 </div>
+                <p class="small-note sim-disclaimer" id="tCapNote">50/30/20 ES UNA REFERENCIA, NO UNA REGLA. PROYECCIÓN CON APORTES AL FINAL DE CADA MES, TASA NOMINAL ANUAL HIPOTÉTICA DEL 5,5% Y CAPITALIZACIÓN MENSUAL. SIN INFLACIÓN, IMPUESTOS, COMISIONES NI VOLATILIDAD. NO GARANTIZA RESULTADOS.</p>
             </div>
             <div class="sim-output" aria-label="Comparación de ahorro e inversión">
                 <div class="metric"><span id="tMetSave">AHORRO MENSUAL ESTIMADO</span><strong id="savingsOut" class="accent pixel">USD 600</strong></div>
                 <p class="sim-comparison-intro" id="simCompareIntro">¿Qué cambia si invertís ese ahorro? Compará el mismo aporte mensual en dos escenarios.</p>
-                <div class="sim-comparison-head"><span id="simInvestmentHead">INVIRTIENDO · 5,5% TNA HIPOTÉTICA</span><span id="simSavingHead">SIN INVERTIR · 0% INTERÉS</span></div>
+                <div class="sim-comparison-head">
+                    <span aria-hidden="true"></span>
+                    <div class="sim-column-heading sim-column-invested"><strong id="simInvestmentHead">INVIRTIENDO</strong><small id="simInvestmentRate">5,5% TNA HIPOTÉTICA</small></div>
+                    <div class="sim-column-heading sim-column-saved"><strong id="simSavingHead">SIN INVERTIR</strong><small id="simSavingRate">0% INTERÉS</small></div>
+                </div>
                 <div class="sim-comparison-row">
                     <span class="sim-comparison-period" id="tMet10">A 10 AÑOS</span>
                     <strong id="tenOut" class="sim-invested pixel">—</strong>
@@ -944,7 +962,6 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
                 <p class="sim-comparison-footnote" id="simCompareNote">Sin invertir: suma de aportes, sin rendimiento. Invirtiendo: escenario ilustrativo con capitalización mensual. Valores nominales; no contemplan inflación, impuestos ni costos.</p>
             </div>
         </div>
-        <p class="small-note" id="tCapNote">50/30/20 ES UNA REFERENCIA, NO UNA REGLA. PROYECCIÓN CON APORTES AL FINAL DE CADA MES, TASA NOMINAL ANUAL HIPOTÉTICA DEL 5,5% Y CAPITALIZACIÓN MENSUAL. SIN INFLACIÓN, IMPUESTOS, COMISIONES NI VOLATILIDAD. NO GARANTIZA RESULTADOS.</p>
     </div>
 </section>
 
@@ -2009,8 +2026,10 @@ function updateSim(){
     $('simCompareIntro').textContent = currentLang==='en'
       ?'What changes if you invest those savings? Compare the same monthly contribution in two scenarios.'
       :'¿Qué cambia si invertís ese ahorro? Compará el mismo aporte mensual en dos escenarios.';
-    $('simInvestmentHead').textContent = currentLang==='en'?'INVESTED · HYPOTHETICAL 5.5% APR':'INVIRTIENDO · 5,5% TNA HIPOTÉTICA';
-    $('simSavingHead').textContent = currentLang==='en'?'NOT INVESTED · 0% INTEREST':'SIN INVERTIR · 0% INTERÉS';
+    $('simInvestmentHead').textContent = currentLang==='en'?'INVESTING':'INVIRTIENDO';
+    $('simInvestmentRate').textContent = currentLang==='en'?'HYPOTHETICAL 5.5% NOMINAL APR':'5,5% TNA HIPOTÉTICA';
+    $('simSavingHead').textContent = currentLang==='en'?'NOT INVESTING':'SIN INVERTIR';
+    $('simSavingRate').textContent = currentLang==='en'?'0% INTEREST':'0% INTERÉS';
     $('simCompareNote').textContent = currentLang==='en'
       ?'Not invested: total contributions with no returns. Invested: illustrative monthly compounding. Nominal values, excluding inflation, taxes and fees.'
       :'Sin invertir: suma de aportes, sin rendimiento. Invirtiendo: escenario ilustrativo con capitalización mensual. Valores nominales; no contemplan inflación, impuestos ni costos.';
