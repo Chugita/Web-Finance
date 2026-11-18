@@ -1,0 +1,38 @@
+{
+  "name": "web-finance",
+  "main": "./gax-contact-worker.js",
+  "compatibility_date": "2026-11-18",
+  "assets": {
+    "directory": "./",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*"
+    ],
+    "not_found_handling": "404-page"
+  },
+  "previews": {},
+  "analytics_engine_datasets": [
+    {
+      "binding": "GAX_EVENTS",
+      "dataset": "gax_site_events"
+    }
+  ],
+  "ratelimits": [
+    {
+      "name": "CONTACT_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 5,
+        "period": 60
+      }
+    },
+    {
+      "name": "EVENT_RATE_LIMITER",
+      "namespace_id": "1002",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    }
+  ]
+}
