@@ -4,8 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#080a09">
-<meta name="description" content="GAX. Explorá tu punto de partida financiero, visualizá escenarios y conocé cómo planificar tu futuro.">
-<title id="pageTitle">GAX — El futuro se diseña</title>
+<meta name="description" content="Explorá tu situación financiera, calculá tu capacidad de ahorro y proyectá tus objetivos con GAX. Una experiencia interactiva para planificar tu futuro.">
+<link rel="canonical" href="https://gaxsuite.com/">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_AR">
+<meta property="og:site_name" content="GAX">
+<meta property="og:title" content="GAX | Explorá y planificá tu futuro financiero">
+<meta property="og:description" content="Descubrí tu punto de partida, simulá escenarios y transformá tus objetivos en un plan.">
+<meta property="og:url" content="https://gaxsuite.com/">
+<meta property="og:image" content="https://gaxsuite.com/gax-flor.png">
+<meta property="og:image:alt" content="GAX — Experiencia de planificación financiera">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GAX | Explorá y planificá tu futuro financiero">
+<meta name="twitter:description" content="Explorá tu punto de partida financiero y proyectá tus próximos pasos.">
+<meta name="twitter:image" content="https://gaxsuite.com/gax-flor.png">
+<title id="pageTitle">GAX | Explorá y planificá tu futuro financiero</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&family=Geist+Pixel&display=swap" rel="stylesheet">
@@ -851,7 +865,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
     </div>
     <div class="nav-actions">
         <button class="lang" id="langBtn" type="button">ES / EN</button>
-        <button class="btn" type="button" data-open-modal id="navBtnMeeting">AGENDAR REUNIÓN ↗</button>
+        <button class="btn" type="button" data-open-modal id="navBtnMeeting">SOLICITAR CONVERSACIÓN ↗</button>
     </div>
 
 </header>
@@ -1178,7 +1192,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
         <div class="section-label"><span class="micro" id="tCloseMicro1">07 / TU PRÓXIMO PASO</span><span class="micro muted" id="tCloseMicro2">GAX / CONTACTO</span></div>
         <h2 id="tCloseTitle">YA CONOCÉS TU<br>PUNTO DE PARTIDA.<br><span class="accent">AHORA, DISEÑEMOS<br>LO QUE SIGUE.</span></h2>
         <p id="tCloseDesc">Una conversación para profundizar en tus objetivos, evaluar tu situación y explorar los próximos pasos que tengan sentido para vos.</p>
-        <button type="button" class="btn" data-open-modal id="tCloseBtn">SOLICITAR UNA REUNIÓN ↗</button>
+        <button type="button" class="btn" data-open-modal id="tCloseBtn">SOLICITAR UNA CONVERSACIÓN ↗</button>
         <p class="small-note" id="tCloseNote">SIN COMPROMISO DE CONTRATACIÓN · EL DIAGNÓSTICO WEB ES ORIENTATIVO</p>
     </div>
 </section>
@@ -1195,7 +1209,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
     <div class="modal-box">
         <button class="modal-close" type="button" id="closeModal" aria-label="Cerrar">×</button>
         <span class="micro" id="tModalMicro">GAX / CONTACTO</span>
-        <h2 id="modalTitle">Solicitar una reunión</h2>
+        <h2 id="modalTitle">Solicitar una conversación</h2>
         <p id="tModalDesc" style="color:var(--muted);margin-bottom:24px;font-family:var(--mono)">Dejanos tus datos para solicitar una conversación. Si hiciste el diagnóstico o usaste los simuladores, podés compartir un resumen para preparar la reunión.</p>
         <form id="contactForm">
             <label class="field"><span id="tField1">NOMBRE Y APELLIDO</span><input name="name" autocomplete="name" maxlength="120" required></label>
@@ -1207,7 +1221,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
             </div>
             <label class="gax-consent-label gax-contact-consent"><input type="checkbox" id="contactConsent" required><span id="contactConsentText">Autorizo a que me contacten por los datos que proporcioné para responder a esta consulta.</span></label>
             <label class="gax-honeypot" aria-hidden="true">Sitio web <input type="text" name="website" autocomplete="off" tabindex="-1"></label>
-            <button class="btn" type="submit" id="tModalBtn" style="width:100%;margin-top:10px;">SOLICITAR REUNIÓN ↗</button>
+            <button class="btn" type="submit" id="tModalBtn" style="width:100%;margin-top:10px;">SOLICITAR CONVERSACIÓN ↗</button>
             <p id="formFeedback" class="small-note" role="status" style="margin-top:15px;text-align:center;">Una solicitud no confirma fecha ni horario.</p>
         </form>
     </div>
@@ -1418,7 +1432,7 @@ document.addEventListener('keydown', e => { if(e.key === 'Escape' && $('methodMo
 let currentLang = 'es';
 const dict = {
     es: {        pageTitle: "GAX — El futuro se diseña",
-        navMeeting: "AGENDAR REUNIÓN ↗",
+        navMeeting: "SOLICITAR CONVERSACIÓN ↗",
         tHeroMicro: "GAX / PLANIFICACIÓN FINANCIERA",
         tHeroTitle: "<span>EL FUTURO</span><span>NO SE ESPERA.</span><span class=\"accent\">SE DISEÑA.</span>",
         tHeroDesc: "Transformá lo que construís hoy en el patrimonio y la tranquilidad que querés para mañana.",
@@ -1488,20 +1502,20 @@ const dict = {
         tCloseMicro2: "GAX / CONTACTO",
         tCloseTitle: "YA CONOCÉS TU<br>PUNTO DE PARTIDA.<br><span class=\"accent\">AHORA, DISEÑEMOS<br>LO QUE SIGUE.</span>",
         tCloseDesc: "Una conversación para profundizar en tus objetivos, evaluar tu situación y explorar los próximos pasos que tengan sentido para vos.",
-        tCloseBtn: "SOLICITAR UNA REUNIÓN ↗",
+        tCloseBtn: "SOLICITAR UNA CONVERSACIÓN ↗",
         tCloseNote: "SIN COMPROMISO DE CONTRATACIÓN · EL DIAGNÓSTICO WEB ES ORIENTATIVO",
         tFooterText: "PLANIFICACIÓN FINANCIERA / DISEÑÁ TU FUTURO",
         tModalMicro: "GAX / CONTACTO",
-        tModalTitle: "Solicitar una reunión",
+        tModalTitle: "Solicitar una conversación",
         tModalDesc: "Dejanos tus datos para solicitar una conversación. Si hiciste el diagnóstico o usaste los simuladores, podés compartir un resumen para preparar la reunión.",
         tField1: "NOMBRE Y APELLIDO",
         tField2: "CORREO ELECTRÓNICO",
         tField3: "TELÉFONO / WHATSAPP",
-        tModalBtn: "SOLICITAR REUNIÓN ↗"
+        tModalBtn: "SOLICITAR CONVERSACIÓN ↗"
     },
     en: {
         pageTitle: "GAX — The Future is Designed",
-        navMeeting: "BOOK A MEETING ↗",
+        navMeeting: "REQUEST A CONVERSATION ↗",
         tHeroMicro: "GAX / FINANCIAL PLANNING",
         tHeroTitle: "<span>THE FUTURE</span><span>IS NOT WAITED FOR.</span><span class=\"accent\">IT IS DESIGNED.</span>",
         tHeroDesc: "Transform what you build today into the wealth and peace of mind you want for tomorrow.",
@@ -1571,11 +1585,11 @@ const dict = {
         tCloseMicro2: "GAX / CONTACT",
         tCloseTitle: "NOW YOU KNOW YOUR<br>STARTING POINT.<br><span class=\"accent\">NOW, LET'S DESIGN<br>WHAT'S NEXT.</span>",
         tCloseDesc: "A conversation to dive deeper into your goals, assess your situation, and explore the next steps that make sense for you.",
-        tCloseBtn: "REQUEST A MEETING ↗",
+        tCloseBtn: "REQUEST A CONVERSATION ↗",
         tCloseNote: "NO OBLIGATION TO HIRE · WEB SELF-ASSESSMENT IS INDICATIVE",
         tFooterText: "FINANCIAL PLANNING / DESIGN YOUR FUTURE",
         tModalMicro: "GAX / CONTACT",
-        tModalTitle: "Request a meeting",
+        tModalTitle: "Request a conversation",
         tModalDesc: "Leave your contact details to request a conversation. If you completed the diagnostic or simulations, you may opt to share a summary to prepare the meeting.",
         tField1: "FULL NAME",
         tField2: "EMAIL ADDRESS",
@@ -1798,8 +1812,8 @@ function setGaxLanguage(next){
     if(methodCTA)methodCTA.textContent=captions.m2;
     const formFeedback=$('formFeedback');
     if(formFeedback&&formFeedback.dataset.emailOpened!=='true')formFeedback.textContent=next==='es'?'La solicitud no confirma fecha ni horario.':'A request does not confirm a date or time.';
-    $('mobileMeetingButton').setAttribute('aria-label',next==='es'?'Solicitar reunión con GAX':'Request a meeting with GAX');
-    $('mobileMeetingButton').setAttribute('title',next==='es'?'Solicitar reunión':'Request a meeting');
+    $('mobileMeetingButton').setAttribute('aria-label',next==='es'?'Solicitar reunión con GAX':'Request a conversation with GAX');
+    $('mobileMeetingButton').setAttribute('title',next==='es'?'Solicitar reunión':'Request a conversation');
     $('shareSummaryText').textContent=next==='es'
       ?'También quiero compartir mis respuestas y proyecciones financieras para preparar la reunión.'
       :'I also want to share my questionnaire answers and financial projections to prepare the meeting.';
