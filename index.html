@@ -2286,6 +2286,13 @@ function gaxSyncLeadSummary(){
 }
 function openModal(){
  modalFocus=document.activeElement;
+ // Clear a previous result or fallback link, but preserve an in-flight request.
+ if(!$('tModalBtn').disabled){
+  $('formFeedback').textContent=currentLang==='en'
+   ?'A request does not confirm a date or time.'
+   :'Una solicitud no confirma fecha ni horario.';
+  delete $('formFeedback').dataset.emailOpened;
+ }
  gaxSyncLeadSummary();
  $('modal').classList.add('open');
  $('modal').setAttribute('aria-hidden','false');
