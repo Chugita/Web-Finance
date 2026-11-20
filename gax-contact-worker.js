@@ -81,7 +81,8 @@ async function postGaxEvent(request,env){
   const quota=await env.EVENT_RATE_LIMITER.limit({key:address});
   if(!quota.success)return json({ok:false},429);
  }catch{return json({ok:false},503);}
- recordGaxEvent(env,payload.event,typeof payload.label==='string'?payload.label:'');
+ const written=recordGaxEvent(env,payload.event,typeof payload.label==='string'?payload.label:'');
+ if(!written)return json({ok:false,error:'Analytics temporarily unavailable'},503);
  return json({ok:true});
 }
 
