@@ -6,3 +6,9 @@
 **/node_modules/**
 **/.DS_Store
 license.txt
+# Server-side application code, deployment configuration and secrets must never be static assets
+gax-contact-worker.js
+wrangler.jsonc
+wrangler.toml
+.env
+.env.*
