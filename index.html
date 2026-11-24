@@ -24,8 +24,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&family=Geist+Pixel&display=swap" rel="stylesheet">
 <!-- THREE.JS PARA ANIMACIÓN 3D PROFESIONAL -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <style>
 :root{--bg:#080a09;--fg:#f2f4f1;--muted:#9eaaa0;--line:#222c23;--green:#70bd8c;--soft:rgba(17,27,20,0.65);--mono:'Geist Mono',monospace;--pixel:'Geist Pixel',monospace}
 *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:82px}
@@ -151,7 +151,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;grid-template
 .control{margin-bottom:35px}
 .control-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:13px;font:400 12px var(--pixel)}
 .control-head output{font-weight:600}
-.control input[type=range]{width:100%;accent-color:var(--green);cursor:pointer}
+.control input[type=range]{width:100%;margin:0;accent-color:var(--green);cursor:pointer}
 .ratio{height:10px;display:flex;gap:2px;margin:20px 0 9px}
 .ratio span{display:block}
 .legend{display:flex;flex-wrap:wrap;gap:17px;color:var(--muted);font:400 10px var(--pixel)}
@@ -823,6 +823,40 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
  #capacidad .sim-growth #simGrowthLabel{grid-column:1 / 3}
  #capacidad .sim-growth #simGrowthValue{grid-column:3;text-align:center;font-size:clamp(11px,3.1vw,17px)}
 }
+
+/* Responsive audit: keep the approved visual style, with readable controls. */
+.section{padding:84px 0}.section-label{margin-bottom:32px}
+.hero .hero-content{z-index:7}
+.time-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;max-width:820px;margin-bottom:25px}
+.time-horizons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.control-head{flex-wrap:wrap;align-items:baseline}.control-head output{white-space:nowrap;max-width:100%}
+.fx-note{font:400 11px/1.6 var(--mono);overflow-wrap:anywhere}.curr-btn:disabled{opacity:.5;cursor:wait}
+.currency-scenario-note{font:400 12px/1.7 var(--mono);color:#b7c2b8;margin:0 0 24px;max-width:820px}
+.sim-comparison-row strong{font-size:clamp(12px,1.25vw,18px)}
+.delay-line,.delay-cost{flex-wrap:wrap;gap:8px}.delay-line strong,.delay-cost strong{overflow-wrap:anywhere}
+.goal-fields>div{min-width:0}.goal-config [aria-invalid=true]{border-color:#e69a8c}
+.goal-result{flex-wrap:wrap;gap:10px}.goal-result strong{overflow-wrap:anywhere}
+.contact-val{overflow-wrap:anywhere}.method-item:focus-visible{outline:2px solid var(--green);outline-offset:5px}
+.market-band{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:25px 0;background:rgba(8,14,10,.75)}
+.market-band-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.market-band h2{font:400 15px/1.5 var(--pixel)}.market-band p,.market-band summary,.market-band li,.market-source{font:400 11px/1.7 var(--mono);color:var(--muted)}
+.market-band .tradingview-widget-container{min-height:78px;max-width:100%}.market-band .tradingview-widget-copyright{font:400 11px/1.6 var(--mono);padding-top:5px}.market-band a{text-decoration:underline;text-underline-offset:3px}
+.market-band details{margin-top:12px}.market-band summary{cursor:pointer;color:var(--green)}.market-band ul{margin:12px 0 0;padding-left:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 24px}.market-band li{overflow-wrap:anywhere}
+@media(max-width:650px){
+ .section{padding:58px 0}.section-label{margin-bottom:24px;gap:12px}.section-label .micro{font-size:9px}
+ .time-controls{grid-template-columns:1fr;gap:24px}.time-horizons{gap:22px}
+ .control-head{font-size:12px}.control{margin-bottom:27px}
+ .sim-comparison-head,.sim-comparison-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px}
+ .sim-comparison-head>span{display:none}.sim-comparison-period{grid-column:1/-1;text-align:left;font-size:10px}
+ .sim-comparison-row strong{font-size:clamp(11px,3.5vw,16px)}
+ #capacidad .sim-growth{grid-template-columns:1fr;gap:8px}#capacidad .sim-growth #simGrowthLabel,#capacidad .sim-growth #simGrowthValue{grid-column:1;text-align:left}
+ #capacidad .sim-growth #simGrowthValue{font-size:16px}
+ .market-band{padding:20px 0}.market-band ul{grid-template-columns:1fr}
+ .small-note{font-family:var(--mono);font-size:11px;line-height:1.7}
+ .footer{font-family:var(--mono);font-size:10px;line-height:1.7}
+}
+@media(max-width:360px){.wrap{padding-left:18px;padding-right:18px}.big{font-size:27px}.hero h1{font-size:27px}.nav-actions{gap:5px}}
+
 </style>
 </head>
 <body>
@@ -844,7 +878,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
   }
   window.GAXLoading={done:done};
   // Never block the site indefinitely on a missing 3D file or an API outage.
-  window.setTimeout(done,8500);
+  window.setTimeout(done,3500);
   window.addEventListener('error',function(event){
     if(event && event.target && event.target.tagName==='SCRIPT')done();
   },true);
@@ -873,7 +907,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
 <main>
 <section class="hero flower-fallback" id="inicio">
     <canvas id="heroCanvas" aria-hidden="true"></canvas>
-    <img class="gax-flower" src="gax-flor.png" alt="" aria-hidden="true"
+    <img class="gax-flower" src="gax-flor.webp" alt="" aria-hidden="true"
          decoding="async" fetchpriority="high"
          onload="this.closest('.hero').classList.remove('flower-fallback')"
          onerror="this.hidden=true">
@@ -885,6 +919,18 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
     </div>
     <a class="scroll-cue" href="#diagnostico" id="tScrollCue">↓ EXPLORAR</a>
 </section>
+
+
+<aside class="market-band" id="mercados" aria-labelledby="marketHeading">
+ <div class="wrap">
+  <div class="market-band-head"><h2 id="marketHeading">Principales mercados</h2><p id="marketDataNote">Referencias CFD de índices y oro. Datos con posible demora.</p></div>
+  <div class="tradingview-widget-container" id="gaxIndexWidget">
+   <div class="tradingview-widget-container__widget"></div>
+   <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/markets/indices/" target="_blank" rel="noopener noreferrer"><span id="marketSourceLink">Mercados por TradingView</span></a></div>
+  </div>
+  <details><summary id="marketDetailsLabel">Cotizaciones, fuentes y horarios</summary><ul id="marketQuoteDetails"></ul><p><a href="https://www.tradingview.com/symbols/SP-IMV/" target="_blank" rel="noopener noreferrer">S&amp;P Merval (Argentina)</a></p><p id="marketDetailsNote">El horario de cada dato corresponde al proveedor. La fecha de consulta no garantiza una cotización en tiempo real.</p></details>
+ </div>
+</aside>
 
 <section class="section" id="diagnostico">
     <div class="wrap">
@@ -932,10 +978,11 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
         <div class="currency-toggle-bar">
             <span class="pixel" style="color:var(--muted); font-size:11px;">MONEDA:</span>
             <button class="curr-btn active" id="btnCurrUSD" type="button">USD (Dólar)</button>
-            <button class="curr-btn" id="btnCurrARS" type="button">ARS (Pesos)</button>
-            <span class="fx-note" id="fxRateDisplay">Tipo de cambio oficial ref: $1,570 ARS</span>
+            <button class="curr-btn" id="btnCurrARS" type="button" disabled>ARS (Pesos)</button>
+            <span class="fx-note" id="fxRateDisplay">Esperando una cotización verificada para habilitar ARS.</span>
         </div>
 
+        <p class="currency-scenario-note" id="currencyScenarioCapacity" hidden></p>
         <div class="sim">
             <div>
                 <div class="control">
@@ -995,12 +1042,12 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
         <p class="section-lead" id="tTimeLead">Elegí cuánto podés aportar por mes y compará cuánto podrías tener en distintos plazos.</p>
         <p class="personal-intro" id="timePersonalIntro" hidden></p>
         
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:820px; margin-bottom:25px;">
+        <div class="time-controls">
             <div class="control" style="margin-bottom:0;">
                 <div class="control-head"><label for="compareMonthly" id="tLabelAporte">Aporte mensual</label><output id="compareOut" class="pixel">USD 300</output></div>
                 <input type="range" min="50" max="1500" value="300" step="50" id="compareMonthly">
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="time-horizons">
                 <div class="control" style="margin-bottom:0;">
                     <div class="control-head"><label for="yearsA">Plazo A (Años)</label><output id="yearsAOut" class="pixel">10 años</output></div>
                     <input type="range" min="1" max="30" value="10" step="1" id="yearsA">
@@ -1012,6 +1059,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
             </div>
         </div>
 
+        <p class="currency-scenario-note" id="currencyScenarioNote" hidden></p>
         <div class="chart">
             <div class="bar-row">
                 <span id="tBarNowLabel">PLAZO A<br><span class="muted pixel" id="tBarNowSub">10 años</span></span>
@@ -1092,7 +1140,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
         <p class="section-lead" id="tMethodLead">Una buena planificación no empieza por elegir un producto. Empieza por conocerte mejor, ordenar tus finanzas personales y diseñar tu tranquilidad a lo largo de la vida.</p>
         
         <div class="method-list">
-            <div class="method-item" data-method-modal="organizar">
+            <div class="method-item" role="button" tabindex="0" aria-haspopup="dialog" data-method-modal="organizar">
                 <span class="micro">01</span>
                 <div>
                     <h3 id="tM1Title">ORGANIZAR</h3>
@@ -1100,7 +1148,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
                 </div>
                 <div class="method-action-btn">↗</div>
             </div>
-            <div class="method-item" data-method-modal="proteger">
+            <div class="method-item" role="button" tabindex="0" aria-haspopup="dialog" data-method-modal="proteger">
                 <span class="micro">02</span>
                 <div>
                     <h3 id="tM2Title">PROTEGER</h3>
@@ -1108,7 +1156,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
                 </div>
                 <div class="method-action-btn">↗</div>
             </div>
-            <div class="method-item" data-method-modal="proyectar">
+            <div class="method-item" role="button" tabindex="0" aria-haspopup="dialog" data-method-modal="proyectar">
                 <span class="micro">03</span>
                 <div>
                     <h3 id="tM3Title">PROYECTAR</h3>
@@ -1125,8 +1173,8 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
         <div class="section-label"><span class="micro" id="tAdvMicro1">06 / ASESORAMIENTO PERSONAL</span><span class="micro muted" id="tAdvMicro2">CONOCÉ A TU ASESOR</span></div>
         <div class="advisor-grid">
             <div class="matrix-portrait" id="matrixPortrait" tabindex="0" role="img" aria-label="Retrato interactivo">
-                <img src="juan-patt.jpg" class="portrait-real" alt="Retrato profesional Juan Martín Patt Llano" draggable="false">
-                <img src="juan-patt-verde.jpg" class="portrait-matrix" alt="Retrato estilo matriz Juan Martín Patt Llano" draggable="false">
+                <img src="juan-patt.webp" loading="lazy" decoding="async" class="portrait-real" alt="Retrato profesional Juan Martín Patt Llano" draggable="false">
+                <img src="juan-patt-verde.webp" loading="lazy" decoding="async" class="portrait-matrix" alt="Retrato estilo matriz Juan Martín Patt Llano" draggable="false">
                 <div class="portrait-glow"></div>
                 <span class="portrait-label">GAX / IDENTITY SCAN</span>
             </div>
@@ -1214,7 +1262,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
         <form id="contactForm">
             <label class="field"><span id="tField1">NOMBRE Y APELLIDO</span><input name="name" autocomplete="name" minlength="2" maxlength="120" required></label>
             <label class="field"><span id="tField2">CORREO ELECTRÓNICO</span><input type="email" name="email" autocomplete="email" maxlength="200" required></label>
-            <label class="field"><span id="tField3">TELÉFONO / WHATSAPP</span><input type="tel" name="phone" autocomplete="tel" minlength="7" maxlength="40" required></label>
+            <label class="field"><span id="tField3">TELÉFONO / WHATSAPP</span><input type="tel" name="phone" autocomplete="tel" minlength="7" maxlength="40" pattern="(?:[^0-9]*[0-9]){7,}[^0-9]*" title="Ingresá al menos 7 dígitos" required></label>
             <div class="gax-lead-consent">
                 <label class="gax-consent-label"><input type="checkbox" id="shareFinancialSummary" name="shareSummary"><span id="shareSummaryText">También quiero compartir mis respuestas y proyecciones financieras para preparar la reunión.</span></label>
                 <details id="leadSummaryDetails"><summary id="leadSummaryToggle">Ver qué información se incluiría</summary><div id="leadSummaryPreview" class="gax-lead-preview">—</div></details>
@@ -1239,7 +1287,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
         </div>
         <div style="margin-top:30px; display:flex; gap:12px; justify-content:flex-end;">
             <button class="btn btn-outline" type="button" id="closeMethodBtn">CERRAR VENTANA</button>
-            <button class="btn" type="button" data-open-modal onclick="closeMethodDetails(); openModal();">CONSULTAR SOBRE LA ESTRATEGIA INTEGRAL ↗</button>
+            <button class="btn" type="button" data-open-modal onclick="closeMethodDetails();">CONSULTAR SOBRE LA ESTRATEGIA INTEGRAL ↗</button>
         </div>
     </div>
 </div>
@@ -1249,11 +1297,12 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
 const $=id=>document.getElementById(id);
 const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let currentCurrency = 'USD';
-let currentOfficialRate = 1570;
+let currentOfficialRate = null;
+let currentOfficialRateDate = null;
 
 const formatMoney=(n)=>{
     if(currentCurrency === 'ARS') {
-        return '$ ' + Math.round(n).toLocaleString('es-AR');
+        return 'ARS ' + Math.round(n).toLocaleString('es-AR');
     }
     return 'USD ' + Math.round(n).toLocaleString('en-US');
 };
@@ -1284,6 +1333,7 @@ if(!reduced&&window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
  let lastTrail=0;
  document.addEventListener('pointermove',e=>{
    if(e.pointerType&&e.pointerType!=='mouse')return;
+   if(!(e.target instanceof Element)||!e.target.closest('#inicio'))return;
    if(e.timeStamp-lastTrail<40)return;
    if(e.target instanceof Element&&e.target.closest('button,a,input,select,textarea,label,.answer,.goal-config,.control,.bar-row,[role=button]'))return;
    if(portraitEl){
@@ -1372,6 +1422,7 @@ const methodDetailsEN = {
     }
 };
 let activeMethodKey=null;
+let methodFocus=null;
 
 function renderMethodDetails(key){
     const data=(typeof currentLang!=='undefined'&&currentLang==='en'?methodDetailsEN:methodDetailsData)[key];
@@ -1399,6 +1450,7 @@ function renderMethodDetails(key){
 }
 
 function openMethodDetails(key) {
+    methodFocus=document.activeElement;
     activeMethodKey=key;
     const data = methodDetailsData[key];
     if(!data) return;
@@ -1408,15 +1460,18 @@ function openMethodDetails(key) {
     $('methodModal').classList.add('open');
     $('methodModal').setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
+    $('closeMethodModal').focus();
 }
 
 function closeMethodDetails() {
     $('methodModal').classList.remove('open');
     $('methodModal').setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
+    methodFocus?.focus();
 }
 
 document.querySelectorAll('.method-item').forEach(item => {
+    item.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();item.click();}});
     item.addEventListener('click', () => {
         const key = item.getAttribute('data-method-modal');
         openMethodDetails(key);
@@ -1781,8 +1836,8 @@ function setGaxLanguage(next){
     $('langBtn').textContent=next==='es'?'ES / EN':'EN / ES';
     $('langBtn').setAttribute('aria-label',next==='es'?'Switch to English':'Cambiar a español');
     $('langBtn').setAttribute('aria-pressed',String(next==='en'));
-    const qVisible=!$('resultPanel').hidden;
-    if(qVisible)renderQuestion();
+    const questionVisible=!$('questionPanel').hidden;
+    if(questionVisible)renderQuestion();
     else renderResult();
     updateSim();
     updateTime();
@@ -1822,11 +1877,34 @@ function setGaxLanguage(next){
       ?'Autorizo a que me contacten por los datos que proporcioné para responder a esta consulta.'
       :'I agree to be contacted using the details I provided about this request.';
     if($('methodModal')?.classList.contains('open') && activeMethodKey) renderMethodDetails(activeMethodKey);
+    gaxSyncCurrencyNote();
+    gaxSyncMarketLabels();
 }
 $('langBtn').addEventListener('click',()=>{
     setGaxLanguage(currentLang==='es'?'en':'es');
 });
 setGaxLanguage('es');
+
+
+function gaxSyncMarketLabels(){
+ const en=currentLang==='en';
+ $('marketHeading').textContent=en?'Major markets':'Principales mercados';
+ $('marketDataNote').textContent=en?'Index CFD and gold references. Data may be delayed.':'Referencias CFD de índices y oro. Datos con posible demora.';
+ $('marketSourceLink').textContent=en?'Markets by TradingView':'Mercados por TradingView';
+ $('marketDetailsLabel').textContent=en?'Quotes, sources and timestamps':'Cotizaciones, fuentes y horarios';
+ $('marketDetailsNote').textContent=en?'Each timestamp comes from its provider. A request date does not guarantee real-time quotes.':'El horario de cada dato corresponde al proveedor. La fecha de consulta no garantiza una cotización en tiempo real.';
+ $('contactForm').querySelector('[name=phone]').title=en?'Enter at least 7 digits':'Ingresá al menos 7 dígitos';
+}
+function gaxLoadIndexWidget(){
+ const box=$('gaxIndexWidget');if(box.dataset.loaded)return;box.dataset.loaded='true';
+ const script=document.createElement('script');script.src='https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js';script.async=true;
+ script.textContent=JSON.stringify({symbols:[{proName:'FOREXCOM:SPXUSD',title:'S&P 500 · CFD'},{proName:'FOREXCOM:NSXUSD',title:'Nasdaq 100 · CFD'},{proName:'FOREXCOM:DJI',title:'Dow Jones · CFD'},{proName:'TVC:GOLD',title:'Oro · USD'}],showSymbolLogo:false,isTransparent:true,displayMode:'adaptive',colorTheme:'dark',locale:'es'});
+ box.append(script);
+}
+window.addEventListener('DOMContentLoaded',()=>{
+ if('IntersectionObserver' in window){const watch=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){gaxLoadIndexWidget();watch.disconnect();}},{rootMargin:'400px'});watch.observe($('gaxIndexWidget'));}
+ else gaxLoadIndexWidget();
+},{once:true});
 
 /* CLOCK */
 function clock(){ $('liveTimeDisplay').textContent='BUE '+new Date().toLocaleTimeString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour12:false})+' HS' }clock();setInterval(clock,1000);
@@ -1912,6 +1990,12 @@ function gaxPaintMarketTicker(){
       movement.hidden=true;movement.textContent='';
     }
   }
+  const list=$('marketQuoteDetails');
+  if(list){list.replaceChildren();for(const [key,name] of gaxMarketSpecs){
+    const e=gaxMarketLast.get(key),li=document.createElement('li');
+    li.textContent=name+': '+(e?e.price+' · '+gaxMarketDate(e.date)+' · '+e.source:(currentLang==='en'?'Unavailable':'No disponible'));
+    list.append(li);
+  }}
 }
 async function loadMarketTicker(){
   if(gaxMarketFetchInProgress)return;
@@ -1921,7 +2005,7 @@ async function loadMarketTicker(){
       gaxMarketRequest('https://dolarapi.com/v1/dolares'),
       gaxMarketRequest('https://monedapi.ar/api/v2/usd'),
       gaxMarketRequest('https://monedapi.ar/api/v2/arg/riesgo'),
-      gaxMarketRequest('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true')
+      gaxMarketRequest('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true')
     ]);
     const primary=results[0].status==='fulfilled'&&Array.isArray(results[0].value)?results[0].value:[];
     const backup=results[1].status==='fulfilled'&&Array.isArray(results[1].value)?results[1].value:[];
@@ -1939,8 +2023,8 @@ async function loadMarketTicker(){
         });
         if(code==='oficial'){
           currentOfficialRate=rate;
-          const note=document.getElementById('fxRateDisplay');
-          if(note)note.textContent='Dólar oficial (venta): '+gaxArs(rate)+' ARS · última cotización disponible';
+          currentOfficialRateDate=a?.fechaActualizacion||b?.updatedAt||b?.lastScrapedAt||null;
+          gaxSyncCurrencyNote();
           updateSim();
           updateTime();
         }
@@ -1961,7 +2045,7 @@ async function loadMarketTicker(){
         if(Number.isFinite(n)&&n>0)gaxMarketLast.set('crypto:'+coin,{
           price:gaxUsd(n),
           change:ch!==null&&ch!==undefined&&Number.isFinite(Number(ch))?Number(ch):null,
-          date:new Date().toISOString(),source:'CoinGecko'
+          date:Number(q?.last_updated_at)>0?new Date(Number(q.last_updated_at)*1000).toISOString():null,source:'CoinGecko'
         });
       }
     }
@@ -1974,39 +2058,44 @@ async function loadMarketTicker(){
 gaxInitMarketTicker();
 loadMarketTicker();
 setInterval(loadMarketTicker,180000);
-/* CAMBIO DE MONEDA */
-$('btnCurrUSD').addEventListener('click', () => {
-    if(currentCurrency === 'USD') return;
-    currentCurrency = 'USD';
-    $('btnCurrUSD').classList.add('active');
-    $('btnCurrARS').classList.remove('active');
-    const incomeInput = $('income');
-    incomeInput.min = 500;
-    incomeInput.max = 15000;
-    incomeInput.step = 100;
-    incomeInput.value = 3000;
-    updateSim();
-    updateTime();
-});
-
-$('btnCurrARS').addEventListener('click', () => {
-    if(currentCurrency === 'ARS') return;
-    currentCurrency = 'ARS';
-    $('btnCurrARS').classList.add('active');
-    $('btnCurrUSD').classList.remove('active');
-    const incomeInput = $('income');
-    incomeInput.min = 500000;
-    incomeInput.max = 15000000;
-    incomeInput.step = 50000;
-    incomeInput.value = 4500000;
-    updateSim();
-    updateTime();
-});
+/* Currency changes preserve the selected amounts at the verified reference rate. */
+function gaxSyncCurrencyNote(){
+ const en=currentLang==='en',ready=Number.isFinite(currentOfficialRate)&&currentOfficialRate>0;
+ $('btnCurrARS').disabled=!ready;
+ $('fxRateDisplay').textContent=ready
+  ?(en?'Official USD/ARS (sell): ':'USD/ARS oficial (venta): ')+currentOfficialRate.toLocaleString(en?'en-US':'es-AR',{maximumFractionDigits:2})+' ARS · '+gaxMarketDate(currentOfficialRateDate)
+  :(en?'ARS is available after a verified exchange rate loads.':'ARS se habilita al recibir una cotización verificada.');
+ $('currencyScenarioNote').hidden=currentCurrency!=='ARS';
+ $('currencyScenarioCapacity').hidden=currentCurrency!=='ARS';
+ $('currencyScenarioNote').textContent=en
+  ?'Amounts in ARS express the hypothetical USD scenario at a fixed reference exchange rate. This is not a forecast of the peso, inflation or future exchange rates.'
+  :'Los importes en ARS expresan el escenario hipotético en USD a un tipo de cambio de referencia fijo. No pronostican el peso, la inflación ni el tipo de cambio futuro.';
+ $('currencyScenarioCapacity').textContent=$('currencyScenarioNote').textContent;
+}
+function gaxSetCurrency(next){
+ if(next===currentCurrency)return;
+ if(!Number.isFinite(currentOfficialRate)||currentOfficialRate<=0)return;
+ const before=currentCurrency==='ARS'?currentOfficialRate:1;
+ const after=next==='ARS'?currentOfficialRate:1;
+ for(const [id,min,max,step] of [['income',500,15000,100],['compareMonthly',50,1500,50]]){
+  const input=$(id),usd=Number(input.value)/before;
+  input.min=String(min*after);input.max=String(max*after);input.step=String(step*after);
+  input.value=String(Math.max(min,Math.min(max,Math.round(usd/step)*step))*after);
+ }
+ currentCurrency=next;
+ $('btnCurrUSD').classList.toggle('active',next==='USD');
+ $('btnCurrARS').classList.toggle('active',next==='ARS');
+ $('btnCurrUSD').setAttribute('aria-pressed',String(next==='USD'));
+ $('btnCurrARS').setAttribute('aria-pressed',String(next==='ARS'));
+ gaxSyncCurrencyNote();updateSim();updateTime();
+}
+$('btnCurrUSD').addEventListener('click',()=>gaxSetCurrency('USD'));
+$('btnCurrARS').addEventListener('click',()=>gaxSetCurrency('ARS'));
 
 /* SIMULADOR */
 function updateSim(){
     let rawIncome = +$('income').value;
-    let incomeInUSD = currentCurrency === 'ARS' ? rawIncome / currentOfficialRate : rawIncome;
+    let incomeInUSD = rawIncome;
 
     const f = +$('fixed').value;
     const v = +$('variable').value;
@@ -2029,7 +2118,7 @@ function updateSim(){
     $('variableLegend').textContent = d.tVarLeg + ' ' + v + '%';
     $('savingLegend').textContent = d.tSaveLeg + ' ' + pct + '%';
 
-    const saveRaw = currentCurrency === 'ARS' ? saveUSD * currentOfficialRate : saveUSD;
+    const saveRaw = saveUSD;
     $('savingsOut').textContent = formatMoney(saveRaw) + ' (' + pct + '%)';
 
     const tenUSD = future(saveUSD, 120);
@@ -2037,7 +2126,7 @@ function updateSim(){
 
     const savedTenUSD = saveUSD * 120;
     const savedTwentyUSD = saveUSD * 240;
-    const currencyMultiplier = currentCurrency === 'ARS' ? currentOfficialRate : 1;
+    const currencyMultiplier = 1;
     $('tenOut').textContent = formatMoney(tenUSD * currencyMultiplier);
     $('twentyOut').textContent = formatMoney(twentyUSD * currencyMultiplier);
     $('tenNoInvestOut').textContent = formatMoney(savedTenUSD * currencyMultiplier);
@@ -2061,21 +2150,21 @@ function updateSim(){
 
 function updateTime(){
     const amountRaw = +$('compareMonthly').value;
-    const amountUSD = currentCurrency === 'ARS' ? amountRaw / currentOfficialRate : amountRaw;
+    const amountUSD = amountRaw;
     
     const yearsA = +$('yearsA').value;
     const yearsB = +$('yearsB').value;
 
-    $('yearsAOut').textContent = yearsA + (yearsA === 1 ? ' año' : ' años');
-    $('yearsBOut').textContent = yearsB + (yearsB === 1 ? ' año' : ' años');
-
-    $('tBarNowSub').textContent = yearsA + (yearsA === 1 ? ' año' : ' años');
-    $('tBarLaterSub').textContent = yearsB + (yearsB === 1 ? ' año' : ' años');
+    const yearLabel=y=>y+(currentLang==='en'?(y===1?' year':' years'):(y===1?' año':' años'));
+    $('yearsAOut').textContent=yearLabel(yearsA);
+    $('yearsBOut').textContent=yearLabel(yearsB);
+    $('tBarNowSub').textContent=yearLabel(yearsA);
+    $('tBarLaterSub').textContent=yearLabel(yearsB);
 
     const valA = future(amountUSD, yearsA * 12);
     const valB = future(amountUSD, yearsB * 12);
 
-    const mult = currentCurrency === 'ARS' ? currentOfficialRate : 1;
+    const mult = 1;
 
     $('compareOut').textContent = formatMoney(amountRaw);
     $('nowValue').textContent = formatMoney(valA * mult);
@@ -2138,7 +2227,7 @@ const gaxGoalStrings={
  es:{heading:'¿Qué querés lograr con tus ahorros?',eyebrow:'TUS OBJETIVOS · UNA PROYECCIÓN POSIBLE',lead:'Elegí uno o varios objetivos. Definí el capital que querés alcanzar y cuándo: GAX calcula el aporte mensual estimado que necesitarías para cada uno.',amount:'Capital objetivo (USD)',years:'Plazo (años)',initial:'Capital que ya tenés (USD)',monthly:'APORTE MENSUAL NECESARIO',total:'APORTE MENSUAL TOTAL ESTIMADO',hint:'Sumatoria de los aportes para alcanzar los objetivos seleccionados en sus respectivos plazos.',custom:'Nombre de tu objetivo',disclaimer:'CÁLCULO ILUSTRATIVO EN USD, CON TASA NOMINAL ANUAL HIPOTÉTICA DEL 5,5% Y CAPITALIZACIÓN MENSUAL. SIN IMPUESTOS, COMISIONES, INFLACIÓN NI VARIACIONES DE MERCADO. NO GARANTIZA RESULTADOS. NO SE ENVÍA INFORMACIÓN AUTOMÁTICAMENTE.'},
  en:{heading:'What do you want your savings to achieve?',eyebrow:'YOUR GOALS · A POSSIBLE PROJECTION',lead:'Select one or more goals. Set your target amount and when you want to reach it: GAX estimates how much you would need to contribute each month.',amount:'Target capital (USD)',years:'Time horizon (years)',initial:'Starting capital (USD)',monthly:'REQUIRED MONTHLY CONTRIBUTION',total:'TOTAL ESTIMATED MONTHLY CONTRIBUTION',hint:'Combined monthly contributions needed to pursue your selected goals on their respective timelines.',custom:'Name your goal',disclaimer:'ILLUSTRATIVE PROJECTION IN USD, ASSUMING A HYPOTHETICAL CONSTANT 5.5% NOMINAL ANNUAL RETURN WITH MONTHLY COMPOUNDING. EXCLUDES INFLATION, TAXES, FEES AND MARKET VOLATILITY. RETURNS ARE NOT GUARANTEED. NO INFORMATION IS AUTOMATICALLY SENT.'}
 };
-function gaxGoalCurrency(n){return 'USD '+Math.round(n).toLocaleString('en-US')}
+function gaxGoalCurrency(n){return 'USD '+Math.ceil(n).toLocaleString('en-US')}
 function gaxGoalContribution(entry){
  const months=Math.max(1,Math.min(600,Number(entry.years)*12));
  const goal=Math.max(0,Number(entry.amount)||0);
@@ -2163,6 +2252,7 @@ function gaxRenderGoalInputs(){
  const parent=$('goalConfigs');const lang=currentLang==='en'?'en':'es';const t=gaxGoalStrings[lang];
  parent.replaceChildren();
  for(const [key,entry] of gaxGoals){
+  entry.invalidFields=new Set();
   const card=document.createElement('article');card.className='goal-config';
   const heading=document.createElement('h4');heading.textContent=entry.name||(gaxGoalTemplates[key][lang]);
   card.append(heading);
@@ -2178,6 +2268,7 @@ function gaxRenderGoalInputs(){
   const years=gaxMakeGoalField(key,t.years,entry.years,1,1,50);
   const initial=gaxMakeGoalField(key,t.initial,entry.initial,100,0,100000000);
   grid.append(target.wrap,years.wrap,initial.wrap);
+  target.input.step='any';initial.input.step='any';
   const output=document.createElement('div');output.className='goal-result';
   const title=document.createElement('span');title.textContent=t.monthly;
   const total=document.createElement('strong');total.className='pixel';
@@ -2185,8 +2276,18 @@ function gaxRenderGoalInputs(){
   output.append(title,total);card.append(grid,output);parent.append(card);
   function update(field,node,lo,hi){
    const value=Number(node.value);
-   if(Number.isFinite(value))entry[field]=Math.max(lo,Math.min(hi,value));
+   entry.invalidFields ||= new Set();
+   const valid=node.value.trim()!==''&&Number.isFinite(value)&&value>=lo&&value<=hi&&(field!=='years'||Number.isInteger(value));
+   if(valid){entry[field]=value;entry.invalidFields.delete(field);}else entry.invalidFields.add(field);
+   node.setAttribute('aria-invalid',String(!valid));
    gaxUpdateGoalTotals();
+  }
+  for(const [field,node,lo,hi] of [['amount',target.input,0,100000000],['years',years.input,1,50],['initial',initial.input,0,100000000]]){
+   node.addEventListener('change',()=>{
+    let value=Number(node.value);if(node.value.trim()===''||!Number.isFinite(value))value=entry[field];
+    value=Math.max(lo,Math.min(hi,value));if(field==='years')value=Math.round(value);
+    node.value=String(value);update(field,node,lo,hi);
+   });
   }
   target.input.addEventListener('input',()=>update('amount',target.input,0,100000000));
   years.input.addEventListener('input',()=>update('years',years.input,1,50));
@@ -2196,16 +2297,17 @@ function gaxRenderGoalInputs(){
  gaxUpdateGoalTotals();
 }
 function gaxUpdateGoalTotals(){
- let combined=0;
+ let combined=0;let invalid=false;
  for(const [key,entry] of gaxGoals){
   const contribution=gaxGoalContribution(entry);
-  combined+=contribution;
+  combined+=Math.ceil(contribution);
   const card=document.querySelector('.goal-config[data-goal="'+key+'"]');
   const output=card?.querySelector('.goal-result strong');
-  if(output)output.textContent=gaxGoalCurrency(contribution);
+  const bad=entry.invalidFields?.size>0;invalid ||= bad;
+  if(output)output.textContent=bad?(currentLang==='en'?'Check the inputs':'Revisá los datos'):gaxGoalCurrency(contribution);
  }
  $('goalTotal').hidden=!gaxGoals.size;
- $('goalTotalAmount').textContent=gaxGoalCurrency(combined);
+ $('goalTotalAmount').textContent=invalid?'—':gaxGoalCurrency(combined);
 }
 function gaxSyncGoalLanguage(){
  const lang=currentLang==='en'?'en':'es';const t=gaxGoalStrings[lang];
@@ -2272,6 +2374,7 @@ function gaxFinancialSummary(){
   lines.push('',currentLang==='en'?'SELECTED GOALS':'OBJETIVOS SELECCIONADOS');
   for(const [key,goal] of gaxGoals){
    const title=goal.name||gaxGoalTemplates[key]?.[currentLang]||key;
+   if(goal.invalidFields?.size){lines.push(title+': '+(currentLang==='en'?'Incomplete inputs':'Datos pendientes de completar'));continue;}
    lines.push(title+': objetivo USD '+Number(goal.amount||0).toLocaleString('es-AR')+
      ', plazo '+goal.years+' años, capital inicial USD '+Number(goal.initial||0).toLocaleString('es-AR')+
      ', aporte mensual estimado '+gaxGoalCurrency(gaxGoalContribution(goal)));
@@ -2312,6 +2415,14 @@ document.querySelectorAll('[data-open-modal]').forEach(button=>{
   if(button.id==='mobileMeetingButton')button.classList.add('is-lit');
   openModal();
  });
+});
+document.addEventListener('keydown',event=>{
+ if(event.key!=='Tab')return;
+ const modal=document.querySelector('.modal.open');if(!modal)return;
+ const nodes=Array.from(modal.querySelectorAll('a[href],button,input,summary,[tabindex="0"]')).filter(e=>!e.disabled&&e.getClientRects().length);
+ const first=nodes[0],last=nodes[nodes.length-1];if(!first)return;
+ if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+ else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
 });
 $('closeModal').addEventListener('click',closeModal);
 $('modal').addEventListener('click',event=>{if(event.target===$('modal'))closeModal()});
@@ -2362,6 +2473,10 @@ $('contactForm').addEventListener('submit',async event=>{
    });
   }finally{clearTimeout(timer)}
   const data=await response.json().catch(()=>({}));
+  if(response.status===400){
+   feedback.textContent=currentLang==='en'?'Check your contact details and consent. The phone number needs at least 7 digits.':'Revisá tus datos y el consentimiento. El teléfono debe tener al menos 7 dígitos.';
+   return;
+  }
   if(response.status===429){
    feedback.textContent=currentLang==='en'?'Too many requests. Please try again later.':'Se realizaron demasiadas solicitudes. Volvé a intentar más tarde.';
    return;
@@ -2995,7 +3110,8 @@ function animateBeeAcrossPage(now){
     }
     beeRenderer.render(beeScene,beeCamera);
 }
-initBeeAcrossPage();
+// Optional 3D loads after the interactive page is ready.
+window.addEventListener('DOMContentLoaded',initBeeAcrossPage,{once:true});
 </script>
 
 <!-- Anonymous interaction counts: works only with /api/gax-event on production Worker. -->
