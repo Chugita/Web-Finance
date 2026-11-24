@@ -6,6 +6,7 @@
  if(host!=='gaxsuite.com'&&host!=='www.gaxsuite.com')return;
  const seen=new Set();
  const allowed=new Set([
+  'page_view','engaged_visit','meeting_intent',
   'diagnostic_started','question_completed','diagnostic_completed',
   'capacity_used','time_used','goals_used','meeting_opened','form_started'
  ]);
@@ -14,6 +15,9 @@
   const key=event+':'+label;
   if(once&&seen.has(key))return;
   if(once)seen.add(key);
+  // One funnel counter per page load, independent of feature/button counts.
+  if(!['page_view','engaged_visit','meeting_intent'].includes(event))track('engaged_visit');
+  if(event==='meeting_opened')track('meeting_intent');
   // Only event names and short, fixed category labels; never input values.
   const body=JSON.stringify({event,label});
   try{
@@ -23,6 +27,7 @@
    }).catch(()=>{});
   }catch{}
  }
+ track('page_view');
  const sourceLabel=(el)=>{
   if(!el)return 'other';
   if(el.id==='navBtnMeeting')return 'nav';

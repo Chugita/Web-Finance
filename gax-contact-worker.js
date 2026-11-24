@@ -36,6 +36,7 @@ async function sendMail(env,message){
  * Each accepted event adds a single counter to an event type and optional label.
  */
 const GAX_ALLOWED_EVENTS=new Set([
+ 'page_view','engaged_visit','meeting_intent',
  'diagnostic_started','question_completed','diagnostic_completed',
  'capacity_used','time_used','goals_used',
  'meeting_opened','form_started','form_sent'
