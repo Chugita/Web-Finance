@@ -976,7 +976,7 @@ header .ticker-window.gax-quote-box .ticker-unavailable{color:#9eaaa0}
         <p class="section-lead" id="tCapLead">Conocer tu margen de maniobra es el primer paso. Evaluá tus ingresos y definí qué porcentaje podés destinar al ahorro de manera consistente para ver su proyección.</p>
         
         <div class="currency-toggle-bar">
-            <span class="pixel" style="color:var(--muted); font-size:11px;">MONEDA:</span>
+            <span class="pixel" id="currencyLabel" style="color:var(--muted); font-size:11px;">MONEDA:</span>
             <button class="curr-btn active" id="btnCurrUSD" type="button">USD (Dólar)</button>
             <button class="curr-btn" id="btnCurrARS" type="button" disabled>ARS (Pesos)</button>
             <span class="fx-note" id="fxRateDisplay">Esperando una cotización verificada para habilitar ARS.</span>
@@ -1836,6 +1836,9 @@ function setGaxLanguage(next){
     $('langBtn').textContent=next==='es'?'ES / EN':'EN / ES';
     $('langBtn').setAttribute('aria-label',next==='es'?'Switch to English':'Cambiar a español');
     $('langBtn').setAttribute('aria-pressed',String(next==='en'));
+    $('restart').textContent=next==='en'?'↻ START AGAIN':'↻ VOLVER A EMPEZAR';
+    $('currencyLabel').textContent=next==='en'?'CURRENCY:':'MONEDA:';
+    $('btnCurrUSD').textContent=next==='en'?'USD (Dollar)':'USD (Dólar)';
     const questionVisible=!$('questionPanel').hidden;
     if(questionVisible)renderQuestion();
     else renderResult();
@@ -2340,6 +2343,7 @@ let modalFocus=null;
 const gaxRecipient='jmpatt@grupoabax.com';
 function gaxFinancialSummary(){
  const lines=[];
+ const en=currentLang==='en';
  const q=(typeof getQuestions==='function')?getQuestions():[];
  if(Array.isArray(answers)&&answers.every(a=>a!==null)){
   lines.push(currentLang==='en'?'INITIAL QUESTIONNAIRE':'CUESTIONARIO INICIAL');
@@ -2354,30 +2358,32 @@ function gaxFinancialSummary(){
   const unit=currentCurrency;
   const remaining=Math.max(0,100-fixed-variable);
   lines.push('',currentLang==='en'?'SAVINGS CAPACITY SIMULATION':'SIMULACIÓN DE CAPACIDAD DE AHORRO');
-  lines.push('Moneda: '+unit);
-  lines.push('Ingreso mensual indicado: '+formatMoney(income));
-  lines.push('Gastos fijos: '+fixed+'% / '+formatMoney(income*fixed/100));
-  lines.push('Gastos variables: '+variable+'% / '+formatMoney(income*variable/100));
-  lines.push('Ahorro posible estimado: '+remaining+'% / '+formatMoney(income*remaining/100));
+  lines.push((en?'Currency: ':'Moneda: ')+unit);
+  lines.push((en?'Selected monthly income: ':'Ingreso mensual indicado: ')+formatMoney(income));
+  lines.push((en?'Fixed expenses: ':'Gastos fijos: ')+fixed+'% / '+formatMoney(income*fixed/100));
+  lines.push((en?'Variable expenses: ':'Gastos variables: ')+variable+'% / '+formatMoney(income*variable/100));
+  lines.push((en?'Estimated possible savings: ':'Ahorro posible estimado: ')+remaining+'% / '+formatMoney(income*remaining/100));
+  if(unit==='ARS')lines.push($('fxRateDisplay').textContent,$('currencyScenarioNote').textContent);
  }
  const contribution=Number($('compareMonthly')?.value),yearsA=Number($('yearsA')?.value),yearsB=Number($('yearsB')?.value);
  if(Number.isFinite(contribution)&&Number.isFinite(yearsA)&&Number.isFinite(yearsB)){
   lines.push('',currentLang==='en'?'SAVINGS PROJECTION':'PROYECCIÓN DE AHORRO');
-  lines.push('Aporte mensual elegido: '+formatMoney(contribution));
-  lines.push('Horizontes: '+yearsA+' y '+yearsB+' años; 5,5% nominal anual hipotético');
-  lines.push('Proyección '+yearsA+' años: '+$('nowValue').textContent);
-  lines.push('Proyección '+yearsB+' años: '+$('laterValue').textContent);
-  lines.push('Costo de postergar 5 años ('+yearsA+' años): '+$('delayACost').textContent);
-  lines.push('Costo de postergar 5 años ('+yearsB+' años): '+$('delayBCost').textContent);
+  lines.push((en?'Selected monthly contribution: ':'Aporte mensual elegido: ')+formatMoney(contribution));
+  lines.push(en?'Horizons: '+yearsA+' and '+yearsB+' years; hypothetical 5.5% nominal annual return':'Horizontes: '+yearsA+' y '+yearsB+' años; 5,5% nominal anual hipotético');
+  lines.push((en?'Projection after ':'Proyección ')+yearsA+(en?' years: ':' años: ')+$('nowValue').textContent);
+  lines.push((en?'Projection after ':'Proyección ')+yearsB+(en?' years: ':' años: ')+$('laterValue').textContent);
+  lines.push((en?'Cost of delaying 5 years (':'Costo de postergar 5 años (')+yearsA+(en?' years): ':' años): ')+$('delayACost').textContent);
+  lines.push((en?'Cost of delaying 5 years (':'Costo de postergar 5 años (')+yearsB+(en?' years): ':' años): ')+$('delayBCost').textContent);
  }
  if(typeof gaxGoals!=='undefined'&&gaxGoals.size){
   lines.push('',currentLang==='en'?'SELECTED GOALS':'OBJETIVOS SELECCIONADOS');
   for(const [key,goal] of gaxGoals){
    const title=goal.name||gaxGoalTemplates[key]?.[currentLang]||key;
    if(goal.invalidFields?.size){lines.push(title+': '+(currentLang==='en'?'Incomplete inputs':'Datos pendientes de completar'));continue;}
-   lines.push(title+': objetivo USD '+Number(goal.amount||0).toLocaleString('es-AR')+
-     ', plazo '+goal.years+' años, capital inicial USD '+Number(goal.initial||0).toLocaleString('es-AR')+
-     ', aporte mensual estimado '+gaxGoalCurrency(gaxGoalContribution(goal)));
+   const locale=en?'en-US':'es-AR';
+   lines.push(title+(en?': target USD ':': objetivo USD ')+Number(goal.amount||0).toLocaleString(locale)+
+     (en?', horizon ':', plazo ')+goal.years+(en?' years, starting capital USD ':' años, capital inicial USD ')+Number(goal.initial||0).toLocaleString(locale)+
+     (en?', estimated monthly contribution ':', aporte mensual estimado ')+gaxGoalCurrency(gaxGoalContribution(goal)));
   }
  }
  lines.push('',currentLang==='en'?'Illustrative calculations, not guaranteed results.':'Cálculos ilustrativos, sin rendimientos garantizados.');
