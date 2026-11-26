@@ -64,9 +64,5 @@
   if(target.closest('#goalConfigs'))track('goals_used');
   if(target.closest('#contactForm'))track('form_started');
  },true);
- document.addEventListener('focusin',event=>{
-  const target=event.target;
-  if(target instanceof Element&&target.closest('#contactForm input:not([name=website])'))
-   track('form_started');
- },true);
+ // Opening the dialog autofocuses a field; only actual edits count as form starts.
 })();
